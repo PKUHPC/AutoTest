@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['aitisa_5fapi_5fexport_610',['AITISA_API_EXPORT',['../macros_8h.html#a2a5897145a3d59e8f2552f2b2028451b',1,'macros.h']]],
+  ['aitisa_5fapi_5fimport_611',['AITISA_API_IMPORT',['../macros_8h.html#adb2cd794d2abd78b0eb259817a35a514',1,'macros.h']]],
+  ['aitisa_5fapi_5finternal_612',['AITISA_API_INTERNAL',['../macros_8h.html#a5e5cdb5acf31646c7fa802cfe5f33ccc',1,'macros.h']]],
+  ['aitisa_5fapi_5flocal_613',['AITISA_API_LOCAL',['../macros_8h.html#af7dc52fc07e7cabfa59992a911db3810',1,'macros.h']]],
+  ['aitisa_5fapi_5fpublic_614',['AITISA_API_PUBLIC',['../macros_8h.html#ac8b488663e34cddcd0952bc63ed91178',1,'macros.h']]],
+  ['aitisa_5fcheck_615',['AITISA_CHECK',['../log_8h.html#af16b187df489040ad47781ef1f96d32f',1,'log.h']]],
+  ['aitisa_5fdispatch_5fall_5ftypes_5fabort_616',['AITISA_DISPATCH_ALL_TYPES_ABORT',['../dispatch_8h.html#ae047268b78cecff25fa35cd3f1c51465',1,'dispatch.h']]],
+  ['aitisa_5fdispatch_5fall_5ftypes_5freturn_617',['AITISA_DISPATCH_ALL_TYPES_RETURN',['../dispatch_8h.html#a9bc100c91a9f497554854af32576da43',1,'dispatch.h']]],
+  ['aitisa_5fdispatch_5fall_5ftypes_5fwith_5fargs_5fabort_618',['AITISA_DISPATCH_ALL_TYPES_WITH_ARGS_ABORT',['../dispatch_8h.html#ac8cda5fcdf81574e61f90aeced001414',1,'dispatch.h']]],
+  ['aitisa_5fdispatch_5fall_5ftypes_5fwith_5fargs_5freturn_619',['AITISA_DISPATCH_ALL_TYPES_WITH_ARGS_RETURN',['../dispatch_8h.html#a32c44cb28e0825d7995d6c06ac89bdc8',1,'dispatch.h']]],
+  ['aitisa_5fdispatch_5ffloating_5ftypes_5fabort_620',['AITISA_DISPATCH_FLOATING_TYPES_ABORT',['../dispatch_8h.html#a95c5cac2a8aed9bec2110a28cdb1bb90',1,'dispatch.h']]],
+  ['aitisa_5fdispatch_5ffloating_5ftypes_5freturn_621',['AITISA_DISPATCH_FLOATING_TYPES_RETURN',['../dispatch_8h.html#a7b3c878659b820408cf8c4c5c02c7902',1,'dispatch.h']]],
+  ['aitisa_5fdispatch_5ffloating_5ftypes_5fwith_5fargs_5fabort_622',['AITISA_DISPATCH_FLOATING_TYPES_WITH_ARGS_ABORT',['../dispatch_8h.html#a62fe4c011737e37b43212176a5065a96',1,'dispatch.h']]],
+  ['aitisa_5fdispatch_5ffloating_5ftypes_5fwith_5fargs_5freturn_623',['AITISA_DISPATCH_FLOATING_TYPES_WITH_ARGS_RETURN',['../dispatch_8h.html#adaf5e513813cd95607ddf7b50ae6aeaa',1,'dispatch.h']]],
+  ['aitisa_5flog_624',['AITISA_LOG',['../log_8h.html#a94e52a12f5a63306511dddee448a368c',1,'log.h']]],
+  ['aitisa_5fprivate_5fcase_5ftype_625',['AITISA_PRIVATE_CASE_TYPE',['../dispatch_8h.html#aef00ad3221e8ed8c67f612ca65c153b0',1,'dispatch.h']]]
+];

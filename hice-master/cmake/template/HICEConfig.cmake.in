@@ -1,0 +1,126 @@
+@PACKAGE_INIT@
+
+# Utils functions.
+include("${CMAKE_CURRENT_LIST_DIR}/public/Utils.cmake")
+
+set_and_check(hice_install_prefix "@PACKAGE_CMAKE_INSTALL_PREFIX@")
+set_and_check(hice_install_includedir "@PACKAGE_INSTALL_INCLUDEDIR@")
+set_and_check(hice_install_cmakedir "@PACKAGE_INSTALL_CMAKEDIR@")
+set(hice_install_rpath "@HICE_INSTALL_RPATH@")
+
+# For all prerequisites, load the corresponding targets if the package was used
+list(APPEND CMAKE_PREFIX_PATH ${hice_install_prefix})
+list(APPEND CMAKE_MODULE_PATH ${hice_install_cmakedir}/module)
+list(APPEND CMAKE_INSTALL_RPATH ${hice_install_rpath})
+
+if(@HICE_USE_ABSEIL@)
+  set(HICE_USE_ABSEIL_LOCAL "@HICE_USE_ABSEIL_LOCAL@")
+  if(HICE_USE_ABSEIL_LOCAL)
+    set(absl_DIR "@absl_DIR@")
+    find_package(absl CONFIG REQUIRED)
+    add_library(hice::absl INTERFACE IMPORTED)
+    set_property(
+      TARGET 
+        hice::absl 
+      PROPERTY INTERFACE_LINK_LIBRARIES
+        absl::base absl::algorithm absl::strings absl::optional
+    )
+  else()
+    include(${CMAKE_CURRENT_LIST_DIR}/public/Abseil.cmake)
+  endif()
+endif()
+
+if(@HICE_USE_TVM@)
+  set(HICE_USE_TVM "@HICE_USE_TVM@")
+  include(${CMAKE_CURRENT_LIST_DIR}/public/TVM.cmake)
+  if (NOT TARGET hice::tvm)
+    message(FATAL_ERROR
+        "Your installed HICE version uses tvm but the tvm library "
+        "cannot be found. Did you accidentally remove it, or have you set "
+        "the right CMAKE_PREFIX_PATH and/or TVM_HOME? If you do not "
+        "have tvm, you will need to install tvm and set the library "
+        "path accordingly.")
+  endif()
+  include(${CMAKE_CURRENT_LIST_DIR}/public/Python.cmake)
+endif()
+
+if(@HICE_USE_SLEEF_LOCAL@)
+  add_library(hice::sleef INTERFACE IMPORTED)
+  set_target_properties(hice::sleef PROPERTIES
+    INTERFACE_LINK_DIRECTORIES "${hice_install_prefix}/lib"
+    INTERFACE_LINK_LIBRARIES "sleef"
+  )
+endif()
+
+if(@HICE_USE_CUDA@)
+  set(CUDA_ROOT_DIR "@CUDA_ROOT_DIR@" CACHE INTERNAL "")
+  include(${CMAKE_CURRENT_LIST_DIR}/public/CUDA.cmake)
+  if (NOT TARGET hice::cudart)
+    message(FATAL_ERROR
+        "Your installed HICE version uses cuda but the cuda library "
+        "cannot be found. Did you accidentally remove it, or have you set "
+        "the right CMAKE_PREFIX_PATH and/or CUDA_ROOT_DIR? If you do not "
+        "have cuda, you will need to install cuda and set the library "
+        "path accordingly.")
+  endif()
+endif()
+
+if(@HICE_USE_CUDNN@)
+  set(CUDNN_ROOT_DIR "@CUDNN_ROOT_DIR@" CACHE INTERNAL "")
+  include(${CMAKE_CURRENT_LIST_DIR}/public/CUDNN.cmake)
+  if (NOT TARGET hice::cudnn)
+    message(FATAL_ERROR
+        "Your installed HICE version uses cudnn but the cudnn library "
+        "cannot be found. Did you accidentally remove it, or have you set "
+        "the right CMAKE_PREFIX_PATH and/or CUDNN_ROOT_DIR? If you do not "
+        "have cudnn, you will need to install cudnn and set the library "
+        "path accordingly.")
+  endif()
+endif()
+
+if(@HICE_USE_MKL@)
+  set(MKL_ROOT_DIR "@MKL_ROOT_DIR@" CACHE INTERNAL "")
+  include(${CMAKE_CURRENT_LIST_DIR}/public/MKL.cmake)
+  if (NOT TARGET hice::mkl)
+    message(FATAL_ERROR
+        "Your installed HICE version uses mkl but the mkl library "
+        "cannot be found. Did you accidentally remove it, or have you set "
+        "the right CMAKE_PREFIX_PATH and/or MKL_ROOT_DIR? If you do not "
+        "have mkl, you will need to install mkl and set the library "
+        "path accordingly.")
+  endif()
+endif()
+
+if(@HICE_USE_MKLDNN@)
+  set(HICE_USE_MKLDNN_LOCAL "@HICE_USE_MKLDNN_LOCAL@")
+  if(HICE_USE_MKLDNN_LOCAL)
+   find_package(MKLDNN CONFIG REQUIRED)
+  else()
+    set(MKLDNN_ROOT_DIR "@MKLDNN_ROOT_DIR@" CACHE INTERNAL "")
+    include(${CMAKE_CURRENT_LIST_DIR}/public/MKLDNN.cmake)
+    if (NOT TARGET hice::mkldnn)
+      message(FATAL_ERROR
+          "Your installed HICE version uses mkldnn but the mkldnn library "
+          "cannot be found. Did you accidentally remove it, or have you set "
+          "the right CMAKE_PREFIX_PATH and/or MKLDNN_ROOT_DIR? If you do not "
+          "have mkldnn, you will need to install mkldnn and set the library "
+          "path accordingly.")
+    endif()
+  endif()
+endif()
+
+if(@HICE_USE_BLAS@ STREQUAL "Eigen")
+  add_library(hice::eigen INTERFACE IMPORTED)
+  set_property(
+    TARGET hice::eigen PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+    "${hice_install_includedir}/../Eigen")
+endif()
+
+list(REMOVE_AT CMAKE_MODULE_PATH -1)
+list(REMOVE_AT CMAKE_PREFIX_PATH -1)
+
+if(NOT TARGET hice)
+  include("${hice_install_cmakedir}/HICETargets.cmake")
+  hice_make_interface_library(hice hice_interface)
+  add_library(hice::hice ALIAS hice_interface)
+endif()
