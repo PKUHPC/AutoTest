@@ -8,6 +8,12 @@
 #include "hice/nn/activation.h"
 #include "hice/math/matmul.h"
 #include "hice/math/binary_expr.h"
+#include "hice/core/tensor_printer.h"
+#include "hice/nn/pooling.h"
+extern "C" {
+#include "src/nn/pooling.h"
+#include <sys/time.h>
+}
 
 namespace hice{
     const DataType hice_dtypes[10] = {DataType::make<__int8_t>(),   DataType::make<uint8_t>(),
@@ -77,7 +83,45 @@ namespace hice{
         *output_ptr = conv_fwd(input, filter, bias_cpu, padding1, stride1, dilation1, groups, false, false);
 
     }
+    void hice_pooling(
+            const Tensor input,const int *stride,
+            const int stride_len, const int *padding, const int padding_len,
+            const int *dilation, const int dilation_len,
+            const int *ksize, const int ksize_len,
+            const char* mode, const int mode_len,
+            Tensor *output_ptr
+    ){
+        std::string mode_str(mode);
+        std::vector<int64_t> padding1={};
+        std::vector<int64_t> stride1={} ;
+        std::vector<int64_t> ksize1 = {};
 
+        padding1.reserve(stride_len);
+        stride1.reserve(padding_len);
+        ksize1.reserve(ksize_len);
+
+        for(auto i=0;i<stride_len;i++){
+            padding1.push_back(padding[i]);
+        }
+        for(auto i=0;i<padding_len;i++){
+            stride1.push_back(stride[i]);
+        }
+
+        for(auto i=0;i<ksize_len;i++){
+            ksize1.push_back(ksize[i]);
+        }
+        if(mode_str == "avg"){
+            *output_ptr = pooling_avg_fwd(input, ksize1 , stride1, padding1);
+        } else if(mode_str == "max"){
+            auto cpu_result = pooling_max_fwd(input, ksize1 , stride1, padding1);
+            Tensor cpu_output = std::get<0>(cpu_result);
+            Tensor cpu_indices = std::get<1>(cpu_result);
+
+            *output_ptr = cpu_output;
+
+        }
+
+    }
 
     void hice_relu(const Tensor input, Tensor *output){
         *output = relu_fwd(input);
@@ -88,7 +132,9 @@ namespace hice{
     void hice_tanh(const Tensor input, Tensor *output){
         *output = tanh_fwd(input);
     }
-
+    void hice_sqrt(const Tensor input, Tensor *output){
+        *output = sqrt_fwd(input);
+    }
 
     void hice_matmul(const Tensor tensor1, const Tensor tensor2,
                      Tensor *output){
@@ -108,6 +154,7 @@ namespace hice{
     void hice_div(const Tensor tensor1, const Tensor tensor2, Tensor *output){
         *output = div(tensor1,tensor2);
     }
+
 }
 REGISTER_BASIC(hice::Tensor,hice::DataType, hice::hice_int_to_dtype,hice::hice_dtype_to_int,hice::Device, hice::hice_int_to_device,
                hice::hice_device_to_int, hice::hice_create, hice::hice_resolve);
@@ -120,35 +167,84 @@ REGISTER_MATMUL(hice::hice_matmul);
 
 REGISTER_BINARY_OP(hice::hice_add, hice::hice_sub, hice::hice_mul,hice::hice_div);
 
-using namespace  hice;
+REGISTER_POOLING(hice::hice_pooling);
+
+void sqrt_assign_float(Tensor t) {
+    int64_t size = aitisa_tensor_size(t);
+    float* data = (float*)aitisa_tensor_data(t);
+    float value = 0;
+    data[0] = 1.601592;
+    data[1] = 0.174768;
+    data[2] = 54997958656.000000;
+    data[3] = -1.885852;
+    data[4] =0.000000;
+    data[5] = 1.796072	;
+
+//    for (int i = 0; i < size; ++i) {
+//        value = i * 2;
+//        data[i] = value;
+//    }
+}
+void pooling_assign_int32(Tensor t) {
+    int64_t size = aitisa_tensor_size(t);
+    int32_t* data = (int32_t*)aitisa_tensor_data(t);
+    int32_t value = 0;
+    for (int i = 0; i < size; ++i) {
+        data[i] = i;
+    }
+}
+//using namespace  hice;
 int main(int argc, char **argv){
     PERFORM_TEST;
 //    TensorPrinter tp;
-//      hice::DataType dtype;
-//      for(int i=0;i<=9;i++){
-//          hice::DataType dtype;
-//          dtype = hice_int_to_dtype(i);
-//          std::cout << i << "sss" <<dtype.name() << std::endl;
-//
-//      }
-      //    hice::Tensor input_cpu = rand_uniform({6,32,124,128}, -10, 10, dtype(hice::kFloat).device(kCPU));
-//    hice::Tensor kernel_cpu = rand_uniform({64,32,2,2}, -10, 10, dtype(hice::kFloat).device(kCPU));
-//    hice::Tensor bias_cpu = full({64}, 0, dtype(hice::kFloat).device(kCPU));
-//
-//    std::vector<int64_t> padding = {0,0};
-//    std::vector<int64_t> stride = {2, 2};
-//    std::vector<int64_t> dilation = {1,1};
-//
-//    int64_t groups = 1;
+//    hice::Tensor input = rand_uniform({2,3}, 1.0, 10.0, device(kCPU).dtype(hice::kFloat));
+//    float data[6] = {664811712.000000,-1.493932,54997958656.000000,-1.885852,0.000000,1.796072};
+//    hice::Tensor input = create({2,3},data,6,device(kCPU).dtype(hice::kFloat));
+//    tp.print(input);
 //    struct timeval hice_start, hice_end;
 //    double hice_time;
 //    gettimeofday(&hice_start,NULL);
-//    hice::Tensor output_cpu = conv_fwd(input_cpu, kernel_cpu, bias_cpu, padding, stride, dilation, groups, false, false);
+//    hice::Tensor output = hice::sqrt_fwd(input);
 //
 //    gettimeofday(&hice_end,NULL);
 //    hice_time = (hice_end.tv_sec - hice_start.tv_sec) * 1000.0
 //                + (hice_end.tv_usec - hice_start.tv_usec) / 1000.0 ;
-//    std::cout<< /*GREEN <<*/ "\t[  HICE  ] " << /*RESET <<*/ hice_time << " ms" << std::endl;
+//
+//
+//    std::cout<< /*GREEN <<*/ "\t[ HICE ] " << /*RESET <<*/ hice_time << " ms" << std::endl;
+//
+//    tp.print(output);
+
+
+
+//    using namespace aitisa_api;
+//    Tensor input;
+//    DataType dtype = kFloat;
+//    Device device = {DEVICE_CPU, 0};
+//    int64_t dims[2] = {2, 3};
+//    aitisa_create(dtype, device, dims, 2, NULL, 0, &input);
+//    sqrt_assign_float(input);
+//    // tensor_printer2d(input);
+//
+//    Tensor output;
+//    aitisa_sqrt(input, &output);
+//    // tensor_printer2d(output);
+//
+//    float* out_data = (float*)aitisa_tensor_data(output);
+//
+//    int64_t size = aitisa_tensor_size(input);
+//    for (int64_t i = 0; i < size; i++) {
+//        /* Due to the problem of precision, consider the two numbers
+//           are equal when their difference is less than 0.000001*/
+//        printf("%f\t",  out_data[i]);
+//    }
+//
+//    aitisa_destroy(&input);
+//    aitisa_destroy(&output);
+
+
+
+
 
     return 0;
 }

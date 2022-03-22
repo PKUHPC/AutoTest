@@ -186,7 +186,7 @@ if(HICE_USE_MKL)
 endif()
 
 if(HICE_USE_MKLDNN)
-  set(DNNL_CONFIGURATION  cpu_iomp)
+  set(DNNL_CONFIGURATION  cpu_gomp)
   find_package(dnnl CONFIG REQUIRED)
 
   list(APPEND hice_public_dependency_libs DNNL::dnnl)

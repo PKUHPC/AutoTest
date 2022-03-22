@@ -1,0 +1,9 @@
+[submodule "hice-master/third_party/gtest"]
+	path = hice-master/third_party/gtest
+	url = https://github.com/google/googletest.git
+[submodule "hice-master/third_party/sleef"]
+	path = hice-master/third_party/sleef
+	url = https://github.com/shibatch/sleef.git
+[submodule "hice-master/third_party/absl"]
+	path = hice-master/third_party/absl
+	url = https://github.com/abseil/abseil-cpp.git
