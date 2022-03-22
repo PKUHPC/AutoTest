@@ -5,7 +5,6 @@
 #include "auto_test/sample.h"
 
 extern "C" {
-#include "src/nn/conv.h"
 #include "src/nn/pooling.h"
 #include <math.h>
 #include <sys/time.h>
@@ -86,7 +85,7 @@ template <typename InterfaceType>
 class PoolingTest : public ::testing::Test{
 public:
     PoolingTest():
-            input0(/*ndim*/4, /*dims*/{5, 3, 5, 4}, /*dtype=float*/8,
+            input0(/*ndim*/4, /*dims*/{50, 30, 50, 40}, /*dtype=float*/8,
                     /*device=cpu*/0, /*data*/nullptr, /*len*/0,
                     /*stride*/{1, 1}, /*padding*/{0,0}, /*dilation*/{1,1},
                     /*ksize*/{2, 2},"avg"),
@@ -123,7 +122,7 @@ public:
     Pooling_Input input0; // Natural assigned int32 type input of CPU with InputDims1{3,3,10,6}, FilterDims2{5,3,2,2}, stride{2,2}, padding{0,0}, dilation{1,1}
     Pooling_Input input1; // Random assigned double type input of CUDA with InputDims1{10,3,100,124,20}, FilterDims2{10,3,5,5,5}, stride{5,5,5}, padding{0,1,0}, dilation{1,1,1}
     Pooling_Input *input[2] = {&input0, &input1};
-    std::string input0_name = "Random float of CPU with InputDims{5, 3, 5, 4}, ksize{2, 2}, stride{2,2}, padding{0,0}, dilation{1,1}, mode{avg}";
+    std::string input0_name = "Random float of CPU with InputDims{50, 30, 50, 40}, ksize{2, 2}, stride{2,2}, padding{0,0}, dilation{1,1}, mode{avg}";
     std::string input1_name = "Random float of CPU with InputDims{3, 2, 4, 6}, ksize{3, 2}, stride{3,3}, padding{0,0}, dilation{1,1}, mode{max}";
     std::string *input_name[2] = {&input0_name, &input1_name};
     int ninput = 2;

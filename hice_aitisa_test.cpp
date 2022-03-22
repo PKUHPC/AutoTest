@@ -10,6 +10,8 @@
 #include "hice/math/binary_expr.h"
 #include "hice/core/tensor_printer.h"
 #include "hice/nn/pooling.h"
+#include "hice/nn/softmax.h"
+
 extern "C" {
 #include "src/nn/pooling.h"
 #include <sys/time.h>
@@ -123,6 +125,11 @@ namespace hice{
 
     }
 
+    void hice_softmax(const Tensor input,const int axis,
+                      Tensor *output_ptr){
+        *output_ptr = softmax_fwd(input,axis);
+    }
+
     void hice_relu(const Tensor input, Tensor *output){
         *output = relu_fwd(input);
     }
@@ -159,15 +166,17 @@ namespace hice{
 REGISTER_BASIC(hice::Tensor,hice::DataType, hice::hice_int_to_dtype,hice::hice_dtype_to_int,hice::Device, hice::hice_int_to_device,
                hice::hice_device_to_int, hice::hice_create, hice::hice_resolve);
 
-REGISTER_CONV2D(hice::hice_conv2d);
-
-REGISTER_ACTIVATION(hice::hice_relu,hice::hice_sigmoid,hice::hice_tanh);
-
-REGISTER_MATMUL(hice::hice_matmul);
-
-REGISTER_BINARY_OP(hice::hice_add, hice::hice_sub, hice::hice_mul,hice::hice_div);
-
+//REGISTER_CONV2D(hice::hice_conv2d);
+//
+//REGISTER_ACTIVATION(hice::hice_relu,hice::hice_sigmoid,hice::hice_tanh);
+//
+//REGISTER_MATMUL(hice::hice_matmul);
+//
+//REGISTER_BINARY_OP(hice::hice_add, hice::hice_sub, hice::hice_mul,hice::hice_div);
+//
 REGISTER_POOLING(hice::hice_pooling);
+
+//REGISTER_SOFTMAX(hice_softmax);
 
 void sqrt_assign_float(Tensor t) {
     int64_t size = aitisa_tensor_size(t);
