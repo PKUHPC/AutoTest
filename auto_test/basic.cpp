@@ -71,4 +71,12 @@ void random_assign(void *data, unsigned int len, int dtype){
   }
 }
 
+void batch_norm_full_float(Tensor t, const float value) {
+    int64_t size = aitisa_tensor_size(t);
+    auto* data = (float *)aitisa_tensor_data(t);
+    for (int i = 0; i < size; ++i) {
+        data[i] = value;
+    }
+}
+
 } // namespace aitisa_api

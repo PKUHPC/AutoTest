@@ -12,18 +12,10 @@ extern "C" {
 #include <sys/time.h>
 }
 
-void batch_norm_full_float(Tensor t, const float value) {
-    int64_t size = aitisa_tensor_size(t);
-    auto* data = (float *)aitisa_tensor_data(t);
-    for (int i = 0; i < size; ++i) {
-        data[i] = value;
-    }
-}
-
-
 namespace aitisa_api {
 
     namespace {
+
 
         class Batchnorm_Input : public Unary_Input {
         public:
@@ -176,7 +168,6 @@ namespace aitisa_api {
                            &aitisa_result_ndim, (void**)&aitisa_result_data, &aitisa_result_len);
 
             // user
-            hice::TensorPrinter tp;
             UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->input[i]->dtype());
             UserDevice user_device = UserFuncs::user_int_to_device(this->input[i]->device());
             UserFuncs::user_create(user_dtype, user_device, this->input[i]->dims(),

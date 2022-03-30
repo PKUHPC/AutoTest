@@ -17,6 +17,7 @@ inline unsigned int elem_size(int dtype) { return static_cast<unsigned int>(aiti
 
 void natural_assign(void *data, unsigned int len, int dtype);
 void random_assign(void *data, unsigned int len, int dtype);
+void batch_norm_full_float(Tensor t, const float value) ;
 
 using AITISA_Tensor = Tensor;
 using AITISA_Device = Device;

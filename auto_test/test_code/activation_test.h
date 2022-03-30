@@ -4,10 +4,12 @@
 #include <string>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
+
 extern "C" {
 #include "src/nn/relu.h"
 #include "src/nn/sigmoid.h"
 #include "src/nn/tanh.h"
+#include "src/math/sqrt.h"
 #include <math.h>
 #include <sys/time.h>
 }
@@ -22,12 +24,15 @@ public:
            /*device1=cuda*/0, /*data*/nullptr, /*len*/0),
     input1(/*ndim*/4, /*dims*/{3,40,100,600}, /*dtype=float*/8,
            /*device1=cuda*/0, /*data*/nullptr, /*len*/0),
-    input2(/*ndim*/4, /*dims*/{3,4,120,60}, /*dtype=float*/8,  
-           /*device1=cuda*/0, /*data*/nullptr, /*len*/0){
+    input2(/*ndim*/4, /*dims*/{30,40,120,60}, /*dtype=float*/8,
+           /*device1=cuda*/0, /*data*/nullptr, /*len*/0),
+    input3(/*ndim*/4, /*dims*/{30,80,120,60}, /*dtype=float*/8,
+    /*device1=cuda*/0, /*data*/nullptr, /*len*/0){
     input[0] = &input0;
     input[1] = &input1;
     input[2] = &input2;
-    ninput = 3;
+    input[3] = &input3;
+    ninput = 4;
     for(int i=0; i<ninput; i++){
       unsigned int input_nelem = 1;
       for(unsigned int j=0; j<input[i]->ndim(); j++){
@@ -46,22 +51,23 @@ public:
   Unary_Input input0;
   Unary_Input input1;
   Unary_Input input2;
-  Unary_Input *input[3] = {&input0, &input1, &input2};
+  Unary_Input input3;
+  Unary_Input *input[4] = {&input0, &input1, &input2,&input3};
   std::string input0_name = "Random Double CPU with Dims{3,6,10,120,600} for ReLU";
   std::string input1_name = "Random Float CPU with Dims{30,40,100,600} for Sigmoid";
-  std::string input2_name = "Natural FLoat CPU with Dims{3,4,120,60} for Tanh";
-  std::string *input_name[3] = {&input0_name, &input1_name, &input2_name};
-  int ninput = 3;
+  std::string input2_name = "Random FLoat CPU with Dims{30,40,120,60} for Tanh";
+  std::string input3_name = "Full FLoat CPU with Dims{30,80,120,60} for Sqrt";
+  std::string *input_name[4] = {&input0_name, &input1_name, &input2_name,&input3_name};
+  int ninput = 4;
 };
 TYPED_TEST_CASE_P(ActivationTest);
 
-TYPED_TEST_P(ActivationTest, ThreeTests){
+TYPED_TEST_P(ActivationTest, FourTests){
   using UserDataType = typename TestFixture::UserInterface::UserDataType;
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
   for(int i=0; i<this->ninput; i++){
-    // if(i != 2) continue;
     struct timeval aitisa_start, aitisa_end, user_start, user_end;
     double aitisa_time, user_time;
     int64_t aitisa_result_ndim, user_result_ndim;
@@ -79,12 +85,17 @@ TYPED_TEST_P(ActivationTest, ThreeTests){
     AITISA_Device aitisa_device = aitisa_int_to_device(0); // cpu supoorted only
     aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->dims(), this->input[i]->ndim(), 
                   (void*)(this->input[i]->data()), this->input[i]->len(), &aitisa_tensor);
-    gettimeofday(&aitisa_start,NULL); 
+    gettimeofday(&aitisa_start,NULL);
+    if(i==3){
+        batch_norm_full_float(aitisa_tensor,1);
+    }
+
     switch(i){
       case 0: aitisa_relu(aitisa_tensor, &aitisa_result); break;
       case 1: aitisa_sigmoid(aitisa_tensor, &aitisa_result); break;
       case 2: aitisa_tanh(aitisa_tensor, &aitisa_result); break;
-      default: break;
+      case 3: aitisa_sqrt(aitisa_tensor, &aitisa_result); break;
+        default: break;
     }
     gettimeofday(&aitisa_end,NULL); 
     aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0 
@@ -102,6 +113,7 @@ TYPED_TEST_P(ActivationTest, ThreeTests){
       case 0: UserFuncs::user_relu(user_tensor, &user_result); break;
       case 1: UserFuncs::user_sigmoid(user_tensor, &user_result); break;
       case 2: UserFuncs::user_tanh(user_tensor, &user_result); break;
+      case 3: UserFuncs::user_sqrt(user_tensor, &user_result); break;
       default: break;
     }
     gettimeofday(&user_end,NULL); 
@@ -147,9 +159,9 @@ TYPED_TEST_P(ActivationTest, ThreeTests){
     std::cout<< /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms" << std::endl;
   }
 }
-REGISTER_TYPED_TEST_CASE_P(ActivationTest, ThreeTests);
+REGISTER_TYPED_TEST_CASE_P(ActivationTest, FourTests);
 
-#define REGISTER_ACTIVATION(RELU, SIGMOID, TANH)                                    \
+#define REGISTER_ACTIVATION(RELU, SIGMOID, TANH, SQRT)                              \
   class Activation : public Basic {                                                 \
   public:                                                                           \
     static void user_relu(UserTensor tensor, UserTensor* result){                   \
@@ -160,6 +172,9 @@ REGISTER_TYPED_TEST_CASE_P(ActivationTest, ThreeTests);
     }                                                                               \
     static void user_tanh(UserTensor tensor, UserTensor* result){                   \
       TANH(tensor, result);                                                         \
+    }                                                                               \
+    static void user_sqrt(UserTensor tensor, UserTensor* result){                   \
+      SQRT(tensor, result);                                                         \
     }                                                                               \
   };                                                                                \
   namespace aitisa_api{                                                             \
