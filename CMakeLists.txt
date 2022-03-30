@@ -70,7 +70,7 @@ if(BUILD_SHARED_LIBS)
       AITISA_API_SHARED_LIBS_EXPORTS
   )
 else()
-  add_library(aitisa_api STATIC ${aitisa_api_srcs} hice_aitisa_test.cpp auto_test/test_code/pooling_test.h auto_test/test_code/softmax_test.h)
+  add_library(aitisa_api STATIC ${aitisa_api_srcs} hice_aitisa_test.cpp)
 endif()
 
 target_compile_features(aitisa_api PUBLIC c_std_99)

@@ -83,19 +83,46 @@ TEST(BatchNorm, Input4dAxis1) {
   int64_t in_dims[4] = {2, 3, 2, 2};
   aitisa_create(dtype, device, in_dims, 4, NULL, 0, &input);
   batch_norm_natural_assign_double(input, 0);
+        auto* input0_data = (double*)aitisa_tensor_data(input);
+        printf("input\n");
+        for (int64_t k = 0; k < aitisa_tensor_size(input); k++) {
+            printf("%lf\t",input0_data[k]);
+        }
 
   Tensor mean, variance, scale, bias;
   int64_t param_dims[1] = {3};
   int64_t param_ndim = 1;
   aitisa_create(dtype, device, param_dims, param_ndim, NULL, 0, &mean);
   batch_norm_natural_assign_double(mean, 0.5);
+
+        auto* input_data = (double*)aitisa_tensor_data(mean);
+        printf("mean\n");
+        for (int64_t k = 0; k < aitisa_tensor_size(mean); k++) {
+            printf("%lf\t",input_data[k]);
+        }
+
   aitisa_create(dtype, device, param_dims, param_ndim, NULL, 0, &variance);
   batch_norm_natural_assign_double(variance, 1.1);
-
+        auto* input1_data = (double*)aitisa_tensor_data(variance);
+        printf("\nvariance\n");
+        for (int64_t k = 0; k < aitisa_tensor_size(variance); k++) {
+            printf("%lf\t",input1_data[k]);
+        }
   aitisa_create(dtype, device, param_dims, param_ndim, NULL, 0, &scale);
   batch_norm_natural_assign_double(scale, 1);
+        auto* input2_data = (double*)aitisa_tensor_data(scale);
+        printf("\nscale\n");
+        for (int64_t k = 0; k < aitisa_tensor_size(scale); k++) {
+            printf("%lf\t",input2_data[k]);
+        }
+
   aitisa_create(dtype, device, param_dims, param_ndim, NULL, 0, &bias);
   batch_norm_natural_assign_double(bias, 0);
+        auto* input3_data = (double*)aitisa_tensor_data(bias);
+        printf("\nbias\n");
+        for (int64_t k = 0; k < aitisa_tensor_size(bias); k++) {
+            printf("%lf\t",input3_data[k]);
+        }
 
   double epsilon = 1e-5;
   Tensor output;

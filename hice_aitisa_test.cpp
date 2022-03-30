@@ -11,7 +11,7 @@
 #include "hice/core/tensor_printer.h"
 #include "hice/nn/pooling.h"
 #include "hice/nn/softmax.h"
-
+#include "hice/nn/batch_norm.h"
 extern "C" {
 #include "src/nn/pooling.h"
 #include <sys/time.h>
@@ -161,22 +161,31 @@ namespace hice{
     void hice_div(const Tensor tensor1, const Tensor tensor2, Tensor *output){
         *output = div(tensor1,tensor2);
     }
+    void hice_batchnorm(Tensor &input, int axis, Tensor &bn_scale, Tensor &bn_bias, Tensor &running_mean,
+                         Tensor &running_var,  double epsilon, Tensor *output){
+        auto result = batch_norm_fwd(input, bn_scale , bn_bias, running_mean,running_var, false,1,1,epsilon);
+        Tensor cpu_output = std::get<0>(result);
+        *output = cpu_output;
+    }
 
 }
 REGISTER_BASIC(hice::Tensor,hice::DataType, hice::hice_int_to_dtype,hice::hice_dtype_to_int,hice::Device, hice::hice_int_to_device,
                hice::hice_device_to_int, hice::hice_create, hice::hice_resolve);
 
-//REGISTER_CONV2D(hice::hice_conv2d);
-//
-//REGISTER_ACTIVATION(hice::hice_relu,hice::hice_sigmoid,hice::hice_tanh);
-//
-//REGISTER_MATMUL(hice::hice_matmul);
-//
-//REGISTER_BINARY_OP(hice::hice_add, hice::hice_sub, hice::hice_mul,hice::hice_div);
+REGISTER_CONV2D(hice::hice_conv2d);
+
+REGISTER_ACTIVATION(hice::hice_relu,hice::hice_sigmoid,hice::hice_tanh);
+
+REGISTER_MATMUL(hice::hice_matmul);
+
+REGISTER_BINARY_OP(hice::hice_add, hice::hice_sub, hice::hice_mul,hice::hice_div);
 //
 REGISTER_POOLING(hice::hice_pooling);
 
-//REGISTER_SOFTMAX(hice_softmax);
+REGISTER_SOFTMAX(hice_softmax);
+
+REGISTER_BATCHNORM(hice::hice_batchnorm);
+
 
 void sqrt_assign_float(Tensor t) {
     int64_t size = aitisa_tensor_size(t);
@@ -202,7 +211,7 @@ void pooling_assign_int32(Tensor t) {
         data[i] = i;
     }
 }
-//using namespace  hice;
+using namespace  hice;
 int main(int argc, char **argv){
     PERFORM_TEST;
 //    TensorPrinter tp;
