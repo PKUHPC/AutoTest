@@ -21,12 +21,14 @@ std::tuple<Tensor, Tensor, Tensor> batch_norm_fwd(
    *  Tensor & bn_bias: original bias
    *  Tensor & running_mean: used to estimated the mean of the whole training
    *set. (Should be carefully initiated e.g., to 0 or to the mean of the first
-   *batch) Tensor & running_var: similar as running_mean above. bool train: to
-   *support training mode and inference mode int mode: mode == 0 for
-   *per-activation batch-norm; mode== 1 for spatial batch-norm in per-activation
-   *mode, input(N * C * H * W) -> saved mean(1 * C * H * W) in spatial mode,
-   *input(N * C * H * W) -> saved mean(1 * C * 1 * 1) double epsilon: for
-   *numerical satbility double expo_factor: the factor used to calculated
+   *batch)
+   *  Tensor & running_var: similar as running_mean above.
+   *  bool train: to support training mode and inference mode
+   *  int mode: mode == 0 for per-activation batch-norm; mode== 1 for spatial batch-norm
+   *in per-activation mode, input(N * C * H * W) -> saved mean(1 * C * H * W)
+   *in spatial mode, input(N * C * H * W) -> saved mean(1 * C * 1 * 1)
+   *  double epsilon: for numerical satbility
+   *  double expo_factor: the factor used to calculated
    *running_{mean,var} running_mean_updated = (1-expo_factor) * running_mean +
    *expo_factor * new_batch_mean. Similar for running_var.
    *

@@ -162,10 +162,10 @@ namespace hice{
         *output = div(tensor1,tensor2);
     }
     void hice_batchnorm(Tensor &input, int axis, Tensor &bn_scale, Tensor &bn_bias, Tensor &running_mean,
-                         Tensor &running_var,  double epsilon, Tensor *output){
-        auto result = batch_norm_fwd(input, bn_scale , bn_bias, running_mean,running_var, false,1,1,epsilon);
-        Tensor cpu_output = std::get<0>(result);
-        *output = cpu_output;
+                         Tensor &running_var,  double epsilon, Tensor &output, Tensor &bn_mean,
+                        Tensor &bn_var){
+
+        auto result = batch_norm_fwd(input, bn_scale , bn_bias, running_mean,running_var, false,2,1,epsilon,output,bn_mean,bn_var);
     }
 
 }
@@ -179,7 +179,7 @@ REGISTER_ACTIVATION(hice::hice_relu,hice::hice_sigmoid,hice::hice_tanh);
 REGISTER_MATMUL(hice::hice_matmul);
 
 REGISTER_BINARY_OP(hice::hice_add, hice::hice_sub, hice::hice_mul,hice::hice_div);
-//
+
 REGISTER_POOLING(hice::hice_pooling);
 
 REGISTER_SOFTMAX(hice_softmax);
@@ -211,7 +211,7 @@ void pooling_assign_int32(Tensor t) {
         data[i] = i;
     }
 }
-using namespace  hice;
+//using namespace  hice;
 int main(int argc, char **argv){
     PERFORM_TEST;
 //    TensorPrinter tp;
@@ -259,10 +259,6 @@ int main(int argc, char **argv){
 //
 //    aitisa_destroy(&input);
 //    aitisa_destroy(&output);
-
-
-
-
 
     return 0;
 }
