@@ -58,4 +58,4 @@ dkms.conf
 /cmake-build-debug
 /third_party
 /hice-master/.idea
-/hice-master/third_party/
+/hice-master/third_party
