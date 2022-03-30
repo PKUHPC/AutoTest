@@ -12,6 +12,8 @@
 #include "hice/nn/pooling.h"
 #include "hice/nn/softmax.h"
 #include "hice/nn/batch_norm.h"
+#include "hice/nn/dropout.h"
+
 extern "C" {
 #include "src/nn/pooling.h"
 #include <sys/time.h>
@@ -169,6 +171,15 @@ namespace hice{
         auto result = batch_norm_fwd(input, bn_scale , bn_bias, running_mean,running_var, false,2,1,epsilon,output,bn_mean,bn_var);
     }
 
+    void  hice_dropout(Tensor input, double rate, Tensor *output){
+
+        hice::Tensor cpu_mask(input.dims(),
+                              device(input.device()).dtype(kBool).layout(kDense));
+
+        *output = dropout_fwd(input, rate, cpu_mask);
+    }
+
+
 }
 REGISTER_BASIC(hice::Tensor,hice::DataType, hice::hice_int_to_dtype,hice::hice_dtype_to_int,hice::Device, hice::hice_int_to_device,
                hice::hice_device_to_int, hice::hice_create, hice::hice_resolve);
@@ -186,6 +197,8 @@ REGISTER_POOLING(hice::hice_pooling);
 REGISTER_SOFTMAX(hice_softmax);
 
 REGISTER_BATCHNORM(hice::hice_batchnorm);
+
+REGISTER_DROPOUT(hice::hice_dropout);
 
 int main(int argc, char **argv){
     PERFORM_TEST;

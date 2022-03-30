@@ -20,9 +20,9 @@ public:
             /*ndim2*/1, /*dims2*/{10}, /*dtype2=float*/8, 
             /*device2=cpu*/0, /*data2*/nullptr, /*len2*/0),
     input1(/*ndim1*/2, /*dims1*/{1995,2020}, /*dtype1=double*/9,  
-            /*device1=cuda*/0, /*data1*/nullptr, /*len1*/0,
+            /*device1=cpu*/0, /*data1*/nullptr, /*len1*/0,
             /*ndim2*/2, /*dims2*/{2020,2018}, /*dtype2=double*/9, 
-            /*device2=cuda*/0, /*data2*/nullptr, /*len2*/0),
+            /*device2=cpu*/0, /*data2*/nullptr, /*len2*/0),
     input2(/*ndim1*/1, /*dims1*/{10}, /*dtype1=float*/8,  
             /*device1=cpu*/0, /*data1*/nullptr, /*len1*/0, 
             /*ndim2*/2, /*dims2*/{10,5}, /*dtype2=float*/8, 
@@ -82,13 +82,13 @@ public:
     aitisa_matmul(in1, in2, out);
   }
   // inputs
-  Binary_Input input0; // Natural assigned float type input of CPU with dims1{10} and dims2{10}
-  Binary_Input input1; // Random assigned double type input of CUDA with dims1{1995,2020} and dims2{2020,2018}
-  Binary_Input input2; // Natural assigned float type input of CPU with dims1{10} and dims2{10,5}
-  Binary_Input input3; // Natural assigned float type input of CPU with dims1{10,5} and dims2{5}
-  Binary_Input input4; // Natural assigned float type input of CPU with dims1{3} and dims2{2,2,4,3,2}
-  Binary_Input input5; // Natural assigned float type input of CPU with dims1{2,2,4,2,3} and dims2{3}
-  Binary_Input input6; // Natural assigned float type input of CPU with dims1{2,4,3} and dims2{3,2,3,2}
+  Binary_Input input0;
+  Binary_Input input1;
+  Binary_Input input2;
+  Binary_Input input3;
+  Binary_Input input4;
+  Binary_Input input5;
+  Binary_Input input6;
   Binary_Input *input[7] = {&input0, &input1, &input2, &input3, &input4, &input5, &input6};
   std::string input0_name = "Natural Float CPU with Dims{10} and Dims{10}";
   std::string input1_name = "Random Double CPU with Dims{199,202} and Dims{202,201}";
@@ -136,15 +136,6 @@ TYPED_TEST_P(MatmulTest, SevenTests){
     aitisa_time = 1000.0 * (aitisa_end - aitisa_start) / static_cast<double>(CLOCKS_PER_SEC);
     aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device, &aitisa_result_dims, 
                    &aitisa_result_ndim, (void**)&aitisa_result_data, &aitisa_result_len);
-    //for debug, please delete it when it is done!
-//   // print_data2d((float*)this->input2.data1(), 3, 3);
-//   // print_data2d((float*)this->input2.data2(), 3, 3);
-//   // print_data2d(aitisa_result_data, 3, 3);
-//   // if(aitisa_result_dtype.code == TYPE_FLOAT) std::cout<<"dtype yes!"<<std::endl;
-//   // if(aitisa_result_device.type == DEVICE_CPU) std::cout<<"device yes!"<<std::endl;
-//   // if(aitisa_result_ndim == 2) std::cout<<"ndim yes!"<<std::endl;
-//   // if(aitisa_result_dims[0]==3 && aitisa_result_dims[1]==2) std::cout<<"ndim yes!"<<std::endl;
-//   // for(int64_t i=0; i<aitisa_tensor_size(aitisa_result); i++) std::cout<< aitisa_result_data[i] <<std::endl;
     // user
     UserDataType user_dtype1 = UserFuncs::user_int_to_dtype(this->input[i]->dtype1());
     UserDataType user_dtype2 = UserFuncs::user_int_to_dtype(this->input[i]->dtype2());
@@ -181,13 +172,11 @@ TYPED_TEST_P(MatmulTest, SevenTests){
     }
     ASSERT_EQ(aitisa_result_len, user_result_len);
     if(i == 1){ // Double
-      // std::cout<< "ok1" << std::endl;
       double *aitisa_data = (double*)aitisa_result_data;
       double *user_data = (double*)user_result_data;
       for(int64_t j=0; j<tensor_size; j++){
         ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
       }
-      // std::cout<< "ok2" << std::endl;
     }else{ // Float
       for(int64_t j=0; j<tensor_size; j++){
         ASSERT_TRUE(abs(aitisa_result_data[j] - user_result_data[j]) < 1e-3);

@@ -21,13 +21,13 @@ class ActivationTest : public ::testing::Test{
 public:
   ActivationTest():
     input0(/*ndim*/5, /*dims*/{3,6,10,120,600}, /*dtype=double*/9,
-           /*device1=cuda*/0, /*data*/nullptr, /*len*/0),
+           /*device=cpu*/0, /*data*/nullptr, /*len*/0),
     input1(/*ndim*/4, /*dims*/{3,40,100,600}, /*dtype=float*/8,
-           /*device1=cuda*/0, /*data*/nullptr, /*len*/0),
+           /*device=cpu*/0, /*data*/nullptr, /*len*/0),
     input2(/*ndim*/4, /*dims*/{30,40,120,60}, /*dtype=float*/8,
-           /*device1=cuda*/0, /*data*/nullptr, /*len*/0),
+           /*device=cpu*/0, /*data*/nullptr, /*len*/0),
     input3(/*ndim*/4, /*dims*/{30,80,120,60}, /*dtype=float*/8,
-    /*device1=cuda*/0, /*data*/nullptr, /*len*/0){
+           /*device=cpu*/0, /*data*/nullptr, /*len*/0){
     input[0] = &input0;
     input[1] = &input1;
     input[2] = &input2;
@@ -87,7 +87,7 @@ TYPED_TEST_P(ActivationTest, FourTests){
                   (void*)(this->input[i]->data()), this->input[i]->len(), &aitisa_tensor);
     gettimeofday(&aitisa_start,NULL);
     if(i==3){
-        batch_norm_full_float(aitisa_tensor,1);
+        full_float(aitisa_tensor,1);
     }
 
     switch(i){

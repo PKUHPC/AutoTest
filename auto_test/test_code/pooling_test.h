@@ -90,7 +90,7 @@ public:
                     /*stride*/{1, 1}, /*padding*/{0,0}, /*dilation*/{1,1},
                     /*ksize*/{2, 2},"avg"),
             input1(/*ndim*/4, /*dims*/{3, 2, 4, 6}, /*dtype=float*/8,
-                    /*device=cuda*/0, /*data*/nullptr, /*len*/0,
+                    /*device=cpu*/0, /*data*/nullptr, /*len*/0,
                     /*stride*/{2, 2}, /*padding*/{0,0}, /*dilation*/{1,1},
                     /*ksize*/{3, 2},"max"){
         input[0] = &input0;
@@ -135,7 +135,6 @@ TYPED_TEST_P(PoolingTest, TwoTests){
     using UserTensor = typename TestFixture::UserInterface::UserTensor;
     using UserFuncs = typename TestFixture::UserInterface;
     for(int i=0; i<this->ninput; i++){
-//             if(i==0) continue;
         struct timeval aitisa_start, aitisa_end, user_start, user_end;
         double aitisa_time, user_time;
         int64_t aitisa_result_ndim, user_result_ndim;
@@ -194,7 +193,6 @@ TYPED_TEST_P(PoolingTest, TwoTests){
         float *aitisa_data = (float*)aitisa_result_data;
         float *user_data = (float*)user_result_data;
         for(int64_t j=0; j<tensor_size; j++){
-//            printf("%f * %f\t", aitisa_data[j] , user_data[j]);
                 ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
         }
         // print result of test

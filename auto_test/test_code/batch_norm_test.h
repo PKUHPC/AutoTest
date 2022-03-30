@@ -16,7 +16,6 @@ namespace aitisa_api {
 
     namespace {
 
-
         class Batchnorm_Input : public Unary_Input {
         public:
             Batchnorm_Input() {};
@@ -74,7 +73,7 @@ namespace aitisa_api {
     class BatchnormTest : public ::testing::Test{
     public:
         BatchnormTest():
-                input0(/*ndim*/4, /*dims*/{2, 3, 2, 2}, /*dtype=double*/8,
+                input0(/*ndim*/4, /*dims*/{2, 3, 2, 2}, /*dtype=float*/8,
                         /*device=cpu*/0, /*data*/nullptr, /*len*/0,
                                1,1e-5,1,{3},1,0.5,0),
                 input1(/*ndim*/4, /*dims*/{200, 300, 20, 20}, /*dtype=float*/8,
@@ -107,8 +106,8 @@ namespace aitisa_api {
 
         }
         // inputs
-        Batchnorm_Input input0; // Natural assigned int32 type input of CPU with InputDims1{3,3,10,6}, FilterDims2{5,3,2,2}, stride{2,2}, padding{0,0}, dilation{1,1}
-        Batchnorm_Input input1; // Random assigned double type input of CUDA with InputDims1{10,3,100,124,20}, FilterDims2{10,3,5,5,5}, stride{5,5,5}, padding{0,1,0}, dilation{1,1,1}
+        Batchnorm_Input input0;
+        Batchnorm_Input input1;
         Batchnorm_Input *input[2] = {&input0, &input1};
         std::string input0_name = "Random float of CPU with InputDims{2, 3, 2, 2}, axis{1}, epsilon{1e-5}, param_ndim{1}, param_dims{3}, value{1}, mean{0.5}, var{0}";
         std::string input1_name = "Random float of CPU with InputDims{200, 300, 20, 20}, axis{1}, epsilon{1e-5}, param_ndim{1}, param_dims{300}, value{1}, mean{0.5}, var{0}";
@@ -140,21 +139,21 @@ namespace aitisa_api {
             AITISA_Device aitisa_device = aitisa_int_to_device(0); // cpu supoorted only
             aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->dims(), this->input[i]->ndim(),
                           (void*)(this->input[i]->data()), this->input[i]->len(), &aitisa_tensor);
-            batch_norm_full_float(aitisa_tensor,this->input[i]->value());
+            full_float(aitisa_tensor,this->input[i]->value());
 
             AITISA_Tensor mean, variance, scale, bias;
 
             aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->param_dims(), this->input[i]->param_ndim(), NULL, 0, &mean);
-            batch_norm_full_float(mean, this->input[i]->mean());
+            full_float(mean, this->input[i]->mean());
 
             aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->param_dims(), this->input[i]->param_ndim(), NULL, 0, &variance);
-            batch_norm_full_float(variance, this->input[i]->var());
+            full_float(variance, this->input[i]->var());
 
             aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->param_dims(), this->input[i]->param_ndim(), NULL, 0, &scale);
-            batch_norm_full_float(scale, 1);
+            full_float(scale, 1);
 
             aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->param_dims(), this->input[i]->param_ndim(), NULL, 0, &bias);
-            batch_norm_full_float(bias, 0);
+            full_float(bias, 0);
 
             gettimeofday(&aitisa_start,NULL);
 

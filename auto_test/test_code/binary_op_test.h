@@ -20,9 +20,9 @@ public:
            /*ndim2*/2, /*dims2*/{10,6}, /*dtype2=float*/4,
            /*device2=cpu*/0, /*data2*/nullptr, /*len2*/0),
     input1(/*ndim1*/2, /*dims1*/{2013,2018}, /*dtype1=double*/9,  
-           /*device1=cuda*/0, /*data1*/nullptr, /*len1*/0,
+           /*device1=cpu*/0, /*data1*/nullptr, /*len1*/0,
            /*ndim2*/2, /*dims2*/{2013,2018}, /*dtype2=double*/9, 
-           /*device2=cuda*/0, /*data2*/nullptr, /*len2*/0),
+           /*device2=cpu*/0, /*data2*/nullptr, /*len2*/0),
     input2(/*ndim1*/3, /*dims1*/{10,3,2}, /*dtype1=uint64*/7,
            /*device1=cpu*/0, /*data1*/nullptr, /*len1*/0, 
            /*ndim2*/3, /*dims2*/{10,3,2}, /*dtype2=uint64*/7,
@@ -64,10 +64,10 @@ public:
   using InputType = Binary_Input;
   using UserInterface = InterfaceType;
   // inputs
-  Binary_Input input0; // Natural assigned int32 type input of CPU with dims1{10,6} and dims2{10,6} for add
-  Binary_Input input1; // Random assigned double type input of CUDA with dims1{2013,2018} and dims2{2013,2018} for sub
-  Binary_Input input2; // Natural assigned uint64 type input of CPU with dims1{10,3,2} and dims2{10,3,2} for mul
-  Binary_Input input3; // Natural assigned float type input of CPU with dims1{5} and dims2{5} for div
+  Binary_Input input0;
+  Binary_Input input1;
+  Binary_Input input2;
+  Binary_Input input3;
   Binary_Input *input[4] = {&input0, &input1, &input2, &input3};
   std::string input0_name = "Natural int32 CPU with Dims{10,6} and Dims{10,6} for add";
   std::string input1_name = "Random Double CPU with Dims{2013,2018} and Dims{2013,2018} dor sub";
@@ -84,7 +84,6 @@ TYPED_TEST_P(BinaryOPTest, FourTests){
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
   for(int i=0; i<this->ninput; i++){
-    // if(i==1) continue;
     std::clock_t aitisa_start, aitisa_end, user_start, user_end;
     double aitisa_time, user_time;
     int64_t aitisa_result_ndim, user_result_ndim;

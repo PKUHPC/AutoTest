@@ -77,15 +77,15 @@ class Conv2dTest : public ::testing::Test{
 public:
   Conv2dTest():
     input0(/*ndim1*/4, /*dims1*/{6,32,124,128}, /*dtype1=float*/8,
-           /*device1=cuda*/0, /*data1*/nullptr, /*len1*/0,
+           /*device1=cpu*/0, /*data1*/nullptr, /*len1*/0,
            /*ndim2*/4, /*dims2*/{64,32,2,2}, /*dtype2=float*/8,
-           /*device2=cuda*/0, /*data2*/nullptr, /*len2*/0,
+           /*device2=cpu*/0, /*data2*/nullptr, /*len2*/0,
            /*stride*/{2,2}, /*padding*/{0,0}, /*dilation*/{1,1},
             /*groups*/1),
     input1(/*ndim1*/4, /*dims1*/{7,16,100,180}, /*dtype1=float*/8,
-           /*device1=cuda*/0, /*data1*/nullptr, /*len1*/0,
+           /*device1=cpu*/0, /*data1*/nullptr, /*len1*/0,
            /*ndim2*/4, /*dims2*/{32,16,3,3}, /*dtype2=float*/8,
-           /*device2=cuda*/0, /*data2*/nullptr, /*len2*/0,
+           /*device2=cpu*/0, /*data2*/nullptr, /*len2*/0,
            /*stride*/{3,3}, /*padding*/{1,0}, /*dilation*/{2,2},
             /*groups*/1){
     input[0] = &input0;
@@ -108,9 +108,7 @@ public:
       random_assign(input_data2, input_len2, input[i]->dtype2());
       input[i]->set_data1(input_data1, input_len1);
       input[i]->set_data2(input_data2, input_len2);
-      //.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      // print_data2d((float*)input_data1, 4, 4);
-      // print_data2d((float*)input_data2, 2, 2);
+
     }
   }
   virtual ~Conv2dTest(){}
@@ -122,8 +120,8 @@ public:
     aitisa_conv2d(input, filter, stride, 2, padding, 2, dilation, 2, groups, output);
   }
   // inputs
-  Conv_Input input0; // Natural assigned int32 type input of CPU with InputDims1{3,3,10,6}, FilterDims2{5,3,2,2}, stride{2,2}, padding{0,0}, dilation{1,1}
-  Conv_Input input1; // Random assigned double type input of CUDA with InputDims1{10,3,100,124,20}, FilterDims2{10,3,5,5,5}, stride{5,5,5}, padding{0,1,0}, dilation{1,1,1}
+  Conv_Input input0;
+  Conv_Input input1;
   Conv_Input *input[2] = {&input0, &input1};
   std::string input0_name = "Random float of CPU with InputDims{6,32,124,128}, FilterDims{64,32,2,2}, stride{2,2}, padding{0,0}, dilation{1,1}";
   std::string input1_name = "Random float of CPU with InputDims{7,16,100,100}, FilterDims{32,16,3,3}, stride{3,3}, padding{1,0}, dilation{2,2}";
@@ -138,7 +136,6 @@ TYPED_TEST_P(Conv2dTest, TwoTests){
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
   for(int i=0; i<this->ninput; i++){
-    // if(i==0) continue;
     struct timeval aitisa_start, aitisa_end, user_start, user_end;
     double aitisa_time, user_time;
     int64_t aitisa_result_ndim, user_result_ndim;
@@ -203,7 +200,6 @@ TYPED_TEST_P(Conv2dTest, TwoTests){
     float *user_data = (float*)user_result_data;
     for(int64_t j=0; j<tensor_size; j++){
       ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
-      // ASSERT_FLOAT_EQ(aitisa_data[j], user_data[j]);
     }
     // print result of test
     std::cout<< /*GREEN <<*/ "[ Conv sample"<< i << " / " 
