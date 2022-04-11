@@ -158,7 +158,7 @@ namespace aitisa_api {
                     user_count++;
                 }
             }
-            ASSERT_TRUE(abs((double )aitisa_count/(double )tensor_size - (double )user_count/(double )tensor_size) < 0.2);
+            ASSERT_TRUE(abs((double )aitisa_count/(double )tensor_size - (double )user_count/(double )tensor_size) < 1e-3);
 
             // print result of test
             std::cout<< /*GREEN <<*/ "[ DropOut sample"<< i << " / "

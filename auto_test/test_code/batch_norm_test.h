@@ -211,7 +211,6 @@ namespace aitisa_api {
             float *aitisa_data = (float*)aitisa_result_data;
             float *user_data = (float*)user_result_data;
             for(int64_t j=0; j<tensor_size; j++){
-                printf("%f  * %f" ,aitisa_data[j] , user_data[j]);
                 ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
             }
             // print result of test
