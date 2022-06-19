@@ -161,11 +161,27 @@ TYPED_TEST_P(ActivationTest, FourTests){
 }
 REGISTER_TYPED_TEST_CASE_P(ActivationTest, FourTests);
 
-#define REGISTER_ACTIVATION(RELU, SIGMOID, TANH, SQRT)                              \
+#define REGISTER_ACTIVATION(RELU_FUN, RELU, SIGMOID, TANH, SQRT)                    \
   class Activation : public Basic {                                                 \
   public:                                                                           \
     static void user_relu(UserTensor tensor, UserTensor* result){                   \
-      RELU(tensor, result);                                                         \
+        auto args_num = aitisa_api::function_traits<RELU_FUN>::nargs;               \
+        if(args_num != 2){                                                          \
+            throw std::invalid_argument(                                            \
+                "Incorrect parameter numbers: expected 3 arguments but got " +      \
+                std::to_string(args_num));                                          \
+        }                                                                           \
+        if(!std::is_same<void,                                                      \
+            aitisa_api::function_traits<RELU_FUN>::result_type>::value){            \
+            throw std::invalid_argument(                                            \
+                "Incorrect return type: expected void but argument is of type " +   \
+                 std::string(                                                       \
+                    abi::__cxa_demangle(                                            \
+                        typeid(                                                     \
+                            aitisa_api::function_traits<RELU_FUN>::result_type      \
+                            ).name(),0,0,0)));                                      \
+            }                                                                       \
+          RELU(tensor, result);                                                     \
     }                                                                               \
     static void user_sigmoid(UserTensor tensor, UserTensor* result){                \
       SIGMOID(tensor, result);                                                      \

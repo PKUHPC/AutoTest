@@ -13,7 +13,8 @@
 #include "hice/nn/softmax.h"
 #include "hice/nn/batch_norm.h"
 #include "hice/nn/dropout.h"
-
+#include <iostream>
+#include <functional>
 extern "C" {
 #include "src/nn/pooling.h"
 #include <sys/time.h>
@@ -136,6 +137,7 @@ namespace hice{
     void hice_relu(const Tensor input, Tensor *output){
         *output = relu_fwd(input);
     }
+    typedef std::function<void(Tensor,Tensor*)> hice_relu_fun;
     void hice_sigmoid(const Tensor input, Tensor *output){
         *output = sigmoid_fwd(input);
     }
@@ -186,7 +188,7 @@ REGISTER_BASIC(hice::Tensor,hice::DataType, hice::hice_int_to_dtype,hice::hice_d
 
 REGISTER_CONV2D(hice::hice_conv2d);
 
-REGISTER_ACTIVATION(hice::hice_relu,hice::hice_sigmoid,hice::hice_tanh,hice::hice_sqrt);
+REGISTER_ACTIVATION(hice::hice_relu_fun, hice::hice_relu, hice::hice_sigmoid,hice::hice_tanh, hice::hice_sqrt);
 
 REGISTER_MATMUL(hice::hice_matmul);
 
