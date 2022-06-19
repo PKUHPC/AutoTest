@@ -204,5 +204,6 @@ REGISTER_DROPOUT(hice::hice_dropout);
 
 int main(int argc, char **argv){
     PERFORM_TEST;
+
     return 0;
 }
