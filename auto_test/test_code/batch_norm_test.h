@@ -222,13 +222,36 @@ namespace aitisa_api {
     }
     REGISTER_TYPED_TEST_CASE_P(BatchnormTest, TwoTests);
 
-#define REGISTER_BATCHNORM(BATCHNORM)                                                                 \
+#define REGISTER_BATCHNORM(BATCHNORM_FUNC, BATCHNORM)                                                 \
   class Batchnorm : public Basic {                                                                    \
   public:                                                                                             \
     static void user_batchnorm(UserTensor input, const int axis,  UserTensor scale,                   \
                                  UserTensor bias,  UserTensor running_mean,                           \
                                  UserTensor running_variance, const double epsilon, UserTensor output,\
                                  UserTensor mean,UserTensor var){                                     \
+          typedef std::function<void(UserTensor &, int, UserTensor &, UserTensor &, UserTensor &,     \
+                                    UserTensor &, double, UserTensor &, UserTensor &,                 \
+                                    UserTensor &)> batchnorm_func;                                    \
+          auto func_args_num = aitisa_api::function_traits<BATCHNORM_FUNC>::nargs;                    \
+          auto args_num = aitisa_api::function_traits<batchnorm_func>::nargs;                         \
+          if(func_args_num != args_num){                                                              \
+                throw std::invalid_argument(                                                          \
+                "Incorrect parameter numbers: expected " +                                            \
+                std::to_string(args_num) +                                                            \
+                " arguments but got " +                                                               \
+                std::to_string(func_args_num));                                                       \
+          }                                                                                           \
+          if(!std::is_same<                                                                           \
+                  std::remove_cv<aitisa_api::function_traits<batchnorm_func>::result_type             \
+              >::type,                                                                                \
+                  aitisa_api::function_traits<BATCHNORM_FUNC>::result_type>::value){                  \
+              throw std::invalid_argument("Incorrect return type: type mismatch at return");          \
+              }                                                                                       \
+          aitisa_api::TypeCompare<                                                                    \
+              aitisa_api::function_traits<batchnorm_func>::nargs,                                     \
+              batchnorm_func,                                                                         \
+              BATCHNORM_FUNC                                                                          \
+          >();                                                                                        \
           BATCHNORM(input, axis, scale, bias ,running_mean,                                           \
                             running_variance,epsilon, output, mean,var );                             \
         }                                                                                             \

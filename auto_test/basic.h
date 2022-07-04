@@ -92,4 +92,52 @@ struct function_traits<std::function<R(Args...)>>
     };
 
 };
+
+template<size_t I, typename T>
+struct type_traits;
+
+template<size_t I, typename R, typename ...Args>
+struct type_traits<I,std::function<R(Args...)>>
+{
+    typedef typename std::tuple_element<I, std::tuple<Args...>>::type type;
+};
+
+template<std::size_t N, typename F, typename U>
+struct TypeComparer {
+    static void compare()
+    {
+        TypeComparer<N - 1, F, U>::compare();
+        typedef typename type_traits<N-1,F>::type type_f;
+        typedef typename type_traits<N-1,U>::type type_u;
+        if(!std::is_same<typename std::remove_cv<type_f>::type, type_u>::value){
+            throw std::invalid_argument("Incorrect type: type mismatch at argument " + std::to_string(N-1) );
+        }
+    }
+};
+
+template<typename F, typename U>
+struct TypeComparer<1, F, U >{
+    static void compare()
+    {
+        typedef typename type_traits<0,F>::type type_f;
+        typedef typename type_traits<0,U>::type type_u;
+        if(!std::is_same<typename std::remove_cv<type_f>::type, type_u>::value){
+            throw std::invalid_argument("Incorrect type: type mismatch at argument " + std::to_string(0));
+        }
+    }
+};
+
+template<size_t N,typename F,typename U>
+struct TypeCompare;
+
+template<size_t N,typename F,typename U>
+struct TypeCompare
+{
+    TypeCompare(){
+        TypeComparer<N,F,U>::compare();
+    }
+};
+
+
+
 } // namespace aitisa_api

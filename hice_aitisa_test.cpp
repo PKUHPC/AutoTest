@@ -89,6 +89,13 @@ namespace hice{
         *output_ptr = conv_fwd(input, filter, bias_cpu, padding1, stride1, dilation1, groups, false, false);
 
     }
+    typedef std::function<void(const Tensor,
+                               const Tensor, const int *,
+                               const int, const int *, const int,
+                               const int *, const int,
+                               const int,
+                               Tensor *)> hice_conv2d_func;
+
     void hice_pooling(
             const Tensor input,const int *stride,
             const int stride_len, const int *padding, const int padding_len,
@@ -124,86 +131,110 @@ namespace hice{
             Tensor cpu_indices = std::get<1>(cpu_result);
 
             *output_ptr = cpu_output;
-
         }
-
     }
+    typedef std::function<void(const Tensor,const int *,
+                               const int, const int *, const int,
+                               const int *, const int,
+                               const int *, const int,
+                               const char*, const int,
+                               Tensor *)> hice_pooling_func;
 
     void hice_softmax(const Tensor input,const int axis,
                       Tensor *output_ptr){
         *output_ptr = softmax_fwd(input,axis);
     }
+    typedef std::function<void(const Tensor ,const int, Tensor *)> hice_softmax_func;
 
     void hice_relu(const Tensor input, Tensor *output){
         *output = relu_fwd(input);
     }
-    typedef std::function<void(Tensor,Tensor*)> hice_relu_fun;
+    typedef std::function<void(Tensor,Tensor*)> hice_relu_func;
+
     void hice_sigmoid(const Tensor input, Tensor *output){
         *output = sigmoid_fwd(input);
     }
+    typedef std::function<void(Tensor,Tensor*)> hice_sigmoid_func;
+
     void hice_tanh(const Tensor input, Tensor *output){
         *output = tanh_fwd(input);
     }
+    typedef std::function<void(Tensor,Tensor*)> hice_tanh_func;
+
     void hice_sqrt(const Tensor input, Tensor *output){
         *output = sqrt_fwd(input);
     }
+    typedef std::function<void(Tensor,Tensor*)> hice_sqrt_func;
+
 
     void hice_matmul(const Tensor tensor1, const Tensor tensor2,
                      Tensor *output){
         * output = matmul(tensor1, tensor2);
     }
+    typedef std::function<void(Tensor,Tensor,Tensor*)> hice_matmul_func;
+
 
     void hice_add(const Tensor tensor1, const Tensor tensor2, Tensor *output){
         *output = add(tensor1,tensor2);
     }
+    typedef std::function<void(Tensor,Tensor,Tensor*)> hice_add_func;
 
     void hice_sub(const Tensor tensor1, const Tensor tensor2, Tensor *output){
         *output = sub(tensor1,tensor2);
     }
+    typedef std::function<void(Tensor,Tensor,Tensor*)> hice_sub_func;
+
     void hice_mul(const Tensor tensor1, const Tensor tensor2, Tensor *output){
         *output = mul(tensor1,tensor2);
     }
+    typedef std::function<void(Tensor,Tensor,Tensor*)> hice_mul_func;
+
     void hice_div(const Tensor tensor1, const Tensor tensor2, Tensor *output){
         *output = div(tensor1,tensor2);
     }
+    typedef std::function<void(Tensor,Tensor,Tensor*)> hice_div_func;
+
     void hice_batchnorm(Tensor &input, int axis, Tensor &bn_scale, Tensor &bn_bias, Tensor &running_mean,
                          Tensor &running_var,  double epsilon, Tensor &output, Tensor &bn_mean,
                         Tensor &bn_var){
 
         auto result = batch_norm_fwd(input, bn_scale , bn_bias, running_mean,running_var, false,2,1,epsilon,output,bn_mean,bn_var);
     }
+    typedef std::function<void(Tensor &, int, Tensor &, Tensor &, Tensor &,
+                               Tensor &, double, Tensor &, Tensor &,
+                               Tensor &)> hice_batchnorm_func;
 
-    void  hice_dropout(Tensor input, double rate, Tensor *output){
+    void hice_dropout(Tensor input, double rate, Tensor *output){
 
         hice::Tensor cpu_mask(input.dims(),
                               device(input.device()).dtype(kBool).layout(kDense));
 
         *output = dropout_fwd(input, rate, cpu_mask);
     }
+    typedef std::function<void(Tensor, double, Tensor *)> hice_dropout_func;
 
 
 }
 REGISTER_BASIC(hice::Tensor,hice::DataType, hice::hice_int_to_dtype,hice::hice_dtype_to_int,hice::Device, hice::hice_int_to_device,
                hice::hice_device_to_int, hice::hice_create, hice::hice_resolve);
 
-REGISTER_CONV2D(hice::hice_conv2d);
+REGISTER_CONV2D(hice::hice_conv2d_func, hice::hice_conv2d);
 
-REGISTER_ACTIVATION(hice::hice_relu_fun, hice::hice_relu, hice::hice_sigmoid,hice::hice_tanh, hice::hice_sqrt);
+REGISTER_ACTIVATION(hice::hice_relu_func, hice::hice_relu, hice::hice_sigmoid_func, hice::hice_sigmoid, hice::hice_tanh_func, hice::hice_tanh, hice::hice_sqrt_func, hice::hice_sqrt);
 
-REGISTER_MATMUL(hice::hice_matmul);
+REGISTER_MATMUL(hice::hice_matmul_func, hice::hice_matmul);
 
-REGISTER_BINARY_OP(hice::hice_add, hice::hice_sub, hice::hice_mul,hice::hice_div);
+REGISTER_BINARY_OP(hice::hice_add_func, hice::hice_add, hice::hice_sub_func, hice::hice_sub, hice::hice_mul_func, hice::hice_mul, hice::hice_div_func, hice::hice_div);
 
-REGISTER_POOLING(hice::hice_pooling);
+REGISTER_POOLING(hice::hice_pooling_func, hice::hice_pooling);
 
-REGISTER_SOFTMAX(hice_softmax);
+REGISTER_SOFTMAX(hice::hice_softmax_func, hice::hice_softmax);
 
-REGISTER_BATCHNORM(hice::hice_batchnorm);
+REGISTER_BATCHNORM(hice::hice_batchnorm_func, hice::hice_batchnorm);
 
-REGISTER_DROPOUT(hice::hice_dropout);
+REGISTER_DROPOUT(hice::hice_dropout_func, hice::hice_dropout);
 
 int main(int argc, char **argv){
     PERFORM_TEST;
-
     return 0;
 }

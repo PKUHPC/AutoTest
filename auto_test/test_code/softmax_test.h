@@ -153,12 +153,33 @@ namespace aitisa_api {
     }
     REGISTER_TYPED_TEST_CASE_P(SoftmaxTest, TwoTests);
 
-#define REGISTER_SOFTMAX(SOFTMAX)                                                               \
+#define REGISTER_SOFTMAX(SOFTMAX_FUNC, SOFTMAX)                                                 \
   class Softmax : public Basic {                                                                \
   public:                                                                                       \
   static void user_softmax(UserTensor input, const int axis,                                    \
                             UserTensor *output){                                                \
-      SOFTMAX(input, axis ,output);                                                             \
+    typedef std::function<void(const UserTensor ,const int, UserTensor *)> softmax_func;        \
+    auto func_args_num = aitisa_api::function_traits<SOFTMAX_FUNC>::nargs;                      \
+    auto args_num = aitisa_api::function_traits<softmax_func>::nargs;                           \
+    if(func_args_num != args_num){                                                              \
+        throw std::invalid_argument(                                                            \
+            "Incorrect parameter numbers: expected " +                                          \
+            std::to_string(args_num) +                                                          \
+            " arguments but got " +                                                             \
+            std::to_string(func_args_num));                                                     \
+    }                                                                                           \
+    if(!std::is_same<                                                                           \
+            std::remove_cv<aitisa_api::function_traits<softmax_func>::result_type               \
+        >::type,                                                                                \
+            aitisa_api::function_traits<SOFTMAX_FUNC>::result_type>::value){                    \
+        throw std::invalid_argument("Incorrect return type: type mismatch at return");          \
+        }                                                                                       \
+    aitisa_api::TypeCompare<                                                                    \
+        aitisa_api::function_traits<softmax_func>::nargs,                                       \
+        softmax_func,                                                                           \
+        SOFTMAX_FUNC                                                                            \
+    >();                                                                                        \
+    SOFTMAX(input, axis ,output);                                                               \
     }};                                                                                         \
   namespace aitisa_api{                                                                         \
     INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, SoftmaxTest, Softmax);                            \

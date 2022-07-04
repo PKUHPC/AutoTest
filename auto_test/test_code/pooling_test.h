@@ -204,7 +204,7 @@ TYPED_TEST_P(PoolingTest, TwoTests){
 }
 REGISTER_TYPED_TEST_CASE_P(PoolingTest, TwoTests);
 
-#define REGISTER_POOLING(POOLING)                                                               \
+#define REGISTER_POOLING(POOLING_FUNC, POOLING)                                                 \
   class Pooling : public Basic {                                                                \
   public:                                                                                       \
  static void user_pooling(UserTensor input, const int *stride,                                  \
@@ -212,7 +212,30 @@ REGISTER_TYPED_TEST_CASE_P(PoolingTest, TwoTests);
                             const int *dilation, const int dilation_len, const int *ksize,      \
                             const int ksize_len, const char *mode, const int mode_len,          \
                             UserTensor *output){                                                \
-      POOLING(input, stride, stride_len, padding,                                               \
+        typedef std::function<void(const UserTensor, const int*, const int, const int*,         \
+            const int, const int*, const int, const int*, const int, const char*,               \
+            const int, UserTensor *)> pooling_func;                                             \
+        auto func_args_num = aitisa_api::function_traits<POOLING_FUNC>::nargs;                  \
+        auto args_num = aitisa_api::function_traits<pooling_func>::nargs;                       \
+        if(func_args_num != args_num){                                                          \
+            throw std::invalid_argument(                                                        \
+                "Incorrect parameter numbers: expected " +                                      \
+                std::to_string(args_num) +                                                      \
+                " arguments but got " +                                                         \
+                std::to_string(func_args_num));                                                 \
+        }                                                                                       \
+        if(!std::is_same<                                                                       \
+                std::remove_cv<aitisa_api::function_traits<pooling_func>::result_type           \
+            >::type,                                                                            \
+                aitisa_api::function_traits<POOLING_FUNC>::result_type>::value){                \
+            throw std::invalid_argument("Incorrect return type: type mismatch at return");      \
+            }                                                                                   \
+        aitisa_api::TypeCompare<                                                                \
+            aitisa_api::function_traits<pooling_func>::nargs,                                   \
+            pooling_func,                                                                       \
+            POOLING_FUNC                                                                        \
+        >();                                                                                    \
+            POOLING(input, stride, stride_len, padding,                                         \
            padding_len, dilation, dilation_len, ksize, ksize_len, mode, mode_len,output);       \
     }                                                                                           \
   };                                                                                            \

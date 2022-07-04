@@ -169,12 +169,33 @@ namespace aitisa_api {
     }
     REGISTER_TYPED_TEST_CASE_P(DropoutTest, TwoTests);
 
-#define REGISTER_DROPOUT(DROPOUT)                                                               \
+#define REGISTER_DROPOUT(DROPOUT_FUNC, DROPOUT)                                                 \
   class Dropout : public Basic {                                                                \
   public:                                                                                       \
   static void user_dropout(UserTensor input, const double rate,                                 \
                             UserTensor *output){                                                \
-      DROPOUT(input, rate ,output);                                                             \
+    typedef std::function<void(UserTensor, double, UserTensor *)> dropout_func;                 \
+    auto func_args_num = aitisa_api::function_traits<DROPOUT_FUNC>::nargs;                      \
+    auto args_num = aitisa_api::function_traits<dropout_func>::nargs;                           \
+    if(func_args_num != args_num){                                                              \
+        throw std::invalid_argument(                                                            \
+            "Incorrect parameter numbers: expected " +                                          \
+            std::to_string(args_num) +                                                          \
+            " arguments but got " +                                                             \
+            std::to_string(func_args_num));                                                     \
+    }                                                                                           \
+    if(!std::is_same<                                                                           \
+            std::remove_cv<aitisa_api::function_traits<dropout_func>::result_type               \
+        >::type,                                                                                \
+            aitisa_api::function_traits<DROPOUT_FUNC>::result_type>::value){                    \
+        throw std::invalid_argument("Incorrect return type: type mismatch at return");          \
+        }                                                                                       \
+    aitisa_api::TypeCompare<                                                                    \
+        aitisa_api::function_traits<dropout_func>::nargs,                                       \
+        dropout_func,                                                                           \
+        DROPOUT_FUNC                                                                            \
+    >();                                                                                        \
+    DROPOUT(input, rate ,output);                                                               \
     }};                                                                                         \
   namespace aitisa_api{                                                                         \
     INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, DropoutTest, Dropout);                            \

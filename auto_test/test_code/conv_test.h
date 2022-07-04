@@ -210,13 +210,39 @@ TYPED_TEST_P(Conv2dTest, TwoTests){
 }
 REGISTER_TYPED_TEST_CASE_P(Conv2dTest, TwoTests);
 
-#define REGISTER_CONV2D(CONV)                                                                   \
+#define REGISTER_CONV2D(CONV_FUNC, CONV)                                                        \
   class Conv2d : public Basic {                                                                 \
   public:                                                                                       \
     static void user_conv2d(UserTensor input, UserTensor filter, const int *stride,             \
                             const int stride_len, const int *padding, const int padding_len,    \
                             const int *dilation, const int dilation_len, const int groups,      \
                             UserTensor *output){                                                \
+        typedef std::function<void(const UserTensor,                                            \
+                                const UserTensor, const int *,                                  \
+                                const int, const int *, const int,                              \
+                                const int *, const int,                                         \
+                                const int,                                                      \
+                                UserTensor *)> conv_func;                                       \
+        auto func_args_num = aitisa_api::function_traits<CONV_FUNC>::nargs;                     \
+        auto args_num = aitisa_api::function_traits<conv_func>::nargs;                          \
+        if(func_args_num != args_num){                                                          \
+            throw std::invalid_argument(                                                        \
+                "Incorrect parameter numbers: expected " +                                      \
+                std::to_string(args_num) +                                                      \
+                " arguments but got " +                                                         \
+                std::to_string(func_args_num));                                                 \
+        }                                                                                       \
+        if(!std::is_same<                                                                       \
+                std::remove_cv<aitisa_api::function_traits<conv_func>::result_type              \
+                >::type,                                                                        \
+                aitisa_api::function_traits<CONV_FUNC>::result_type>::value){                   \
+            throw std::invalid_argument("Incorrect return type: type mismatch at return");      \
+            }                                                                                   \
+        aitisa_api::TypeCompare<                                                                \
+            aitisa_api::function_traits<conv_func>::nargs,                                      \
+            conv_func,                                                                          \
+            CONV_FUNC                                                                           \
+        >();                                                                                    \
       CONV(input, filter, stride, stride_len, padding,                                          \
            padding_len, dilation, dilation_len, groups, output);                                \
     }                                                                                           \

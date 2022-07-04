@@ -202,20 +202,100 @@ TYPED_TEST_P(BinaryOPTest, FourTests){
 }
 REGISTER_TYPED_TEST_CASE_P(BinaryOPTest, FourTests);
 
-#define REGISTER_BINARY_OP(ADD, SUB, MUL, DIV)                                            \
+#define REGISTER_BINARY_OP(ADD_FUNC, ADD, SUB_FUNC, SUB, MUL_FUNC, MUL, DIV_FUNC, DIV)    \
   class BinaryOP : public Basic {                                                         \
   public:                                                                                 \
     static void user_add(UserTensor tensor1, UserTensor tensor2, UserTensor* result){     \
-      ADD(tensor1, tensor2, result);                                                      \
+        typedef std::function<void(UserTensor,UserTensor,UserTensor*)> add_func;          \
+        auto func_args_num = aitisa_api::function_traits<ADD_FUNC>::nargs;                \
+        auto args_num = aitisa_api::function_traits<add_func>::nargs;                     \
+        if(func_args_num != args_num){                                                    \
+            throw std::invalid_argument(                                                  \
+                "Incorrect parameter numbers: expected " +                                \
+                std::to_string(args_num) +                                                \
+                " arguments but got " +                                                   \
+                std::to_string(func_args_num));                                           \
+        }                                                                                 \
+        if(!std::is_same<                                                                 \
+            std::remove_cv<aitisa_api::function_traits<add_func>::result_type>::type,     \
+                aitisa_api::function_traits<ADD_FUNC>::result_type>::value){              \
+            throw std::invalid_argument("Incorrect return type: type mismatch at return");\
+            }                                                                             \
+        aitisa_api::TypeCompare<                                                          \
+            aitisa_api::function_traits<add_func>::nargs,                                 \
+            add_func,                                                                     \
+            ADD_FUNC                                                                      \
+        >();                                                                              \
+        ADD(tensor1, tensor2, result);                                                    \
     }                                                                                     \
     static void user_sub(UserTensor tensor1, UserTensor tensor2, UserTensor* result){     \
-      SUB(tensor1, tensor2, result);                                                      \
+        typedef std::function<void(UserTensor,UserTensor,UserTensor*)> sub_func;          \
+        auto func_args_num = aitisa_api::function_traits<SUB_FUNC>::nargs;                \
+        auto args_num = aitisa_api::function_traits<sub_func>::nargs;                     \
+        if(func_args_num != args_num){                                                    \
+            throw std::invalid_argument(                                                  \
+                "Incorrect parameter numbers: expected " +                                \
+                std::to_string(args_num) +                                                \
+                " arguments but got " +                                                   \
+                std::to_string(func_args_num));                                           \
+        }                                                                                 \
+        if(!std::is_same<                                                                 \
+            std::remove_cv<aitisa_api::function_traits<sub_func>::result_type>::type,     \
+                aitisa_api::function_traits<SUB_FUNC>::result_type>::value){              \
+            throw std::invalid_argument("Incorrect return type: type mismatch at return");\
+            }                                                                             \
+        aitisa_api::TypeCompare<                                                          \
+            aitisa_api::function_traits<sub_func>::nargs,                                 \
+            sub_func,                                                                     \
+            SUB_FUNC                                                                      \
+        >();                                                                              \
+        SUB(tensor1, tensor2, result);                                                    \
     }                                                                                     \
     static void user_mul(UserTensor tensor1, UserTensor tensor2, UserTensor* result){     \
-      MUL(tensor1, tensor2, result);                                                      \
+        typedef std::function<void(UserTensor,UserTensor,UserTensor*)> mul_func;          \
+        auto func_args_num = aitisa_api::function_traits<MUL_FUNC>::nargs;                \
+        auto args_num = aitisa_api::function_traits<mul_func>::nargs;                     \
+        if(func_args_num != args_num){                                                    \
+            throw std::invalid_argument(                                                  \
+                "Incorrect parameter numbers: expected " +                                \
+                std::to_string(args_num) +                                                \
+                " arguments but got " +                                                   \
+                std::to_string(func_args_num));                                           \
+        }                                                                                 \
+        if(!std::is_same<                                                                 \
+            std::remove_cv<aitisa_api::function_traits<mul_func>::result_type>::type,     \
+                aitisa_api::function_traits<MUL_FUNC>::result_type>::value){              \
+            throw std::invalid_argument("Incorrect return type: type mismatch at return");\
+            }                                                                             \
+        aitisa_api::TypeCompare<                                                          \
+            aitisa_api::function_traits<mul_func>::nargs,                                 \
+            mul_func,                                                                     \
+            MUL_FUNC                                                                      \
+        >();                                                                              \
+        MUL(tensor1, tensor2, result);                                                    \
     }                                                                                     \
     static void user_div(UserTensor tensor1, UserTensor tensor2, UserTensor* result){     \
-      DIV(tensor1, tensor2, result);                                                      \
+        typedef std::function<void(UserTensor,UserTensor,UserTensor*)> div_func;          \
+        auto func_args_num = aitisa_api::function_traits<DIV_FUNC>::nargs;                \
+        auto args_num = aitisa_api::function_traits<div_func>::nargs;                     \
+        if(func_args_num != args_num){                                                    \
+            throw std::invalid_argument(                                                  \
+                "Incorrect parameter numbers: expected " +                                \
+                std::to_string(args_num) +                                                \
+                " arguments but got " +                                                   \
+                std::to_string(func_args_num));                                           \
+        }                                                                                 \
+        if(!std::is_same<                                                                 \
+            std::remove_cv<aitisa_api::function_traits<div_func>::result_type>::type,     \
+                aitisa_api::function_traits<DIV_FUNC>::result_type>::value){              \
+            throw std::invalid_argument("Incorrect return type: type mismatch at return");\
+            }                                                                             \
+        aitisa_api::TypeCompare<                                                          \
+            aitisa_api::function_traits<div_func>::nargs,                                 \
+            div_func,                                                                     \
+            DIV_FUNC                                                                      \
+        >();                                                                              \
+        DIV(tensor1, tensor2, result);                                                \
     }                                                                                     \
   };                                                                                      \
   namespace aitisa_api{                                                                   \

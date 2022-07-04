@@ -161,35 +161,116 @@ TYPED_TEST_P(ActivationTest, FourTests){
 }
 REGISTER_TYPED_TEST_CASE_P(ActivationTest, FourTests);
 
-#define REGISTER_ACTIVATION(RELU_FUN, RELU, SIGMOID, TANH, SQRT)                    \
+#define REGISTER_ACTIVATION(RELU_FUNC, RELU, SIGMOID_FUNC, SIGMOID,                 \
+                                        TANH_FUNC, TANH, SQRT_FUNC, SQRT)           \
   class Activation : public Basic {                                                 \
   public:                                                                           \
     static void user_relu(UserTensor tensor, UserTensor* result){                   \
-        auto args_num = aitisa_api::function_traits<RELU_FUN>::nargs;               \
-        if(args_num != 2){                                                          \
+        typedef std::function<void(UserTensor,UserTensor*)> relu_func;              \
+        auto func_args_num = aitisa_api::function_traits<RELU_FUNC>::nargs;         \
+        auto args_num = aitisa_api::function_traits<relu_func>::nargs;              \
+        if(func_args_num != args_num){                                              \
             throw std::invalid_argument(                                            \
-                "Incorrect parameter numbers: expected 3 arguments but got " +      \
-                std::to_string(args_num));                                          \
+                "Incorrect parameter numbers: expected " +                          \
+                std::to_string(args_num) +                                          \
+                " arguments but got " +                                             \
+                std::to_string(func_args_num));                                     \
         }                                                                           \
-        if(!std::is_same<void,                                                      \
-            aitisa_api::function_traits<RELU_FUN>::result_type>::value){            \
+        if(!std::is_same<                                                           \
+            std::remove_cv<                                                         \
+                aitisa_api::function_traits<relu_func>::result_type                 \
+            >::type,                                                                \
+            aitisa_api::function_traits<RELU_FUNC>::result_type>::value){           \
             throw std::invalid_argument(                                            \
-                "Incorrect return type: expected void but argument is of type " +   \
-                 std::string(                                                       \
-                    abi::__cxa_demangle(                                            \
-                        typeid(                                                     \
-                            aitisa_api::function_traits<RELU_FUN>::result_type      \
-                            ).name(),0,0,0)));                                      \
+                "Incorrect return type: type mismatch at return"                    \
+                );                                                                  \
             }                                                                       \
-          RELU(tensor, result);                                                     \
+        aitisa_api::TypeCompare<                                                    \
+            aitisa_api::function_traits<relu_func>::nargs,                          \
+            relu_func,                                                              \
+            RELU_FUNC                                                               \
+        >();                                                                        \
+    RELU(tensor, result);                                                           \
     }                                                                               \
     static void user_sigmoid(UserTensor tensor, UserTensor* result){                \
-      SIGMOID(tensor, result);                                                      \
+        typedef std::function<void(UserTensor,UserTensor*)> sigmoid_func;           \
+        auto func_args_num = aitisa_api::function_traits<SIGMOID_FUNC>::nargs;      \
+        auto args_num = aitisa_api::function_traits<sigmoid_func>::nargs;           \
+        if(func_args_num != args_num){                                              \
+            throw std::invalid_argument(                                            \
+                "Incorrect parameter numbers: expected " +                          \
+                std::to_string(args_num) +                                          \
+                " arguments but got " +                                             \
+                std::to_string(func_args_num));                                     \
+        }                                                                           \
+        if(!std::is_same<                                                           \
+            std::remove_cv<                                                         \
+                aitisa_api::function_traits<sigmoid_func>::result_type              \
+            >::type,                                                                \
+            aitisa_api::function_traits<SIGMOID_FUNC>::result_type>::value){        \
+            throw std::invalid_argument(                                            \
+                "Incorrect return type: type mismatch at return"                    \
+                );                                                                  \
+            }                                                                       \
+        aitisa_api::TypeCompare<                                                    \
+            aitisa_api::function_traits<sigmoid_func>::nargs,                       \
+            sigmoid_func,                                                           \
+            SIGMOID_FUNC                                                            \
+        >();                                                                        \
+        SIGMOID(tensor, result);                                                    \
     }                                                                               \
     static void user_tanh(UserTensor tensor, UserTensor* result){                   \
+        typedef std::function<void(UserTensor,UserTensor*)> tanh_func;              \
+        auto func_args_num = aitisa_api::function_traits<TANH_FUNC>::nargs;         \
+        auto args_num = aitisa_api::function_traits<tanh_func>::nargs;              \
+        if(func_args_num != args_num){                                              \
+            throw std::invalid_argument(                                            \
+                "Incorrect parameter numbers: expected " +                          \
+                std::to_string(args_num) +                                          \
+                " arguments but got " +                                             \
+                std::to_string(func_args_num));                                     \
+        }                                                                           \
+        if(!std::is_same<                                                           \
+            std::remove_cv<                                                         \
+                aitisa_api::function_traits<tanh_func>::result_type                 \
+            >::type,                                                                \
+            aitisa_api::function_traits<TANH_FUNC>::result_type>::value){           \
+            throw std::invalid_argument(                                            \
+                "Incorrect return type: type mismatch at return"                    \
+                );                                                                  \
+            }                                                                       \
+        aitisa_api::TypeCompare<                                                    \
+            aitisa_api::function_traits<tanh_func>::nargs,                          \
+            tanh_func,                                                              \
+            TANH_FUNC                                                               \
+        >();                                                                        \
       TANH(tensor, result);                                                         \
     }                                                                               \
     static void user_sqrt(UserTensor tensor, UserTensor* result){                   \
+        typedef std::function<void(UserTensor,UserTensor*)> sqrt_func;              \
+        auto func_args_num = aitisa_api::function_traits<SQRT_FUNC>::nargs;         \
+        auto args_num = aitisa_api::function_traits<sqrt_func>::nargs;              \
+        if(func_args_num != args_num){                                              \
+            throw std::invalid_argument(                                            \
+                "Incorrect parameter numbers: expected " +                          \
+                std::to_string(args_num) +                                          \
+                " arguments but got " +                                             \
+                std::to_string(func_args_num));                                     \
+        }                                                                           \
+        if(!std::is_same<                                                           \
+            std::remove_cv<                                                         \
+                aitisa_api::function_traits<sqrt_func>::result_type                 \
+            >::type,                                                                \
+            aitisa_api::function_traits<SQRT_FUNC>::result_type>::value){           \
+            throw std::invalid_argument(                                            \
+                "Incorrect return type: type mismatch at return"                    \
+                );                                                                  \
+            }                                                                       \
+        aitisa_api::TypeCompare<                                                    \
+            aitisa_api::function_traits<sqrt_func>::nargs,                          \
+            sqrt_func,                                                              \
+            SQRT_FUNC                                                               \
+        >();                                                                        \
       SQRT(tensor, result);                                                         \
     }                                                                               \
   };                                                                                \

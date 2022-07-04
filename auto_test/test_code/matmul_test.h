@@ -199,11 +199,31 @@ Sample<Binary_Input> get_sample_matmul(int sample_num){
   aitisa_api::Sample<aitisa_api::Binary_Input> SAMPLE;                                    \
   aitisa_api::get_binary_sample<aitisa_api::MatmulTest<void>>(SAMPLE, NUM);
 
-#define REGISTER_MATMUL(MATMUL_FUNC)                                                      \
+#define REGISTER_MATMUL(MATMUL_FUNC, MATMUL)                                              \
   class Matmul : public Basic {                                                           \
   public:                                                                                 \
     static void user_matmul(UserTensor tensor1, UserTensor tensor2, UserTensor* result){  \
-      MATMUL_FUNC(tensor1, tensor2, result);                                              \
+      typedef std::function<void(UserTensor,UserTensor,UserTensor*)> matmul_func;         \
+      auto func_args_num = aitisa_api::function_traits<MATMUL_FUNC>::nargs;               \
+      auto args_num = aitisa_api::function_traits<matmul_func>::nargs;                    \
+        if(func_args_num != args_num){                                                    \
+            throw std::invalid_argument(                                                  \
+                "Incorrect parameter numbers: expected " +                                \
+                std::to_string(args_num) +                                                \
+                " arguments but got " +                                                   \
+                std::to_string(func_args_num));                                           \
+        }                                                                                 \
+        if(!std::is_same<                                                                 \
+            std::remove_cv<aitisa_api::function_traits<matmul_func>::result_type>::type,  \
+                aitisa_api::function_traits<MATMUL_FUNC>::result_type>::value){           \
+            throw std::invalid_argument("Incorrect return type: type mismatch at return");\
+            }                                                                             \
+        aitisa_api::TypeCompare<                                                          \
+            aitisa_api::function_traits<matmul_func>::nargs,                              \
+            matmul_func,                                                                  \
+            MATMUL_FUNC                                                                   \
+        >();                                                                              \
+    MATMUL(tensor1, tensor2, result);                                                     \
     }                                                                                     \
   };                                                                                      \
   namespace aitisa_api{                                                                   \
