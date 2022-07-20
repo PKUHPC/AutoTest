@@ -12,6 +12,7 @@ extern "C" {
 #include "src/math/sqrt.h"
 #include <math.h>
 #include <sys/time.h>
+#include <libconfig.h>
 }
 
 namespace aitisa_api {
@@ -19,46 +20,69 @@ namespace aitisa_api {
 template <typename InterfaceType>
 class ActivationTest : public ::testing::Test{
 public:
-  ActivationTest():
-    input0(/*ndim*/5, /*dims*/{3,6,10,120,600}, /*dtype=double*/9,
-           /*device=cpu*/0, /*data*/nullptr, /*len*/0),
-    input1(/*ndim*/4, /*dims*/{3,40,100,600}, /*dtype=float*/8,
-           /*device=cpu*/0, /*data*/nullptr, /*len*/0),
-    input2(/*ndim*/4, /*dims*/{30,40,120,60}, /*dtype=float*/8,
-           /*device=cpu*/0, /*data*/nullptr, /*len*/0),
-    input3(/*ndim*/4, /*dims*/{30,80,120,60}, /*dtype=float*/8,
-           /*device=cpu*/0, /*data*/nullptr, /*len*/0){
-    input[0] = &input0;
-    input[1] = &input1;
-    input[2] = &input2;
-    input[3] = &input3;
-    ninput = 4;
-    for(int i=0; i<ninput; i++){
-      unsigned int input_nelem = 1;
-      for(unsigned int j=0; j<input[i]->ndim(); j++){
-        input_nelem *= input[i]->dims()[j];
+  ActivationTest(){
+     config_t cfg;
+     config_setting_t *setting;
+     const char *str;
+     config_init(&cfg);
+
+      /* Read the file. If there is an error, report it and exit. */
+      if(! config_read_file(&cfg, "../../config/test/test_data.cfg"))
+      {
+          fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
+                  config_error_line(&cfg), config_error_text(&cfg));
+          config_destroy(&cfg);
       }
-      unsigned int input_len = input_nelem * elem_size(input[i]->dtype());
-      void *input_data = (void*) new char[input_len];
-      random_assign(input_data, input_len, input[i]->dtype());
-      input[i]->set_data(input_data, input_len);
-    }
+
+      setting = config_lookup(&cfg, "tests.activate");
+      if(setting != nullptr)
+      {
+          int count = config_setting_length(setting);
+          for(int i = 0; i < count; ++i)
+          {
+              config_setting_t *test = config_setting_get_elem(setting, i);
+              config_setting_t *dims_setting = config_setting_lookup(test, "dims");
+              int ndim;
+              int dtype, device;
+              int len;
+              void *data;
+              const char *input_name;
+              if(!(config_setting_lookup_int(test, "ndim", &ndim)
+                   && config_setting_lookup_int(test, "dtype", &dtype)
+                   && config_setting_lookup_int(test, "device", &device)
+                   && config_setting_lookup_int(test, "len", &len)
+                   && config_setting_lookup_string(test, "input_name", &input_name)))
+                  continue;
+              std::vector<int64_t> dims;
+              for(int j = 0 ; j < ndim; ++j){
+                  int64_t input = config_setting_get_int_elem(dims_setting, j);
+                  dims.push_back(input);
+              }
+              Unary_Input tmp(/*ndim*/ndim, /*dims*/dims, /*dtype=double*/dtype,
+                      /*device=cpu*/device, /*data*/nullptr, /*len*/len);
+
+              inputs.push_back(std::move(tmp));
+              inputs_name.emplace_back(input_name);
+          }
+      }
+
+      for(auto & input : inputs){
+          unsigned int input_nelem = 1;
+          for(unsigned int j=0; j<input.ndim(); j++){
+              input_nelem *= input.dims()[j];
+          }
+          unsigned int input_len = input_nelem * elem_size(input.dtype());
+          void *input_data = (void*) new char[input_len];
+          random_assign(input_data, input_len, input.dtype());
+          input.set_data(input_data, input_len);
+      }
   }
   virtual ~ActivationTest(){}
   using InputType = Unary_Input;
   using UserInterface = InterfaceType;
-  // inputs
-  Unary_Input input0;
-  Unary_Input input1;
-  Unary_Input input2;
-  Unary_Input input3;
-  Unary_Input *input[4] = {&input0, &input1, &input2,&input3};
-  std::string input0_name = "Random Double CPU with Dims{3,6,10,120,600} for ReLU";
-  std::string input1_name = "Random Float CPU with Dims{30,40,100,600} for Sigmoid";
-  std::string input2_name = "Random FLoat CPU with Dims{30,40,120,60} for Tanh";
-  std::string input3_name = "Full FLoat CPU with Dims{30,80,120,60} for Sqrt";
-  std::string *input_name[4] = {&input0_name, &input1_name, &input2_name,&input3_name};
-  int ninput = 4;
+  std::vector<Unary_Input> inputs;
+  std::vector<std::string> inputs_name;
+
 };
 TYPED_TEST_CASE_P(ActivationTest);
 
@@ -67,7 +91,7 @@ TYPED_TEST_P(ActivationTest, FourTests){
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
-  for(int i=0; i<this->ninput; i++){
+  for(int i=0; i<this->inputs.size(); i++){
     struct timeval aitisa_start, aitisa_end, user_start, user_end;
     double aitisa_time, user_time;
     int64_t aitisa_result_ndim, user_result_ndim;
@@ -81,10 +105,10 @@ TYPED_TEST_P(ActivationTest, FourTests){
     UserDataType user_result_dtype;
     UserDevice user_result_device;
     // aitisa
-    AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->input[i]->dtype());
+    AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->inputs[i].dtype());
     AITISA_Device aitisa_device = aitisa_int_to_device(0); // cpu supoorted only
-    aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->dims(), this->input[i]->ndim(), 
-                  (void*)(this->input[i]->data()), this->input[i]->len(), &aitisa_tensor);
+    aitisa_create(aitisa_dtype, aitisa_device, this->inputs[i].dims(), this->inputs[i].ndim(),
+                  (void*)(this->inputs[i].data()), this->inputs[i].len(), &aitisa_tensor);
     gettimeofday(&aitisa_start,NULL);
     if(i==3){
         full_float(aitisa_tensor,1);
@@ -103,11 +127,11 @@ TYPED_TEST_P(ActivationTest, FourTests){
     aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device, &aitisa_result_dims, 
                    &aitisa_result_ndim, (void**)&aitisa_result_data, &aitisa_result_len);
     // user
-    UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->input[i]->dtype());
-    UserDevice user_device = UserFuncs::user_int_to_device(this->input[i]->device());
-    UserFuncs::user_create(user_dtype, user_device, this->input[i]->dims(), 
-                           this->input[i]->ndim(), this->input[i]->data(),
-                           this->input[i]->len(), &user_tensor);
+    UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->inputs[i].dtype());
+    UserDevice user_device = UserFuncs::user_int_to_device(this->inputs[i].device());
+    UserFuncs::user_create(user_dtype, user_device, this->inputs[i].dims(),
+                           this->inputs[i].ndim(), this->inputs[i].data(),
+                           this->inputs[i].len(), &user_tensor);
     gettimeofday(&user_start,NULL); 
     switch(i){
       case 0: UserFuncs::user_relu(user_tensor, &user_result); break;
@@ -153,8 +177,8 @@ TYPED_TEST_P(ActivationTest, FourTests){
       }
     }
     // print result of test
-    std::cout<< /*GREEN <<*/ "[ Activation sample"<< i << " / " 
-             << *(this->input_name[i]) << " ] " << /*RESET <<*/ std::endl;
+    std::cout<< /*GREEN <<*/ "[ Activation sample"<< i << " / "
+             << this->inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
     std::cout<< /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time << " ms" << std::endl;
     std::cout<< /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms" << std::endl;
   }

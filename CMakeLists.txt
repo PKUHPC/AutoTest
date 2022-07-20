@@ -132,6 +132,7 @@ if(AITISA_API_BUILD_AUTO_TESTING)
 
   add_executable(hicetest hice_aitisa_test.cpp)
   target_link_libraries(hicetest auto_test)
+  target_link_libraries(hicetest libconfig.a)
   include_directories(hice-master)
 
 endif()
