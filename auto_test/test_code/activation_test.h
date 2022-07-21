@@ -16,43 +16,83 @@ extern "C" {
 }
 
 namespace aitisa_api {
+#define CONFIG_FILE "../../config/test/test_data.cfg"
 
 template <typename InterfaceType>
 class ActivationTest : public ::testing::Test{
 public:
   ActivationTest(){
-     config_t cfg;
-     config_setting_t *setting;
-     const char *str;
-     config_init(&cfg);
+      fetch_test_data("activate.Relu",relu_inputs,relu_inputs_name);
+      fetch_test_data("activate.Sigmoid",sigmoid_inputs,sigmoid_inputs_name);
+      fetch_test_data("activate.Tanh",tanh_inputs,tanh_inputs_name);
+      fetch_test_data("activate.Sqrt",sqrt_inputs,sqrt_inputs_name);
+
+
+  }
+  virtual ~ActivationTest(){}
+  using InputType = Unary_Input;
+  using UserInterface = InterfaceType;
+  std::vector<Unary_Input> relu_inputs;
+  std::vector<std::string> relu_inputs_name;
+
+  std::vector<Unary_Input> sigmoid_inputs;
+  std::vector<std::string> sigmoid_inputs_name;
+
+  std::vector<Unary_Input> tanh_inputs;
+  std::vector<std::string> tanh_inputs_name;
+
+  std::vector<Unary_Input> sqrt_inputs;
+  std::vector<std::string> sqrt_inputs_name;
+
+  void fetch_test_data(const char *path, std::vector<Unary_Input> &inputs, std::vector<std::string> &inputs_name) {
+
+      config_t cfg;
+      config_setting_t *relu_setting;
+      const char *str;
+      config_init(&cfg);
 
       /* Read the file. If there is an error, report it and exit. */
-      if(! config_read_file(&cfg, "../../config/test/test_data.cfg"))
+      if(! config_read_file(&cfg, CONFIG_FILE))
       {
           fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
                   config_error_line(&cfg), config_error_text(&cfg));
           config_destroy(&cfg);
       }
 
-      setting = config_lookup(&cfg, "tests.activate");
-      if(setting != nullptr)
+      relu_setting = config_lookup(&cfg, path);
+
+      if(relu_setting != nullptr)
       {
-          int count = config_setting_length(setting);
+          int count = config_setting_length(relu_setting);
+
           for(int i = 0; i < count; ++i)
           {
-              config_setting_t *test = config_setting_get_elem(setting, i);
+              config_setting_t *test = config_setting_get_elem(relu_setting, i);
               config_setting_t *dims_setting = config_setting_lookup(test, "dims");
-              int ndim;
-              int dtype, device;
-              int len;
-              void *data;
+              int64_t ndim;
+              int dtype, device, len;
               const char *input_name;
-              if(!(config_setting_lookup_int(test, "ndim", &ndim)
-                   && config_setting_lookup_int(test, "dtype", &dtype)
-                   && config_setting_lookup_int(test, "device", &device)
-                   && config_setting_lookup_int(test, "len", &len)
-                   && config_setting_lookup_string(test, "input_name", &input_name)))
+
+              if(!config_setting_lookup_int64(test, "ndim", reinterpret_cast<long long int *>(&ndim))){
+                  fprintf(stderr, "No 'ndim' name in configuration file.\n");
                   continue;
+              }
+              if(!config_setting_lookup_int(test, "dtype", &dtype)){
+                  fprintf(stderr, "No 'dtype' name in configuration file.\n");
+                  continue;
+              }
+              if(! config_setting_lookup_int(test, "device", &device)) {
+                  fprintf(stderr, "No 'device' name in configuration file.\n");
+                  continue;
+              }
+              if(!config_setting_lookup_int(test, "len", &len)){
+                  fprintf(stderr, "No 'len' name in configuration file.\n");
+                  continue;
+              }
+              if(!config_setting_lookup_string(test, "input_name", &input_name)){
+                  fprintf(stderr, "No 'input_name' name in configuration file.\n");
+                  continue;
+              }
               std::vector<int64_t> dims;
               for(int j = 0 ; j < ndim; ++j){
                   int64_t input = config_setting_get_int_elem(dims_setting, j);
@@ -77,21 +117,15 @@ public:
           input.set_data(input_data, input_len);
       }
   }
-  virtual ~ActivationTest(){}
-  using InputType = Unary_Input;
-  using UserInterface = InterfaceType;
-  std::vector<Unary_Input> inputs;
-  std::vector<std::string> inputs_name;
-
 };
 TYPED_TEST_CASE_P(ActivationTest);
 
-TYPED_TEST_P(ActivationTest, FourTests){
+TYPED_TEST_P(ActivationTest, ReluTests){
   using UserDataType = typename TestFixture::UserInterface::UserDataType;
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
-  for(int i=0; i<this->inputs.size(); i++){
+  for(int i=0; i<this->relu_inputs.size(); i++){
     struct timeval aitisa_start, aitisa_end, user_start, user_end;
     double aitisa_time, user_time;
     int64_t aitisa_result_ndim, user_result_ndim;
@@ -105,85 +139,277 @@ TYPED_TEST_P(ActivationTest, FourTests){
     UserDataType user_result_dtype;
     UserDevice user_result_device;
     // aitisa
-    AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->inputs[i].dtype());
+    AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->relu_inputs[i].dtype());
     AITISA_Device aitisa_device = aitisa_int_to_device(0); // cpu supoorted only
-    aitisa_create(aitisa_dtype, aitisa_device, this->inputs[i].dims(), this->inputs[i].ndim(),
-                  (void*)(this->inputs[i].data()), this->inputs[i].len(), &aitisa_tensor);
+    aitisa_create(aitisa_dtype, aitisa_device, this->relu_inputs[i].dims(), this->relu_inputs[i].ndim(),
+                  (void*)(this->relu_inputs[i].data()), this->relu_inputs[i].len(), &aitisa_tensor);
     gettimeofday(&aitisa_start,NULL);
-    if(i==3){
-        full_float(aitisa_tensor,1);
-    }
 
-    switch(i){
-      case 0: aitisa_relu(aitisa_tensor, &aitisa_result); break;
-      case 1: aitisa_sigmoid(aitisa_tensor, &aitisa_result); break;
-      case 2: aitisa_tanh(aitisa_tensor, &aitisa_result); break;
-      case 3: aitisa_sqrt(aitisa_tensor, &aitisa_result); break;
-        default: break;
-    }
-    gettimeofday(&aitisa_end,NULL); 
-    aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0 
+    aitisa_relu(aitisa_tensor, &aitisa_result);
+    gettimeofday(&aitisa_end,NULL);
+    aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0
                 + (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0 ;
-    aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device, &aitisa_result_dims, 
+    aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device, &aitisa_result_dims,
                    &aitisa_result_ndim, (void**)&aitisa_result_data, &aitisa_result_len);
     // user
-    UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->inputs[i].dtype());
-    UserDevice user_device = UserFuncs::user_int_to_device(this->inputs[i].device());
-    UserFuncs::user_create(user_dtype, user_device, this->inputs[i].dims(),
-                           this->inputs[i].ndim(), this->inputs[i].data(),
-                           this->inputs[i].len(), &user_tensor);
-    gettimeofday(&user_start,NULL); 
-    switch(i){
-      case 0: UserFuncs::user_relu(user_tensor, &user_result); break;
-      case 1: UserFuncs::user_sigmoid(user_tensor, &user_result); break;
-      case 2: UserFuncs::user_tanh(user_tensor, &user_result); break;
-      case 3: UserFuncs::user_sqrt(user_tensor, &user_result); break;
-      default: break;
-    }
-    gettimeofday(&user_end,NULL); 
-    user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 
+    UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->relu_inputs[i].dtype());
+    UserDevice user_device = UserFuncs::user_int_to_device(this->relu_inputs[i].device());
+    UserFuncs::user_create(user_dtype, user_device, this->relu_inputs[i].dims(),
+                           this->relu_inputs[i].ndim(), this->relu_inputs[i].data(),
+                           this->relu_inputs[i].len(), &user_tensor);
+    gettimeofday(&user_start,NULL);
+
+    UserFuncs::user_relu(user_tensor, &user_result);
+    gettimeofday(&user_end,NULL);
+    user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0
               + (user_end.tv_usec - user_start.tv_usec) / 1000.0;
-    UserFuncs::user_resolve(user_result, &user_result_dtype, &user_result_device, 
-                            &user_result_dims, &user_result_ndim, 
+    UserFuncs::user_resolve(user_result, &user_result_dtype, &user_result_device,
+                            &user_result_dims, &user_result_ndim,
                             (void**)&user_result_data, &user_result_len);
     // compare
     int64_t tensor_size = 1;
     ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-    ASSERT_EQ( 
+    ASSERT_EQ(
         /*CUDA*/0, UserFuncs::user_device_to_int(user_result_device));
-    ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype), 
+    ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
               UserFuncs::user_dtype_to_int(user_result_dtype));
     for(int64_t j=0; j<aitisa_result_ndim; j++){
       tensor_size *= aitisa_result_dims[j];
       ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
     }
     ASSERT_EQ(aitisa_result_len, user_result_len);
-    switch(i){
-      case 0: {
-        double *aitisa_data = (double*)aitisa_result_data;
-        double *user_data = (double*)user_result_data;
-        for(int64_t j=0; j<tensor_size; j++){
+      double *aitisa_data = (double*)aitisa_result_data;
+      double *user_data = (double*)user_result_data;
+      for(int64_t j=0; j<tensor_size; j++){
           ASSERT_FLOAT_EQ(aitisa_data[j], user_data[j]);
-        }
-        break;
       }
-      default: {
+    // print result of test
+    std::cout<< /*GREEN <<*/ "[ Relu sample"<< i << " / "
+             << this->relu_inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+    std::cout<< /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time << " ms" << std::endl;
+    std::cout<< /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms" << std::endl;
+  }
+}
+
+TYPED_TEST_P(ActivationTest, SigmoidTests){
+    using UserDataType = typename TestFixture::UserInterface::UserDataType;
+    using UserDevice = typename TestFixture::UserInterface::UserDevice;
+    using UserTensor = typename TestFixture::UserInterface::UserTensor;
+    using UserFuncs = typename TestFixture::UserInterface;
+    for(int i=0; i<this->sigmoid_inputs.size(); i++){
+        struct timeval aitisa_start, aitisa_end, user_start, user_end;
+        double aitisa_time, user_time;
+        int64_t aitisa_result_ndim, user_result_ndim;
+        int64_t *aitisa_result_dims=nullptr, *user_result_dims=nullptr;
+        float *aitisa_result_data=nullptr, *user_result_data=nullptr;
+        unsigned int aitisa_result_len, user_result_len;
+        AITISA_Tensor aitisa_tensor, aitisa_result;
+        AITISA_DataType aitisa_result_dtype;
+        AITISA_Device aitisa_result_device;
+        UserTensor user_tensor, user_result;
+        UserDataType user_result_dtype;
+        UserDevice user_result_device;
+        // aitisa
+        AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->sigmoid_inputs[i].dtype());
+        AITISA_Device aitisa_device = aitisa_int_to_device(0); // cpu supoorted only
+        aitisa_create(aitisa_dtype, aitisa_device, this->sigmoid_inputs[i].dims(), this->sigmoid_inputs[i].ndim(),
+                      (void*)(this->sigmoid_inputs[i].data()), this->sigmoid_inputs[i].len(), &aitisa_tensor);
+        gettimeofday(&aitisa_start,NULL);
+
+        aitisa_sigmoid(aitisa_tensor, &aitisa_result);
+
+        gettimeofday(&aitisa_end,NULL);
+        aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0
+                      + (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0 ;
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data, &aitisa_result_len);
+        // user
+        UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->sigmoid_inputs[i].dtype());
+        UserDevice user_device = UserFuncs::user_int_to_device(this->sigmoid_inputs[i].device());
+        UserFuncs::user_create(user_dtype, user_device, this->sigmoid_inputs[i].dims(),
+                               this->sigmoid_inputs[i].ndim(), this->sigmoid_inputs[i].data(),
+                               this->sigmoid_inputs[i].len(), &user_tensor);
+        gettimeofday(&user_start,NULL);
+        UserFuncs::user_sigmoid(user_tensor, &user_result);
+
+        gettimeofday(&user_end,NULL);
+        user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0
+                    + (user_end.tv_usec - user_start.tv_usec) / 1000.0;
+        UserFuncs::user_resolve(user_result, &user_result_dtype, &user_result_device,
+                                &user_result_dims, &user_result_ndim,
+                                (void**)&user_result_data, &user_result_len);
+        // compare
+        int64_t tensor_size = 1;
+        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+        ASSERT_EQ(
+        /*CUDA*/0, UserFuncs::user_device_to_int(user_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  UserFuncs::user_dtype_to_int(user_result_dtype));
+        for(int64_t j=0; j<aitisa_result_ndim; j++){
+            tensor_size *= aitisa_result_dims[j];
+            ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, user_result_len);
+        float *aitisa_data = (float*)aitisa_result_data;
+        float *user_data = (float*)user_result_data;
+        for(int64_t j=0; j<tensor_size; j++){
+            ASSERT_FLOAT_EQ(aitisa_data[j], user_data[j]);
+        }
+        // print result of test
+        std::cout<< /*GREEN <<*/ "[ Sigmoid sample"<< i << " / "
+                 << this->sigmoid_inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+        std::cout<< /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time << " ms" << std::endl;
+        std::cout<< /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms" << std::endl;
+    }
+}
+
+TYPED_TEST_P(ActivationTest, TanhTests){
+    using UserDataType = typename TestFixture::UserInterface::UserDataType;
+    using UserDevice = typename TestFixture::UserInterface::UserDevice;
+    using UserTensor = typename TestFixture::UserInterface::UserTensor;
+    using UserFuncs = typename TestFixture::UserInterface;
+    for(int i=0; i<this->tanh_inputs.size(); i++){
+        struct timeval aitisa_start, aitisa_end, user_start, user_end;
+        double aitisa_time, user_time;
+        int64_t aitisa_result_ndim, user_result_ndim;
+        int64_t *aitisa_result_dims=nullptr, *user_result_dims=nullptr;
+        float *aitisa_result_data=nullptr, *user_result_data=nullptr;
+        unsigned int aitisa_result_len, user_result_len;
+        AITISA_Tensor aitisa_tensor, aitisa_result;
+        AITISA_DataType aitisa_result_dtype;
+        AITISA_Device aitisa_result_device;
+        UserTensor user_tensor, user_result;
+        UserDataType user_result_dtype;
+        UserDevice user_result_device;
+        // aitisa
+        AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->tanh_inputs[i].dtype());
+        AITISA_Device aitisa_device = aitisa_int_to_device(0); // cpu supoorted only
+        aitisa_create(aitisa_dtype, aitisa_device, this->tanh_inputs[i].dims(), this->tanh_inputs[i].ndim(),
+                      (void*)(this->tanh_inputs[i].data()), this->tanh_inputs[i].len(), &aitisa_tensor);
+        gettimeofday(&aitisa_start,NULL);
+
+        aitisa_tanh(aitisa_tensor, &aitisa_result);
+        gettimeofday(&aitisa_end,NULL);
+        aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0
+                      + (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0 ;
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data, &aitisa_result_len);
+        // user
+        UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->tanh_inputs[i].dtype());
+        UserDevice user_device = UserFuncs::user_int_to_device(this->tanh_inputs[i].device());
+        UserFuncs::user_create(user_dtype, user_device, this->tanh_inputs[i].dims(),
+                               this->tanh_inputs[i].ndim(), this->tanh_inputs[i].data(),
+                               this->tanh_inputs[i].len(), &user_tensor);
+        gettimeofday(&user_start,NULL);
+
+        UserFuncs::user_tanh(user_tensor, &user_result);
+        gettimeofday(&user_end,NULL);
+        user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0
+                    + (user_end.tv_usec - user_start.tv_usec) / 1000.0;
+        UserFuncs::user_resolve(user_result, &user_result_dtype, &user_result_device,
+                                &user_result_dims, &user_result_ndim,
+                                (void**)&user_result_data, &user_result_len);
+        // compare
+        int64_t tensor_size = 1;
+        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+        ASSERT_EQ(
+        /*CUDA*/0, UserFuncs::user_device_to_int(user_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  UserFuncs::user_dtype_to_int(user_result_dtype));
+        for(int64_t j=0; j<aitisa_result_ndim; j++){
+            tensor_size *= aitisa_result_dims[j];
+            ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, user_result_len);
+
         float *aitisa_data = (float*)aitisa_result_data;
         float *user_data = (float*)user_result_data;
         for(int64_t j=0; j<tensor_size; j++){
           ASSERT_FLOAT_EQ(aitisa_data[j], user_data[j]);
         }
-        break;
-      }
+        // print result of test
+        std::cout<< /*GREEN <<*/ "[ Tanh sample"<< i << " / "
+                 << this->tanh_inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+        std::cout<< /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time << " ms" << std::endl;
+        std::cout<< /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms" << std::endl;
     }
-    // print result of test
-    std::cout<< /*GREEN <<*/ "[ Activation sample"<< i << " / "
-             << this->inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
-    std::cout<< /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time << " ms" << std::endl;
-    std::cout<< /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms" << std::endl;
-  }
 }
-REGISTER_TYPED_TEST_CASE_P(ActivationTest, FourTests);
+
+TYPED_TEST_P(ActivationTest, SqrtTests){
+        using UserDataType = typename TestFixture::UserInterface::UserDataType;
+        using UserDevice = typename TestFixture::UserInterface::UserDevice;
+        using UserTensor = typename TestFixture::UserInterface::UserTensor;
+        using UserFuncs = typename TestFixture::UserInterface;
+        for(int i=0; i<this->sqrt_inputs.size(); i++){
+            struct timeval aitisa_start, aitisa_end, user_start, user_end;
+            double aitisa_time, user_time;
+            int64_t aitisa_result_ndim, user_result_ndim;
+            int64_t *aitisa_result_dims=nullptr, *user_result_dims=nullptr;
+            float *aitisa_result_data=nullptr, *user_result_data=nullptr;
+            unsigned int aitisa_result_len, user_result_len;
+            AITISA_Tensor aitisa_tensor, aitisa_result;
+            AITISA_DataType aitisa_result_dtype;
+            AITISA_Device aitisa_result_device;
+            UserTensor user_tensor, user_result;
+            UserDataType user_result_dtype;
+            UserDevice user_result_device;
+            // aitisa
+            AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->sqrt_inputs[i].dtype());
+            AITISA_Device aitisa_device = aitisa_int_to_device(0); // cpu supoorted only
+            aitisa_create(aitisa_dtype, aitisa_device, this->sqrt_inputs[i].dims(), this->sqrt_inputs[i].ndim(),
+                          (void*)(this->sqrt_inputs[i].data()), this->sqrt_inputs[i].len(), &aitisa_tensor);
+            gettimeofday(&aitisa_start,NULL);
+            full_float(aitisa_tensor,1);
+
+            aitisa_sqrt(aitisa_tensor, &aitisa_result);
+            gettimeofday(&aitisa_end,NULL);
+            aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0
+                          + (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0 ;
+            aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device, &aitisa_result_dims,
+                           &aitisa_result_ndim, (void**)&aitisa_result_data, &aitisa_result_len);
+            // user
+            UserDataType user_dtype = UserFuncs::user_int_to_dtype(this->sqrt_inputs[i].dtype());
+            UserDevice user_device = UserFuncs::user_int_to_device(this->sqrt_inputs[i].device());
+            UserFuncs::user_create(user_dtype, user_device, this->sqrt_inputs[i].dims(),
+                                   this->sqrt_inputs[i].ndim(), this->sqrt_inputs[i].data(),
+                                   this->sqrt_inputs[i].len(), &user_tensor);
+            gettimeofday(&user_start,NULL);
+
+            UserFuncs::user_sqrt(user_tensor, &user_result);
+            gettimeofday(&user_end,NULL);
+            user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0
+                        + (user_end.tv_usec - user_start.tv_usec) / 1000.0;
+            UserFuncs::user_resolve(user_result, &user_result_dtype, &user_result_device,
+                                    &user_result_dims, &user_result_ndim,
+                                    (void**)&user_result_data, &user_result_len);
+            // compare
+            int64_t tensor_size = 1;
+            ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+            ASSERT_EQ(
+            /*CUDA*/0, UserFuncs::user_device_to_int(user_result_device));
+            ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                      UserFuncs::user_dtype_to_int(user_result_dtype));
+            for(int64_t j=0; j<aitisa_result_ndim; j++){
+                tensor_size *= aitisa_result_dims[j];
+                ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+            }
+            ASSERT_EQ(aitisa_result_len, user_result_len);
+            float *aitisa_data = (float*)aitisa_result_data;
+            float *user_data = (float*)user_result_data;
+            for(int64_t j=0; j<tensor_size; j++){
+              ASSERT_FLOAT_EQ(aitisa_data[j], user_data[j]);
+            }
+            // print result of test
+            std::cout<< /*GREEN <<*/ "[ Sqrt sample"<< i << " / "
+                     << this->sqrt_inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+            std::cout<< /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time << " ms" << std::endl;
+            std::cout<< /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms" << std::endl;
+        }
+}
+
+
+REGISTER_TYPED_TEST_CASE_P(ActivationTest, ReluTests, SigmoidTests, TanhTests, SqrtTests);
+
 
 #define REGISTER_ACTIVATION(RELU_FUNC, RELU, SIGMOID_FUNC, SIGMOID,                 \
                                         TANH_FUNC, TANH, SQRT_FUNC, SQRT)           \
