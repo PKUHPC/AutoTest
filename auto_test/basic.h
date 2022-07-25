@@ -6,6 +6,7 @@ extern "C" {
 #include "src/core/tensor.h"
 }
 namespace aitisa_api {
+#define CONFIG_FILE "../../config/test/test_data.cfg"
 
 extern const DataType aitisa_dtypes[];
 extern const Device aitisa_devices[];

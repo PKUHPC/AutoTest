@@ -95,12 +95,6 @@ class BatchnormTest : public ::testing::Test {
     fetch_test_data("batch_norm", batch_norm_inputs, batch_norm_name);
   }
   virtual ~BatchnormTest() {}
-  using InputType = Batchnorm_Input;
-  using UserInterface = InterfaceType;
-  // inputs
-  std::vector<Batchnorm_Input> batch_norm_inputs;
-  std::vector<std::string> batch_norm_name;
-
   static void aitisa_kernel(const Tensor input, const int axis,
                             const Tensor scale, const Tensor bias,
                             const Tensor mean, const Tensor variance,
@@ -109,10 +103,10 @@ class BatchnormTest : public ::testing::Test {
                       output);
   }
   int fetch_test_data(const char* path, std::vector<Batchnorm_Input>& inputs,
-                       std::vector<std::string>& inputs_name) {
+                      std::vector<std::string>& inputs_name) {
 
     config_t cfg;
-    config_setting_t* relu_setting;
+    config_setting_t* setting;
     const char* str;
     config_init(&cfg);
 
@@ -124,13 +118,13 @@ class BatchnormTest : public ::testing::Test {
       return(EXIT_FAILURE);
     }
 
-    relu_setting = config_lookup(&cfg, path);
+    setting = config_lookup(&cfg, path);
 
-    if (relu_setting != nullptr) {
-      int count = config_setting_length(relu_setting);
+    if (setting != nullptr) {
+      int count = config_setting_length(setting);
 
       for (int i = 0; i < count; ++i) {
-        config_setting_t* test = config_setting_get_elem(relu_setting, i);
+        config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims_setting = config_setting_lookup(test, "dims");
         config_setting_t* param_dims_setting =
             config_setting_lookup(test, "param_dims");
@@ -226,6 +220,14 @@ class BatchnormTest : public ::testing::Test {
     config_destroy(&cfg);
     return(EXIT_SUCCESS);
   }
+
+  using InputType = Batchnorm_Input;
+  using UserInterface = InterfaceType;
+  // inputs
+  std::vector<Batchnorm_Input> batch_norm_inputs;
+  std::vector<std::string> batch_norm_name;
+  std::map<std::string, int> test_case = {
+      {"batch_norm", 0}};
 };
 TYPED_TEST_CASE_P(BatchnormTest);
 
@@ -234,8 +236,7 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
-  std::map<std::string, int> test_case = {
-      {"batch_norm", 0}};
+
   auto test = [](std::vector<Batchnorm_Input>&& inputs,
                  std::vector<std::string>&& inputs_name,const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
@@ -357,7 +358,7 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
     }
   };
   test(std::move(this->batch_norm_inputs), std::move(this->batch_norm_name), "batch_norm",
-       test_case["batch_norm"]);
+       this->test_case["batch_norm"]);
 }
 REGISTER_TYPED_TEST_CASE_P(BatchnormTest, TwoTests);
 

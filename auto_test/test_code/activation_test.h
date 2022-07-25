@@ -16,7 +16,6 @@ extern "C" {
 }
 
 namespace aitisa_api {
-#define CONFIG_FILE "../../config/test/test_data.cfg"
 
 template <typename InterfaceType>
 class ActivationTest : public ::testing::Test {
@@ -33,7 +32,7 @@ class ActivationTest : public ::testing::Test {
                        std::vector<std::string>& inputs_name) {
 
     config_t cfg;
-    config_setting_t* relu_setting;
+    config_setting_t* setting;
     const char* str;
     config_init(&cfg);
 
@@ -45,13 +44,13 @@ class ActivationTest : public ::testing::Test {
       return(EXIT_FAILURE);
     }
 
-    relu_setting = config_lookup(&cfg, path);
+    setting = config_lookup(&cfg, path);
 
-    if (relu_setting != nullptr) {
-      int count = config_setting_length(relu_setting);
+    if (setting != nullptr) {
+      int count = config_setting_length(setting);
 
       for (int i = 0; i < count; ++i) {
-        config_setting_t* test = config_setting_get_elem(relu_setting, i);
+        config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims_setting = config_setting_lookup(test, "dims");
         int64_t ndim;
         std::vector<int64_t> dims;
@@ -120,7 +119,8 @@ class ActivationTest : public ::testing::Test {
 
   std::vector<Unary_Input> sqrt_inputs;
   std::vector<std::string> sqrt_inputs_name;
-
+  std::map<std::string, int> test_case = {
+      {"relu", 0}, {"sigmoid", 1}, {"tanh", 2}, {"sqrt", 3}};
 };
 TYPED_TEST_CASE_P(ActivationTest);
 
@@ -129,8 +129,6 @@ TYPED_TEST_P(ActivationTest, FourTests) {
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
-  std::map<std::string, int> test_case = {
-      {"relu", 0}, {"sigmoid", 1}, {"tanh", 2}, {"sqrt", 3}};
 
   auto test = [](std::vector<Unary_Input>&& inputs,
                  std::vector<std::string>&& inputs_name,
@@ -255,13 +253,13 @@ TYPED_TEST_P(ActivationTest, FourTests) {
   };
 
   test(std::move(this->relu_inputs), std::move(this->relu_inputs_name), "relu",
-       test_case["relu"]);
+       this->test_case["relu"]);
   test(std::move(this->sigmoid_inputs), std::move(this->sigmoid_inputs_name),
-       "sigmoid", test_case["sigmoid"]);
+       "sigmoid", this->test_case["sigmoid"]);
   test(std::move(this->tanh_inputs), std::move(this->tanh_inputs_name), "tanh",
-       test_case["tanh"]);
+       this->test_case["tanh"]);
   test(std::move(this->sqrt_inputs), std::move(this->sqrt_inputs_name), "sqrt",
-       test_case["sqrt"]);
+       this->test_case["sqrt"]);
 }
 
 REGISTER_TYPED_TEST_CASE_P(ActivationTest, FourTests);
