@@ -349,7 +349,7 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
         ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
       }
       // print result of test
-      std::cout << /*GREEN <<*/ "[ BN sample" << i << " / "
+      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i << " / "
                 << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
       std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
                 << " ms" << std::endl;
