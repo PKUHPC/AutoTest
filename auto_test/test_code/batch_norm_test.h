@@ -174,7 +174,7 @@ class BatchnormTest : public ::testing::Test {
           continue;
         }
         if (!config_setting_lookup_int(test, "axis", &axis)) {
-          fprintf(stderr, "No 'axis' in test case %d from %s.\n", i, axis);
+          fprintf(stderr, "No 'axis' in test case %d from %s.\n", i, path);
           continue;
         }
         if (!config_setting_lookup_float(test, "epsilon", &epsilon)) {
