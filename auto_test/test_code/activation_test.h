@@ -22,27 +22,14 @@ template <typename InterfaceType>
 class ActivationTest : public ::testing::Test {
  public:
   ActivationTest() {
-    fetch_test_data("activate.Relu", relu_inputs, relu_inputs_name);
-    fetch_test_data("activate.Sigmoid", sigmoid_inputs, sigmoid_inputs_name);
-    fetch_test_data("activate.Tanh", tanh_inputs, tanh_inputs_name);
-    fetch_test_data("activate.Sqrt", sqrt_inputs, sqrt_inputs_name);
+    fetch_test_data("activate.relu", relu_inputs, relu_inputs_name);
+    fetch_test_data("activate.sigmoid", sigmoid_inputs, sigmoid_inputs_name);
+    fetch_test_data("activate.tanh", tanh_inputs, tanh_inputs_name);
+    fetch_test_data("activate.sqrt", sqrt_inputs, sqrt_inputs_name);
   }
   ~ActivationTest() override = default;
-  using InputType = Unary_Input;
-  using UserInterface = InterfaceType;
-  std::vector<Unary_Input> relu_inputs;
-  std::vector<std::string> relu_inputs_name;
 
-  std::vector<Unary_Input> sigmoid_inputs;
-  std::vector<std::string> sigmoid_inputs_name;
-
-  std::vector<Unary_Input> tanh_inputs;
-  std::vector<std::string> tanh_inputs_name;
-
-  std::vector<Unary_Input> sqrt_inputs;
-  std::vector<std::string> sqrt_inputs_name;
-
-  void fetch_test_data(const char* path, std::vector<Unary_Input>& inputs,
+  int fetch_test_data(const char* path, std::vector<Unary_Input>& inputs,
                        std::vector<std::string>& inputs_name) {
 
     config_t cfg;
@@ -55,6 +42,7 @@ class ActivationTest : public ::testing::Test {
       fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
               config_error_line(&cfg), config_error_text(&cfg));
       config_destroy(&cfg);
+      return(EXIT_FAILURE);
     }
 
     relu_setting = config_lookup(&cfg, path);
@@ -66,6 +54,7 @@ class ActivationTest : public ::testing::Test {
         config_setting_t* test = config_setting_get_elem(relu_setting, i);
         config_setting_t* dims_setting = config_setting_lookup(test, "dims");
         int64_t ndim;
+        std::vector<int64_t> dims;
         int dtype, device, len;
         const char* input_name;
 
@@ -91,7 +80,6 @@ class ActivationTest : public ::testing::Test {
                   path);
           continue;
         }
-        std::vector<int64_t> dims;
         for (int j = 0; j < ndim; ++j) {
           int64_t input = config_setting_get_int_elem(dims_setting, j);
           dims.push_back(input);
@@ -114,7 +102,25 @@ class ActivationTest : public ::testing::Test {
       random_assign(input_data, input_len, input.dtype());
       input.set_data(input_data, input_len);
     }
+
+    config_destroy(&cfg);
+    return(EXIT_SUCCESS);
   }
+
+  using InputType = Unary_Input;
+  using UserInterface = InterfaceType;
+  std::vector<Unary_Input> relu_inputs;
+  std::vector<std::string> relu_inputs_name;
+
+  std::vector<Unary_Input> sigmoid_inputs;
+  std::vector<std::string> sigmoid_inputs_name;
+
+  std::vector<Unary_Input> tanh_inputs;
+  std::vector<std::string> tanh_inputs_name;
+
+  std::vector<Unary_Input> sqrt_inputs;
+  std::vector<std::string> sqrt_inputs_name;
+
 };
 TYPED_TEST_CASE_P(ActivationTest);
 
@@ -124,7 +130,7 @@ TYPED_TEST_P(ActivationTest, FourTests) {
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
   std::map<std::string, int> test_case = {
-      {"Relu", 0}, {"Sigmoid", 1}, {"Tanh", 2}, {"Sqrt", 3}};
+      {"relu", 0}, {"sigmoid", 1}, {"tanh", 2}, {"sqrt", 3}};
 
   auto test = [](std::vector<Unary_Input>&& inputs,
                  std::vector<std::string>&& inputs_name,
@@ -248,14 +254,14 @@ TYPED_TEST_P(ActivationTest, FourTests) {
     }
   };
 
-  test(std::move(this->relu_inputs), std::move(this->relu_inputs_name), "Relu",
-       test_case["Relu"]);
+  test(std::move(this->relu_inputs), std::move(this->relu_inputs_name), "relu",
+       test_case["relu"]);
   test(std::move(this->sigmoid_inputs), std::move(this->sigmoid_inputs_name),
-       "Sigmoid", test_case["Sigmoid"]);
-  test(std::move(this->tanh_inputs), std::move(this->tanh_inputs_name), "Tanh",
-       test_case["Tanh"]);
-  test(std::move(this->sqrt_inputs), std::move(this->sqrt_inputs_name), "Sqrt",
-       test_case["Sqrt"]);
+       "sigmoid", test_case["sigmoid"]);
+  test(std::move(this->tanh_inputs), std::move(this->tanh_inputs_name), "tanh",
+       test_case["tanh"]);
+  test(std::move(this->sqrt_inputs), std::move(this->sqrt_inputs_name), "sqrt",
+       test_case["sqrt"]);
 }
 
 REGISTER_TYPED_TEST_CASE_P(ActivationTest, FourTests);
