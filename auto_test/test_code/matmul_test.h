@@ -5,6 +5,7 @@
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
 extern "C" {
+#include <libconfig.h>
 #include <math.h>
 #include "src/math/matmul.h"
 }
@@ -122,13 +123,8 @@ class MatmulTest : public ::testing::Test {
       unsigned int input_len2 = input_nelem2 * elem_size(input.dtype2());
       void* input_data1 = (void*)new char[input_len1];
       void* input_data2 = (void*)new char[input_len2];
-      //      if ( i == 1) {
-      //        random_assign(input_data1, input_len1, input[i]->dtype1());
-      //        random_assign(input_data2, input_len2, input[i]->dtype2());
-      //      } else {
       natural_assign(input_data1, input_len1, input.dtype1());
       natural_assign(input_data2, input_len2, input.dtype2());
-      //      }
       input.set_data1(input_data1, input_len1);
       input.set_data2(input_data2, input_len2);
     }
@@ -214,13 +210,10 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
       // compare
       int64_t tensor_size = 1;
       ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-      if (i == 1) {  // CUDA
-        ASSERT_EQ(
-            /*CUDA*/ 0, UserFuncs::user_device_to_int(user_result_device));
-      } else {  // CPU
-        ASSERT_EQ(aitisa_device_to_int(aitisa_result_device),
-                  UserFuncs::user_device_to_int(user_result_device));
-      }
+
+      ASSERT_EQ(aitisa_device_to_int(aitisa_result_device),
+                UserFuncs::user_device_to_int(user_result_device));
+
       ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
                 UserFuncs::user_dtype_to_int(user_result_dtype));
       for (int64_t j = 0; j < aitisa_result_ndim; j++) {
@@ -228,17 +221,10 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
         ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
       }
       ASSERT_EQ(aitisa_result_len, user_result_len);
-      //      if (i == 1) {  // Double
-      //        auto* aitisa_data = (double*)aitisa_result_data;
-      //        auto* user_data = (double*)user_result_data;
-      //        for (int64_t j = 0; j < tensor_size; j++) {
-      //          ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
-      //        }
-      //      } else {  // Float
+
       for (int64_t j = 0; j < tensor_size; j++) {
         ASSERT_TRUE(abs(aitisa_result_data[j] - user_result_data[j]) < 1e-3);
       }
-      //      }
       // print result of test
       std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
                 << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;

@@ -7,6 +7,7 @@
 #include "hice/basic/factories.h"
 
 extern "C" {
+#include <libconfig.h>
 #include <math.h>
 #include <sys/time.h>
 #include "src/nn/batch_norm.h"
@@ -18,7 +19,7 @@ namespace {
 
 class Batchnorm_Input : public Unary_Input {
  public:
-  Batchnorm_Input()= default;;
+  Batchnorm_Input() = default;
   Batchnorm_Input(int64_t ndim, std::vector<int64_t> dims, int dtype,
                   int device, void* data, unsigned int len, int axis,
                   double epsilon, int64_t param_ndim,
@@ -47,10 +48,10 @@ class Batchnorm_Input : public Unary_Input {
         param_dims_(input.param_dims()),
         value_(input.value()),
         mean_(input.mean()),
-        var_(input.var()){
-            input.to_nullptr();
-            input.param_dims_ = nullptr;
-        };
+        var_(input.var()) {
+    input.to_nullptr();
+    input.param_dims_ = nullptr;
+  };
 
   ~Batchnorm_Input() override { delete[] param_dims_; }
   Batchnorm_Input& operator=(Batchnorm_Input& right) {
@@ -94,7 +95,7 @@ class BatchnormTest : public ::testing::Test {
   BatchnormTest() {
     fetch_test_data("batch_norm", batch_norm_inputs, batch_norm_name);
   }
-  virtual ~BatchnormTest() {}
+  ~BatchnormTest() override {}
   static void aitisa_kernel(const Tensor input, const int axis,
                             const Tensor scale, const Tensor bias,
                             const Tensor mean, const Tensor variance,
@@ -115,7 +116,7 @@ class BatchnormTest : public ::testing::Test {
       fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
               config_error_line(&cfg), config_error_text(&cfg));
       config_destroy(&cfg);
-      return(EXIT_FAILURE);
+      return (EXIT_FAILURE);
     }
 
     setting = config_lookup(&cfg, path);
@@ -218,7 +219,7 @@ class BatchnormTest : public ::testing::Test {
       input.set_data(input_data, input_len);
     }
     config_destroy(&cfg);
-    return(EXIT_SUCCESS);
+    return (EXIT_SUCCESS);
   }
 
   using InputType = Batchnorm_Input;
@@ -226,8 +227,7 @@ class BatchnormTest : public ::testing::Test {
   // inputs
   std::vector<Batchnorm_Input> batch_norm_inputs;
   std::vector<std::string> batch_norm_name;
-  std::map<std::string, int> test_case = {
-      {"batch_norm", 0}};
+  std::map<std::string, int> test_case = {{"batch_norm", 0}};
 };
 TYPED_TEST_CASE_P(BatchnormTest);
 
@@ -238,9 +238,12 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
   using UserFuncs = typename TestFixture::UserInterface;
 
   auto test = [](std::vector<Batchnorm_Input>&& inputs,
-                 std::vector<std::string>&& inputs_name,const std::string& test_case_name, int test_case_index) {
+                 std::vector<std::string>&& inputs_name,
+                 const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
+      // clang-format off
       struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
+      // clang-format on
       double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;

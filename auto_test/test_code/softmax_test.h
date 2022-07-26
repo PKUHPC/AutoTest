@@ -5,6 +5,7 @@
 #include "auto_test/sample.h"
 
 extern "C" {
+#include <libconfig.h>
 #include <math.h>
 #include <sys/time.h>
 #include "src/nn/softmax.h"
@@ -152,8 +153,9 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
                  std::vector<std::string>&& inputs_name,
                  const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      struct timeval aitisa_start {
-      }, aitisa_end{}, user_start{}, user_end{};
+      // clang-format off
+      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
+      // clang-format on
       double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;

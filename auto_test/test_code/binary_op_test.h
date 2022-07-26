@@ -1,11 +1,13 @@
 #pragma once
 
-#include <ctime>
 #include <string>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
+
 extern "C" {
+#include <libconfig.h>
 #include <math.h>
+#include <sys/time.h>
 #include "src/math/binary_op.h"
 }
 
@@ -24,7 +26,7 @@ class BinaryOPTest : public ::testing::Test {
     fetch_test_data("binary_op.div", div_inputs, div_inputs_name,
                     test_case["div"]);
   }
-  virtual ~BinaryOPTest() {}
+  ~BinaryOPTest() override {}
   int fetch_test_data(const char* path, std::vector<Binary_Input>& inputs,
                       std::vector<std::string>& inputs_name,
                       int test_case_index) {
@@ -171,7 +173,9 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
                  std::vector<std::string>&& inputs_name,
                  const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      std::clock_t aitisa_start, aitisa_end, user_start, user_end;
+      // clang-format off
+      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
+      // clang-format on
       double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
@@ -196,7 +200,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
       aitisa_create(aitisa_dtype2, aitisa_device2, inputs[i].dims2(),
                     inputs[i].ndim2(), (void*)(inputs[i].data2()),
                     inputs[i].len2(), &aitisa_tensor2);
-      aitisa_start = std::clock();
+      gettimeofday(&aitisa_start, nullptr);
       switch (test_case_index) {
         case 0:
           aitisa_add(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
@@ -213,8 +217,9 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
         default:
           break;
       }
-      aitisa_end = std::clock();
-      aitisa_time = (double)(aitisa_end - aitisa_start) / CLOCKS_PER_SEC * 1000;
+      gettimeofday(&aitisa_end, nullptr);
+      aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0 +
+                    (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0;
       aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
                      &aitisa_result_dims, &aitisa_result_ndim,
                      (void**)&aitisa_result_data, &aitisa_result_len);
@@ -233,7 +238,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
       UserFuncs::user_create(user_dtype2, user_device2, inputs[i].dims2(),
                              inputs[i].ndim2(), inputs[i].data2(),
                              inputs[i].len2(), &user_tensor2);
-      user_start = std::clock();
+      gettimeofday(&user_start, nullptr);
       switch (test_case_index) {
         case 0:
           UserFuncs::user_add(user_tensor1, user_tensor2, &user_result);
@@ -250,8 +255,9 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
         default:
           break;
       }
-      user_end = std::clock();
-      user_time = (double)(user_end - user_start) / CLOCKS_PER_SEC * 1000;
+      gettimeofday(&user_end, nullptr);
+      user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
+                  (user_end.tv_usec - user_start.tv_usec) / 1000.0;
       UserFuncs::user_resolve(user_result, &user_result_dtype,
                               &user_result_device, &user_result_dims,
                               &user_result_ndim, (void**)&user_result_data,
