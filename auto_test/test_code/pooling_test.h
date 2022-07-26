@@ -146,6 +146,10 @@ class PoolingTest : public ::testing::Test {
       for (int i = 0; i < count; ++i) {
         config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims_setting = config_setting_lookup(test, "dims");
+        if (!dims_setting) {
+          fprintf(stderr, "No 'dims' in test case %d from %s.\n", i, path);
+          continue;
+        }
 
         int64_t ndim;
         std::vector<int64_t> dims;
@@ -159,12 +163,22 @@ class PoolingTest : public ::testing::Test {
           fprintf(stderr, "No 'ndim' in test case %d from %s.\n", i, path);
           continue;
         }
+        if (config_setting_length(dims_setting) != ndim) {
+          fprintf(stderr,
+                  "'dims' length is not correct in test case %d from %s.\n", i,
+                  path);
+          continue;
+        }
         for (int j = 0; j < ndim; ++j) {
           int64_t input = config_setting_get_int_elem(dims_setting, j);
           dims.push_back(input);
         }
         config_setting_t* stride_setting =
             config_setting_get_member(test, "stride");
+        if (!stride_setting) {
+          fprintf(stderr, "No 'stride' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int stride_count = config_setting_length(stride_setting);
         for (int j = 0; j < stride_count; ++j) {
           int input = config_setting_get_int_elem(stride_setting, j);
@@ -172,6 +186,10 @@ class PoolingTest : public ::testing::Test {
         }
         config_setting_t* padding_setting =
             config_setting_get_member(test, "padding");
+        if (!padding_setting) {
+          fprintf(stderr, "No 'padding' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int padding_count = config_setting_length(padding_setting);
         for (int j = 0; j < padding_count; ++j) {
           int input = config_setting_get_int_elem(padding_setting, j);
@@ -179,6 +197,10 @@ class PoolingTest : public ::testing::Test {
         }
         config_setting_t* dilation_setting =
             config_setting_get_member(test, "dilation");
+        if (!dilation_setting) {
+          fprintf(stderr, "No 'dilation' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int dilation_count = config_setting_length(dilation_setting);
         for (int j = 0; j < dilation_count; ++j) {
           int input = config_setting_get_int_elem(dilation_setting, j);
@@ -186,6 +208,10 @@ class PoolingTest : public ::testing::Test {
         }
         config_setting_t* ksize_setting =
             config_setting_get_member(test, "ksize");
+        if (!ksize_setting) {
+          fprintf(stderr, "No 'ksize' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int ksize_count = config_setting_length(ksize_setting);
         for (int j = 0; j < ksize_count; ++j) {
           int input = config_setting_get_int_elem(ksize_setting, j);

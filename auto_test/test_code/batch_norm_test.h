@@ -95,7 +95,7 @@ class BatchnormTest : public ::testing::Test {
   BatchnormTest() {
     fetch_test_data("batch_norm", batch_norm_inputs, batch_norm_name);
   }
-  ~BatchnormTest() override {}
+  ~BatchnormTest() override = default;
   static void aitisa_kernel(const Tensor input, const int axis,
                             const Tensor scale, const Tensor bias,
                             const Tensor mean, const Tensor variance,
@@ -127,9 +127,16 @@ class BatchnormTest : public ::testing::Test {
       for (int i = 0; i < count; ++i) {
         config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims_setting = config_setting_lookup(test, "dims");
+        if (!dims_setting) {
+          fprintf(stderr, "No 'dims' in test case %d from %s.\n", i, path);
+          continue;
+        }
         config_setting_t* param_dims_setting =
             config_setting_lookup(test, "param_dims");
-
+        if (!param_dims_setting) {
+          fprintf(stderr, "No 'param_dims' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int64_t ndim, param_ndim;
         std::vector<int64_t> dims, param_dims;
         int dtype, device, len, axis;
@@ -142,10 +149,22 @@ class BatchnormTest : public ::testing::Test {
           fprintf(stderr, "No 'ndim' in test case %d from %s.\n", i, path);
           continue;
         }
+        if (config_setting_length(dims_setting) != ndim) {
+          fprintf(stderr,
+                  "'dims' length is not correct in test case %d from %s.\n", i,
+                  path);
+          continue;
+        }
         if (!config_setting_lookup_int64(
                 test, "param_ndim",
                 reinterpret_cast<long long int*>(&param_ndim))) {
           fprintf(stderr, "No 'param_ndim' in test case %d from %s.\n", i,
+                  path);
+          continue;
+        }
+        if (config_setting_length(param_dims_setting) != param_ndim) {
+          fprintf(stderr,
+                  "'param_dims' length is not correct in test case %d from %s.\n", i,
                   path);
           continue;
         }

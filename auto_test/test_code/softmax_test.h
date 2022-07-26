@@ -76,7 +76,10 @@ class SoftmaxTest : public ::testing::Test {
       for (int i = 0; i < count; ++i) {
         config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims_setting = config_setting_lookup(test, "dims");
-
+        if (!dims_setting) {
+          fprintf(stderr, "No 'dims' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int64_t ndim;
         std::vector<int64_t> dims;
         int dtype, device, len, axis;
@@ -85,6 +88,12 @@ class SoftmaxTest : public ::testing::Test {
         if (!config_setting_lookup_int64(
                 test, "ndim", reinterpret_cast<long long int*>(&ndim))) {
           fprintf(stderr, "No 'ndim' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        if (config_setting_length(dims_setting) != ndim) {
+          fprintf(stderr,
+                  "'dims' length is not correct in test case %d from %s.\n", i,
+                  path);
           continue;
         }
         for (int j = 0; j < ndim; ++j) {

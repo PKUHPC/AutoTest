@@ -132,7 +132,15 @@ class Conv2dTest : public ::testing::Test {
       for (int i = 0; i < count; ++i) {
         config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims1_setting = config_setting_lookup(test, "dims1");
+        if (!dims1_setting) {
+          fprintf(stderr, "No 'dims1' in test case %d from %s.\n", i, path);
+          continue;
+        }
         config_setting_t* dims2_setting = config_setting_lookup(test, "dims2");
+        if (!dims2_setting) {
+          fprintf(stderr, "No 'dims2' in test case %d from %s.\n", i, path);
+          continue;
+        }
 
         int64_t ndim1, ndim2;
         std::vector<int64_t> dims1, dims2;
@@ -146,9 +154,21 @@ class Conv2dTest : public ::testing::Test {
           fprintf(stderr, "No 'ndim1' in test case %d from %s.\n", i, path);
           continue;
         }
+        if (config_setting_length(dims1_setting) != ndim1) {
+          fprintf(stderr,
+                  "'dims1' length is not correct in test case %d from %s.\n", i,
+                  path);
+          continue;
+        }
         if (!config_setting_lookup_int64(
                 test, "ndim2", reinterpret_cast<long long int*>(&ndim2))) {
           fprintf(stderr, "No 'ndim2' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        if (config_setting_length(dims2_setting) != ndim2) {
+          fprintf(stderr,
+                  "'dims2' length is not correct in test case %d from %s.\n", i,
+                  path);
           continue;
         }
         for (int j = 0; j < ndim1; ++j) {
@@ -194,6 +214,10 @@ class Conv2dTest : public ::testing::Test {
         }
         config_setting_t* stride_setting =
             config_setting_get_member(test, "stride");
+        if (!stride_setting) {
+          fprintf(stderr, "No 'stride' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int stride_count = config_setting_length(stride_setting);
         for (int j = 0; j < stride_count; ++j) {
           int input = config_setting_get_int_elem(stride_setting, j);
@@ -201,6 +225,10 @@ class Conv2dTest : public ::testing::Test {
         }
         config_setting_t* padding_setting =
             config_setting_get_member(test, "padding");
+        if (!padding_setting) {
+          fprintf(stderr, "No 'padding' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int padding_count = config_setting_length(padding_setting);
         for (int j = 0; j < padding_count; ++j) {
           int input = config_setting_get_int_elem(padding_setting, j);
@@ -208,6 +236,10 @@ class Conv2dTest : public ::testing::Test {
         }
         config_setting_t* dilation_setting =
             config_setting_get_member(test, "dilation");
+        if (!dilation_setting) {
+          fprintf(stderr, "No 'dilation' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int dilation_count = config_setting_length(dilation_setting);
         for (int j = 0; j < dilation_count; ++j) {
           int input = config_setting_get_int_elem(dilation_setting, j);

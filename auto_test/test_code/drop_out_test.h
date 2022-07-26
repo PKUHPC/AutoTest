@@ -54,7 +54,7 @@ template <typename InterfaceType>
 class DropoutTest : public ::testing::Test {
  public:
   DropoutTest() { fetch_test_data("drop_out", drop_out_inputs, drop_out_name); }
-  ~DropoutTest() override {}
+  ~DropoutTest() override = default;
   static void aitisa_kernel(const AITISA_Tensor input, const double rate,
                             AITISA_Tensor* output) {
     aitisa_dropout(input, rate, output);
@@ -83,6 +83,10 @@ class DropoutTest : public ::testing::Test {
       for (int i = 0; i < count; ++i) {
         config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims_setting = config_setting_lookup(test, "dims");
+        if (!dims_setting) {
+          fprintf(stderr, "No 'dims' in test case %d from %s.\n", i, path);
+          continue;
+        }
 
         int64_t ndim;
         std::vector<int64_t> dims;
@@ -93,6 +97,12 @@ class DropoutTest : public ::testing::Test {
         if (!config_setting_lookup_int64(
                 test, "ndim", reinterpret_cast<long long int*>(&ndim))) {
           fprintf(stderr, "No 'ndim' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        if (config_setting_length(dims_setting) != ndim) {
+          fprintf(stderr,
+                  "'dims' length is not correct in test case %d from %s.\n", i,
+                  path);
           continue;
         }
         for (int j = 0; j < ndim; ++j) {

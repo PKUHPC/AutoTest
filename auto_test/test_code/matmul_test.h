@@ -47,8 +47,15 @@ class MatmulTest : public ::testing::Test {
       for (int i = 0; i < count; ++i) {
         config_setting_t* test = config_setting_get_elem(setting, i);
         config_setting_t* dims1_setting = config_setting_lookup(test, "dims1");
+        if (!dims1_setting) {
+          fprintf(stderr, "No 'dims1' in test case %d from %s.\n", i, path);
+          continue;
+        }
         config_setting_t* dims2_setting = config_setting_lookup(test, "dims2");
-
+        if (!dims2_setting) {
+          fprintf(stderr, "No 'dims2' in test case %d from %s.\n", i, path);
+          continue;
+        }
         int64_t ndim1, ndim2;
         std::vector<int64_t> dims1, dims2;
         int dtype1, device1, len1, dtype2, device2, len2;
@@ -59,9 +66,21 @@ class MatmulTest : public ::testing::Test {
           fprintf(stderr, "No 'ndim1' in test case %d from %s.\n", i, path);
           continue;
         }
+        if (config_setting_length(dims1_setting) != ndim1) {
+          fprintf(stderr,
+                  "'dims1' length is not correct in test case %d from %s.\n", i,
+                  path);
+          continue;
+        }
         if (!config_setting_lookup_int64(
                 test, "ndim2", reinterpret_cast<long long int*>(&ndim2))) {
           fprintf(stderr, "No 'ndim2' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        if (config_setting_length(dims2_setting) != ndim2) {
+          fprintf(stderr,
+                  "'dims2' length is not correct in test case %d from %s.\n", i,
+                  path);
           continue;
         }
         for (int j = 0; j < ndim1; ++j) {
