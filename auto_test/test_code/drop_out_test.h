@@ -52,9 +52,7 @@ class Dropout_Input : public Unary_Input {
 template <typename InterfaceType>
 class DropoutTest : public ::testing::Test {
  public:
-  DropoutTest() {
-    fetch_test_data("drop_out", drop_out_inputs, drop_out_name);
-  }
+  DropoutTest() { fetch_test_data("drop_out", drop_out_inputs, drop_out_name); }
   ~DropoutTest() override {}
   static void aitisa_kernel(const AITISA_Tensor input, const double rate,
                             AITISA_Tensor* output) {
@@ -166,9 +164,11 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
   using UserFuncs = typename TestFixture::UserInterface;
 
   auto test = [](std::vector<Dropout_Input>&& inputs,
-                 std::vector<std::string>&& inputs_name,const std::string& test_case_name, int test_case_index) {
+                 std::vector<std::string>&& inputs_name,
+                 const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
+      struct timeval aitisa_start {
+      }, aitisa_end{}, user_start{}, user_end{};
       double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
@@ -201,8 +201,7 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
                      (void**)&aitisa_result_data, &aitisa_result_len);
 
       // user
-      UserDataType user_dtype =
-          UserFuncs::user_int_to_dtype(inputs[i].dtype());
+      UserDataType user_dtype = UserFuncs::user_int_to_dtype(inputs[i].dtype());
       UserDevice user_device =
           UserFuncs::user_int_to_device(inputs[i].device());
       UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
@@ -215,9 +214,10 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
       gettimeofday(&user_end, nullptr);
       user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
                   (user_end.tv_usec - user_start.tv_usec) / 1000.0;
-      UserFuncs::user_resolve(
-          user_result, &user_result_dtype, &user_result_device, &user_result_dims,
-          &user_result_ndim, (void**)&user_result_data, &user_result_len);
+      UserFuncs::user_resolve(user_result, &user_result_dtype,
+                              &user_result_device, &user_result_dims,
+                              &user_result_ndim, (void**)&user_result_data,
+                              &user_result_len);
 
       // compare
       int64_t tensor_size = 1;
@@ -247,18 +247,17 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
                       (double)user_count / (double)tensor_size) < 1e-3);
 
       // print result of test
-      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i << " / "
-                << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
+                << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
       std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
                 << " ms" << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms"
-                << std::endl;
+      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
+                << " ms" << std::endl;
     }
-
   };
 
-  test(std::move(this->drop_out_inputs), std::move(this->drop_out_name), "drop_out",
-       this->test_case["drop_out"]);
+  test(std::move(this->drop_out_inputs), std::move(this->drop_out_name),
+       "drop_out", this->test_case["drop_out"]);
 }
 REGISTER_TYPED_TEST_CASE_P(DropoutTest, TwoTests);
 

@@ -29,7 +29,7 @@ class ActivationTest : public ::testing::Test {
   ~ActivationTest() override = default;
 
   int fetch_test_data(const char* path, std::vector<Unary_Input>& inputs,
-                       std::vector<std::string>& inputs_name) {
+                      std::vector<std::string>& inputs_name) {
 
     config_t cfg;
     config_setting_t* setting;
@@ -41,7 +41,7 @@ class ActivationTest : public ::testing::Test {
       fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
               config_error_line(&cfg), config_error_text(&cfg));
       config_destroy(&cfg);
-      return(EXIT_FAILURE);
+      return (EXIT_FAILURE);
     }
 
     setting = config_lookup(&cfg, path);
@@ -103,7 +103,7 @@ class ActivationTest : public ::testing::Test {
     }
 
     config_destroy(&cfg);
-    return(EXIT_SUCCESS);
+    return (EXIT_SUCCESS);
   }
 
   using InputType = Unary_Input;
@@ -119,8 +119,10 @@ class ActivationTest : public ::testing::Test {
 
   std::vector<Unary_Input> sqrt_inputs;
   std::vector<std::string> sqrt_inputs_name;
-  std::map<std::string, int> test_case = {
-      {"relu", 0}, {"sigmoid", 1}, {"tanh", 2}, {"sqrt", 3}};
+  std::map<std::string, int> test_case = {{"relu", 0},
+                                          {"sigmoid", 1},
+                                          {"tanh", 2},
+                                          {"sqrt", 3}};
 };
 TYPED_TEST_CASE_P(ActivationTest);
 

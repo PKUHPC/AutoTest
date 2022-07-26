@@ -43,10 +43,8 @@ class Softmax_Input : public Unary_Input {
 template <typename InterfaceType>
 class SoftmaxTest : public ::testing::Test {
  public:
-  SoftmaxTest() {
-    fetch_test_data("softmax",softmax_inputs,softmax_name);
-  }
-  ~SoftmaxTest() override {}
+  SoftmaxTest() { fetch_test_data("softmax", softmax_inputs, softmax_name); }
+  ~SoftmaxTest() override = default;
   using InputType = Softmax_Input;
   using UserInterface = InterfaceType;
   static void aitisa_kernel(const AITISA_Tensor input, const int axis,
@@ -66,7 +64,7 @@ class SoftmaxTest : public ::testing::Test {
       fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
               config_error_line(&cfg), config_error_text(&cfg));
       config_destroy(&cfg);
-      return(EXIT_FAILURE);
+      return (EXIT_FAILURE);
     }
 
     setting = config_lookup(&cfg, path);
@@ -135,13 +133,12 @@ class SoftmaxTest : public ::testing::Test {
       input.set_data(input_data, input_len);
     }
     config_destroy(&cfg);
-    return(EXIT_SUCCESS);
+    return (EXIT_SUCCESS);
   }
   // inputs
   std::vector<Softmax_Input> softmax_inputs;
   std::vector<std::string> softmax_name;
-  std::map<std::string, int> test_case = {
-      {"softmax", 0}};
+  std::map<std::string, int> test_case = {{"softmax", 0}};
 };
 TYPED_TEST_CASE_P(SoftmaxTest);
 
@@ -152,9 +149,11 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
   using UserFuncs = typename TestFixture::UserInterface;
 
   auto test = [](std::vector<Softmax_Input>&& inputs,
-                 std::vector<std::string>&& inputs_name,const std::string& test_case_name, int test_case_index) {
+                 std::vector<std::string>&& inputs_name,
+                 const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
+      struct timeval aitisa_start {
+      }, aitisa_end{}, user_start{}, user_end{};
       double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
@@ -185,8 +184,7 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
                      (void**)&aitisa_result_data, &aitisa_result_len);
 
       // user
-      UserDataType user_dtype =
-          UserFuncs::user_int_to_dtype(inputs[i].dtype());
+      UserDataType user_dtype = UserFuncs::user_int_to_dtype(inputs[i].dtype());
       UserDevice user_device =
           UserFuncs::user_int_to_device(inputs[i].device());
       UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
@@ -199,9 +197,10 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
       gettimeofday(&user_end, nullptr);
       user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
                   (user_end.tv_usec - user_start.tv_usec) / 1000.0;
-      UserFuncs::user_resolve(
-          user_result, &user_result_dtype, &user_result_device, &user_result_dims,
-          &user_result_ndim, (void**)&user_result_data, &user_result_len);
+      UserFuncs::user_resolve(user_result, &user_result_dtype,
+                              &user_result_device, &user_result_dims,
+                              &user_result_ndim, (void**)&user_result_data,
+                              &user_result_len);
 
       // compare
       int64_t tensor_size = 1;
@@ -220,17 +219,16 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
         ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
       }
       //            // print result of test
-      std::cout << /*GREEN <<*/ "[ "<< test_case_name <<" sample" << i << " / "
-                << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
+                << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
       std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
                 << " ms" << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms"
-                << std::endl;
+      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
+                << " ms" << std::endl;
     }
-
   };
-  test(std::move(this->softmax_inputs), std::move(this->softmax_name), "softmax",
-       this->test_case["softmax"]);
+  test(std::move(this->softmax_inputs), std::move(this->softmax_name),
+       "softmax", this->test_case["softmax"]);
 }
 REGISTER_TYPED_TEST_CASE_P(SoftmaxTest, TwoTests);
 

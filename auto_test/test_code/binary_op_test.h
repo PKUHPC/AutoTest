@@ -158,7 +158,6 @@ class BinaryOPTest : public ::testing::Test {
                                           {"sub", 1},
                                           {"mul", 2},
                                           {"div", 3}};
-
 };
 TYPED_TEST_CASE_P(BinaryOPTest);
 
@@ -167,7 +166,6 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
-
 
   auto test = [](std::vector<Binary_Input>&& inputs,
                  std::vector<std::string>&& inputs_name,
