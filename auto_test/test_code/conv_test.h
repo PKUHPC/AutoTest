@@ -16,7 +16,8 @@ namespace {
 
 class Conv_Input : public Binary_Input {
  public:
-  Conv_Input()= default;;
+  Conv_Input() = default;
+  ;
   Conv_Input(int64_t ndim1, int64_t* dims1, int dtype1, int device1,
              void* data1, unsigned int len1, int64_t ndim2, int64_t* dims2,
              int dtype2, int device2, void* data2, unsigned int len2,
@@ -32,8 +33,8 @@ class Conv_Input : public Binary_Input {
              std::vector<int64_t> dims2, int dtype2, int device2, void* data2,
              unsigned int len2, std::vector<int> stride,
              std::vector<int> padding, std::vector<int> dilation, int groups)
-      : Binary_Input(ndim1, std::move(dims1), dtype1, device1, data1, len1, ndim2, std::move(dims2),
-                     dtype2, device2, data2, len2),
+      : Binary_Input(ndim1, std::move(dims1), dtype1, device1, data1, len1,
+                     ndim2, std::move(dims2), dtype2, device2, data2, len2),
         stride_(nullptr),
         padding_(nullptr),
         dilation_(nullptr),
@@ -95,10 +96,8 @@ class Conv_Input : public Binary_Input {
 template <typename InterfaceType>
 class Conv2dTest : public ::testing::Test {
  public:
-  Conv2dTest(){
-    fetch_test_data("conv2d", conv2d_inputs, conv2d_inputs_name);
-  }
-  ~Conv2dTest() override {}
+  Conv2dTest() { fetch_test_data("conv2d", conv2d_inputs, conv2d_inputs_name); }
+  ~Conv2dTest() override = default;
 
   static void aitisa_kernel(const AITISA_Tensor input,
                             const AITISA_Tensor filter, int* stride,
@@ -121,7 +120,7 @@ class Conv2dTest : public ::testing::Test {
       fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
               config_error_line(&cfg), config_error_text(&cfg));
       config_destroy(&cfg);
-      return(EXIT_FAILURE);
+      return (EXIT_FAILURE);
     }
 
     setting = config_lookup(&cfg, path);
@@ -192,19 +191,22 @@ class Conv2dTest : public ::testing::Test {
                   path);
           continue;
         }
-        config_setting_t* stride_setting = config_setting_get_member(test, "stride");
+        config_setting_t* stride_setting =
+            config_setting_get_member(test, "stride");
         int stride_count = config_setting_length(stride_setting);
         for (int j = 0; j < stride_count; ++j) {
           int input = config_setting_get_int_elem(stride_setting, j);
           stride.push_back(input);
         }
-        config_setting_t* padding_setting = config_setting_get_member(test, "padding");
+        config_setting_t* padding_setting =
+            config_setting_get_member(test, "padding");
         int padding_count = config_setting_length(padding_setting);
         for (int j = 0; j < padding_count; ++j) {
           int input = config_setting_get_int_elem(padding_setting, j);
           padding.push_back(input);
         }
-        config_setting_t* dilation_setting = config_setting_get_member(test, "dilation");
+        config_setting_t* dilation_setting =
+            config_setting_get_member(test, "dilation");
         int dilation_count = config_setting_length(dilation_setting);
         for (int j = 0; j < dilation_count; ++j) {
           int input = config_setting_get_int_elem(dilation_setting, j);
@@ -239,7 +241,7 @@ class Conv2dTest : public ::testing::Test {
     }
 
     config_destroy(&cfg);
-    return(EXIT_SUCCESS);
+    return (EXIT_SUCCESS);
   }
 
   using InputType = Conv_Input;
@@ -247,8 +249,7 @@ class Conv2dTest : public ::testing::Test {
   // inputs
   std::vector<Conv_Input> conv2d_inputs;
   std::vector<std::string> conv2d_inputs_name;
-  std::map<std::string, int> test_case = {
-      {"conv2d", 0}};
+  std::map<std::string, int> test_case = {{"conv2d", 0}};
 };
 TYPED_TEST_CASE_P(Conv2dTest);
 
@@ -259,9 +260,11 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
   using UserFuncs = typename TestFixture::UserInterface;
 
   auto test = [](std::vector<Conv_Input>&& inputs,
-                   std::vector<std::string>&& inputs_name,const std::string& test_case_name, int test_case_index) {
+                 std::vector<std::string>&& inputs_name,
+                 const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
+      struct timeval aitisa_start {
+      }, aitisa_end{}, user_start{}, user_end{};
       double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
@@ -274,10 +277,8 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
       UserDataType user_result_dtype;
       UserDevice user_result_device;
       // aitisa
-      AITISA_DataType aitisa_dtype1 =
-          aitisa_int_to_dtype(inputs[i].dtype1());
-      AITISA_DataType aitisa_dtype2 =
-          aitisa_int_to_dtype(inputs[i].dtype2());
+      AITISA_DataType aitisa_dtype1 = aitisa_int_to_dtype(inputs[i].dtype1());
+      AITISA_DataType aitisa_dtype2 = aitisa_int_to_dtype(inputs[i].dtype2());
       AITISA_Device aitisa_device1 =
           aitisa_int_to_device(0);  // cpu supoorted only
       AITISA_Device aitisa_device2 =
@@ -314,16 +315,16 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                              inputs[i].ndim2(), inputs[i].data2(),
                              inputs[i].len2(), &user_tensor2);
       gettimeofday(&user_start, nullptr);
-      UserFuncs::user_conv2d(user_tensor1, user_tensor2, inputs[i].stride(),
-                             2, inputs[i].padding(), 2,
-                             inputs[i].dilation(), 2,
+      UserFuncs::user_conv2d(user_tensor1, user_tensor2, inputs[i].stride(), 2,
+                             inputs[i].padding(), 2, inputs[i].dilation(), 2,
                              inputs[i].groups(), &user_result);
       gettimeofday(&user_end, nullptr);
       user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
                   (user_end.tv_usec - user_start.tv_usec) / 1000.0;
-      UserFuncs::user_resolve(
-          user_result, &user_result_dtype, &user_result_device, &user_result_dims,
-          &user_result_ndim, (void**)&user_result_data, &user_result_len);
+      UserFuncs::user_resolve(user_result, &user_result_dtype,
+                              &user_result_device, &user_result_dims,
+                              &user_result_ndim, (void**)&user_result_data,
+                              &user_result_len);
       // compare
       int64_t tensor_size = 1;
       ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
@@ -341,16 +342,16 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
         ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
       }
       // print result of test
-      std::cout << /*GREEN <<*/ "[ " << test_case_name <<" sample" << i << " / "
-                << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
+                << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
       std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
                 << " ms" << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms"
-                << std::endl;
+      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
+                << " ms" << std::endl;
     }
   };
-  test(std::move(this->conv2d_inputs), std::move(this->conv2d_inputs_name), "conv2d",
-       this->test_case["conv2d"]);
+  test(std::move(this->conv2d_inputs), std::move(this->conv2d_inputs_name),
+       "conv2d", this->test_case["conv2d"]);
 }
 REGISTER_TYPED_TEST_CASE_P(Conv2dTest, TwoTests);
 

@@ -16,19 +16,24 @@ namespace {
 
 class Softmax_Input : public Unary_Input {
  public:
-  Softmax_Input(){};
+  Softmax_Input() = default;
   Softmax_Input(int64_t ndim, std::vector<int64_t> dims, int dtype, int device,
                 void* data, unsigned int len, int axis)
       : Unary_Input(ndim, dims, dtype, device, data, len), axis_(axis) {}
-
-  virtual ~Softmax_Input() {}
+  Softmax_Input(Softmax_Input&& input) noexcept
+      : Unary_Input(input.ndim(), input.dims(), input.dtype(), input.device(),
+                    input.data(), input.len()),
+        axis_(input.axis()) {
+    input.to_nullptr();
+  }
+  ~Softmax_Input() override = default;
 
   Softmax_Input& operator=(Softmax_Input& right) {
     Unary_Input& left = (Unary_Input&)(*this);
     left = (Unary_Input&)right;
     this->axis_ = right.axis();
   }
-  int axis() { return axis_; }
+  int axis() const { return axis_; }
 
  private:
   int axis_ = -1;
@@ -38,45 +43,105 @@ class Softmax_Input : public Unary_Input {
 template <typename InterfaceType>
 class SoftmaxTest : public ::testing::Test {
  public:
-  SoftmaxTest()
-      : input0(/*ndim*/ 3, /*dims*/ {256, 256, 256}, /*dtype=float*/ 8,
-               /*device=cuda*/ 0, /*data*/ nullptr, /*len*/ 0, 2),
-        input1(/*ndim*/ 4, /*dims*/ {64, 64, 64, 64}, /*dtype=float*/ 8,
-               /*device=cpu*/ 0, /*data*/ nullptr, /*len*/ 0, 3) {
-    input[0] = &input0;
-    input[1] = &input1;
-    ninput = 2;
-    for (int i = 0; i < ninput; i++) {
-      unsigned int input_nelem = 1;
-      for (unsigned int j = 0; j < input[i]->ndim(); j++) {
-        input_nelem *= input[i]->dims()[j];
-      }
-
-      unsigned int input_len = input_nelem * elem_size(input[i]->dtype());
-      void* input_data = (void*)new char[input_len];
-      random_assign(input_data, input_len, input[i]->dtype());
-      input[i]->set_data(input_data, input_len);
-    }
+  SoftmaxTest() {
+    fetch_test_data("softmax",softmax_inputs,softmax_name);
   }
-  virtual ~SoftmaxTest() {}
+  ~SoftmaxTest() override {}
   using InputType = Softmax_Input;
   using UserInterface = InterfaceType;
   static void aitisa_kernel(const AITISA_Tensor input, const int axis,
                             AITISA_Tensor* output) {
     aitisa_softmax(input, axis, output);
   }
+  int fetch_test_data(const char* path, std::vector<Softmax_Input>& inputs,
+                      std::vector<std::string>& inputs_name) {
+
+    config_t cfg;
+    config_setting_t* setting;
+    const char* str;
+    config_init(&cfg);
+
+    /* Read the file. If there is an error, report it and exit. */
+    if (!config_read_file(&cfg, CONFIG_FILE)) {
+      fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
+              config_error_line(&cfg), config_error_text(&cfg));
+      config_destroy(&cfg);
+      return(EXIT_FAILURE);
+    }
+
+    setting = config_lookup(&cfg, path);
+
+    if (setting != nullptr) {
+      int count = config_setting_length(setting);
+
+      for (int i = 0; i < count; ++i) {
+        config_setting_t* test = config_setting_get_elem(setting, i);
+        config_setting_t* dims_setting = config_setting_lookup(test, "dims");
+
+        int64_t ndim;
+        std::vector<int64_t> dims;
+        int dtype, device, len, axis;
+        const char* input_name;
+
+        if (!config_setting_lookup_int64(
+                test, "ndim", reinterpret_cast<long long int*>(&ndim))) {
+          fprintf(stderr, "No 'ndim' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        for (int j = 0; j < ndim; ++j) {
+          int64_t input = config_setting_get_int_elem(dims_setting, j);
+          dims.push_back(input);
+        }
+        if (!config_setting_lookup_int(test, "dtype", &dtype)) {
+          fprintf(stderr, "No 'dtype' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        if (!config_setting_lookup_int(test, "device", &device)) {
+          fprintf(stderr, "No 'device' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        if (!config_setting_lookup_int(test, "len", &len)) {
+          fprintf(stderr, "No 'len' in test case %d from %s.\n", i, path);
+          continue;
+        }
+        if (!config_setting_lookup_string(test, "input_name", &input_name)) {
+          fprintf(stderr, "No 'input_name' in test case %d from %s.\n", i,
+                  path);
+          continue;
+        }
+        if (!config_setting_lookup_int(test, "axis", &axis)) {
+          fprintf(stderr, "No 'axis' in test case %d from %s.\n", i, path);
+          continue;
+        }
+
+        Softmax_Input tmp(
+            /*ndim*/ ndim, /*dims*/ dims, /*dtype=double*/ dtype,
+            /*device=cpu*/ device, /*data*/ nullptr, /*len*/ len, axis);
+
+        inputs.push_back(std::move(tmp));
+        inputs_name.emplace_back(input_name);
+      }
+    }
+
+    for (auto& input : inputs) {
+      unsigned int input_nelem = 1;
+      for (unsigned int j = 0; j < input.ndim(); j++) {
+        input_nelem *= input.dims()[j];
+      }
+
+      unsigned int input_len = input_nelem * elem_size(input.dtype());
+      void* input_data = (void*)new char[input_len];
+      random_assign(input_data, input_len, input.dtype());
+      input.set_data(input_data, input_len);
+    }
+    config_destroy(&cfg);
+    return(EXIT_SUCCESS);
+  }
   // inputs
-  Softmax_Input
-      input0;  // Natural assigned int32 type input of CPU with InputDims1{3,3,10,6}, FilterDims2{5,3,2,2}, stride{2,2}, padding{0,0}, dilation{1,1}
-  Softmax_Input
-      input1;  // Random assigned double type input of CUDA with InputDims1{10,3,100,124,20}, FilterDims2{10,3,5,5,5}, stride{5,5,5}, padding{0,1,0}, dilation{1,1,1}
-  Softmax_Input* input[2] = {&input0, &input1};
-  std::string input0_name =
-      "Random float of CPU with InputDims{256, 256,256}, axis{2}";
-  std::string input1_name =
-      "Random float of CPU with InputDims{64, 64, 64, 64}, axis{3} ";
-  std::string* input_name[2] = {&input0_name, &input1_name};
-  int ninput = 2;
+  std::vector<Softmax_Input> softmax_inputs;
+  std::vector<std::string> softmax_name;
+  std::map<std::string, int> test_case = {
+      {"softmax", 0}};
 };
 TYPED_TEST_CASE_P(SoftmaxTest);
 
@@ -85,80 +150,87 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
-  for (int i = 0; i < this->ninput; i++) {
-    struct timeval aitisa_start, aitisa_end, user_start, user_end;
-    double aitisa_time, user_time;
-    int64_t aitisa_result_ndim, user_result_ndim;
-    int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
-    float *aitisa_result_data = nullptr, *user_result_data = nullptr;
-    unsigned int aitisa_result_len, user_result_len;
-    AITISA_Tensor aitisa_tensor, aitisa_result;
-    AITISA_DataType aitisa_result_dtype;
-    AITISA_Device aitisa_result_device;
-    UserTensor user_tensor, user_result;
-    UserDataType user_result_dtype;
-    UserDevice user_result_device;
-    // aitisa
-    AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(this->input[i]->dtype());
-    AITISA_Device aitisa_device =
-        aitisa_int_to_device(0);  // cpu supoorted only
-    aitisa_create(aitisa_dtype, aitisa_device, this->input[i]->dims(),
-                  this->input[i]->ndim(), (void*)(this->input[i]->data()),
-                  this->input[i]->len(), &aitisa_tensor);
-    gettimeofday(&aitisa_start, NULL);
 
-    aitisa_softmax(aitisa_tensor, this->input[i]->axis(), &aitisa_result);
+  auto test = [](std::vector<Softmax_Input>&& inputs,
+                 std::vector<std::string>&& inputs_name,const std::string& test_case_name, int test_case_index) {
+    for (int i = 0; i < inputs.size(); i++) {
+      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
+      double aitisa_time, user_time;
+      int64_t aitisa_result_ndim, user_result_ndim;
+      int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
+      float *aitisa_result_data = nullptr, *user_result_data = nullptr;
+      unsigned int aitisa_result_len, user_result_len;
+      AITISA_Tensor aitisa_tensor, aitisa_result;
+      AITISA_DataType aitisa_result_dtype;
+      AITISA_Device aitisa_result_device;
+      UserTensor user_tensor, user_result;
+      UserDataType user_result_dtype;
+      UserDevice user_result_device;
+      // aitisa
+      AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(inputs[i].dtype());
+      AITISA_Device aitisa_device =
+          aitisa_int_to_device(0);  // cpu supoorted only
+      aitisa_create(aitisa_dtype, aitisa_device, inputs[i].dims(),
+                    inputs[i].ndim(), (void*)(inputs[i].data()),
+                    inputs[i].len(), &aitisa_tensor);
+      gettimeofday(&aitisa_start, nullptr);
 
-    gettimeofday(&aitisa_end, NULL);
-    aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0 +
-                  (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0;
-    aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
-                   &aitisa_result_dims, &aitisa_result_ndim,
-                   (void**)&aitisa_result_data, &aitisa_result_len);
+      aitisa_softmax(aitisa_tensor, inputs[i].axis(), &aitisa_result);
 
-    // user
-    UserDataType user_dtype =
-        UserFuncs::user_int_to_dtype(this->input[i]->dtype());
-    UserDevice user_device =
-        UserFuncs::user_int_to_device(this->input[i]->device());
-    UserFuncs::user_create(user_dtype, user_device, this->input[i]->dims(),
-                           this->input[i]->ndim(), this->input[i]->data(),
-                           this->input[i]->len(), &user_tensor);
-    gettimeofday(&user_start, NULL);
+      gettimeofday(&aitisa_end, nullptr);
+      aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0 +
+                    (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0;
+      aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
+                     &aitisa_result_dims, &aitisa_result_ndim,
+                     (void**)&aitisa_result_data, &aitisa_result_len);
 
-    UserFuncs::user_softmax(user_tensor, this->input[i]->axis(), &user_result);
+      // user
+      UserDataType user_dtype =
+          UserFuncs::user_int_to_dtype(inputs[i].dtype());
+      UserDevice user_device =
+          UserFuncs::user_int_to_device(inputs[i].device());
+      UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
+                             inputs[i].ndim(), inputs[i].data(),
+                             inputs[i].len(), &user_tensor);
+      gettimeofday(&user_start, nullptr);
 
-    gettimeofday(&user_end, NULL);
-    user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
-                (user_end.tv_usec - user_start.tv_usec) / 1000.0;
-    UserFuncs::user_resolve(
-        user_result, &user_result_dtype, &user_result_device, &user_result_dims,
-        &user_result_ndim, (void**)&user_result_data, &user_result_len);
+      UserFuncs::user_softmax(user_tensor, inputs[i].axis(), &user_result);
 
-    // compare
-    int64_t tensor_size = 1;
-    ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-    ASSERT_EQ(/*CUDA*/ 0, UserFuncs::user_device_to_int(user_result_device));
-    ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
-              UserFuncs::user_dtype_to_int(user_result_dtype));
-    for (int64_t j = 0; j < aitisa_result_ndim; j++) {
-      tensor_size *= aitisa_result_dims[j];
-      ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+      gettimeofday(&user_end, nullptr);
+      user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
+                  (user_end.tv_usec - user_start.tv_usec) / 1000.0;
+      UserFuncs::user_resolve(
+          user_result, &user_result_dtype, &user_result_device, &user_result_dims,
+          &user_result_ndim, (void**)&user_result_data, &user_result_len);
+
+      // compare
+      int64_t tensor_size = 1;
+      ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+      ASSERT_EQ(/*CUDA*/ 0, UserFuncs::user_device_to_int(user_result_device));
+      ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                UserFuncs::user_dtype_to_int(user_result_dtype));
+      for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+        tensor_size *= aitisa_result_dims[j];
+        ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+      }
+      ASSERT_EQ(aitisa_result_len, user_result_len);
+      auto* aitisa_data = (float*)aitisa_result_data;
+      auto* user_data = (float*)user_result_data;
+      for (int64_t j = 0; j < tensor_size; j++) {
+        ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+      }
+      //            // print result of test
+      std::cout << /*GREEN <<*/ "[ "<< test_case_name <<" sample" << i << " / "
+                << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+      std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
+                << " ms" << std::endl;
+      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms"
+                << std::endl;
     }
-    ASSERT_EQ(aitisa_result_len, user_result_len);
-    float* aitisa_data = (float*)aitisa_result_data;
-    float* user_data = (float*)user_result_data;
-    for (int64_t j = 0; j < tensor_size; j++) {
-      ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
-    }
-    //            // print result of test
-    std::cout << /*GREEN <<*/ "[ Pooling sample" << i << " / "
-              << *(this->input_name[i]) << " ] " << /*RESET <<*/ std::endl;
-    std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
-              << " ms" << std::endl;
-    std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms"
-              << std::endl;
-  }
+
+  };
+  test(std::move(this->softmax_inputs), std::move(this->softmax_name), "softmax",
+       this->test_case["softmax"]);
 }
 REGISTER_TYPED_TEST_CASE_P(SoftmaxTest, TwoTests);
 
