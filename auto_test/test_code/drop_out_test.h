@@ -7,7 +7,6 @@
 #include "hice/core/tensor_printer.h"
 
 extern "C" {
-#include <libconfig.h>
 #include <math.h>
 #include <sys/time.h>
 #include "src/nn/dropout.h"

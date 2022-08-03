@@ -5,7 +5,6 @@
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
 extern "C" {
-#include <libconfig.h>
 #include <math.h>
 #include "src/math/matmul.h"
 }

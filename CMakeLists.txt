@@ -111,6 +111,12 @@ if(AITISA_API_BUILD_AUTO_TESTING)
       include(cmake/public/GTest.cmake)
     endif()
   endif()
+  include(cmake/local/LibConfig.cmake)
+  set(libconfig_build_include_dirs
+          "${libconfig_SOURCE_DIR}/lib"
+          "${libconfig_SOURCE_DIR}")
+  include_directories(${libconfig_build_include_dirs})
+
   FILE(GLOB_RECURSE auto_test_srcs "auto_test/*.cpp" "auto_test/*.h")
   add_library(auto_test SHARED ${auto_test_srcs})
   set_target_properties(auto_test
@@ -126,13 +132,17 @@ if(AITISA_API_BUILD_AUTO_TESTING)
       AUTO_TEST_SHARED_LIBS
       AUTO_TEST_SHARED_LIBS_EXPORTS
   )
-  target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock)
+  target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock aitisa_api::libconfig)
   add_library(aitisa_api::auto_test ALIAS auto_test)
+
+  #add user lib
   target_link_libraries(auto_test hice::hice)
 
+  #add user test code
   add_executable(hicetest hice_aitisa_test.cpp)
+
+  #link auto_test
   target_link_libraries(hicetest auto_test)
-  target_link_libraries(hicetest libconfig.a)
   include_directories(hice-master)
 
 endif()

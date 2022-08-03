@@ -4,9 +4,11 @@
 #include "gtest/gtest.h"
 extern "C" {
 #include "src/core/tensor.h"
+#include "libconfig.h"
 }
-namespace aitisa_api {
 #define CONFIG_FILE "../../config/test/test_data.cfg"
+
+namespace aitisa_api {
 
 extern const DataType aitisa_dtypes[];
 extern const Device aitisa_devices[];

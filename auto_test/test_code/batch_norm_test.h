@@ -7,7 +7,6 @@
 #include "hice/basic/factories.h"
 
 extern "C" {
-#include <libconfig.h>
 #include <math.h>
 #include <sys/time.h>
 #include "src/nn/batch_norm.h"

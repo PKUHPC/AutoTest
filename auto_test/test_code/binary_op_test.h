@@ -5,7 +5,6 @@
 #include "auto_test/sample.h"
 
 extern "C" {
-#include <libconfig.h>
 #include <math.h>
 #include <sys/time.h>
 #include "src/math/binary_op.h"
