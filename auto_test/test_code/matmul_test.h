@@ -126,6 +126,9 @@ class MatmulTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
 
     for (auto& input : inputs) {
@@ -252,9 +255,11 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
                 << " ms" << std::endl;
     }
   };
-
-  test(std::move(this->matmul_inputs), std::move(this->matmul_inputs_name),
-       "matmul", this->test_case["matmul"]);
+  if (this->matmul_inputs.size()) {
+    test(std::move(this->matmul_inputs), std::move(this->matmul_inputs_name),
+         "matmul", this->test_case["matmul"]);
+  } else
+    FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(MatmulTest, SevenTests);
 

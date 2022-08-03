@@ -133,7 +133,8 @@ class BatchnormTest : public ::testing::Test {
         config_setting_t* param_dims_setting =
             config_setting_lookup(test, "param_dims");
         if (!param_dims_setting) {
-          fprintf(stderr, "No 'param_dims' in test case %d from %s.\n", i, path);
+          fprintf(stderr, "No 'param_dims' in test case %d from %s.\n", i,
+                  path);
           continue;
         }
         int64_t ndim, param_ndim;
@@ -162,9 +163,10 @@ class BatchnormTest : public ::testing::Test {
           continue;
         }
         if (config_setting_length(param_dims_setting) != param_ndim) {
-          fprintf(stderr,
-                  "'param_dims' length is not correct in test case %d from %s.\n", i,
-                  path);
+          fprintf(
+              stderr,
+              "'param_dims' length is not correct in test case %d from %s.\n",
+              i, path);
           continue;
         }
         for (int j = 0; j < ndim; ++j) {
@@ -224,6 +226,9 @@ class BatchnormTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
 
     for (auto& input : inputs) {
@@ -313,8 +318,7 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
                      (void**)&aitisa_result_data, &aitisa_result_len);
 
       // user
-      UserDataType user_dtype =
-          UserFuncs::user_int_to_dtype(inputs[i].dtype());
+      UserDataType user_dtype = UserFuncs::user_int_to_dtype(inputs[i].dtype());
       UserDevice user_device =
           UserFuncs::user_int_to_device(inputs[i].device());
       UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
@@ -351,9 +355,10 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
       gettimeofday(&user_end, nullptr);
       user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
                   (user_end.tv_usec - user_start.tv_usec) / 1000.0;
-      UserFuncs::user_resolve(
-          user_result, &user_result_dtype, &user_result_device, &user_result_dims,
-          &user_result_ndim, (void**)&user_result_data, &user_result_len);
+      UserFuncs::user_resolve(user_result, &user_result_dtype,
+                              &user_result_device, &user_result_dims,
+                              &user_result_ndim, (void**)&user_result_data,
+                              &user_result_len);
       // compare
       int64_t tensor_size = 1;
       ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
@@ -370,16 +375,19 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
         ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
       }
       // print result of test
-      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i << " / "
-                << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
+      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
+                << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
       std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
                 << " ms" << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time << " ms"
-                << std::endl;
+      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
+                << " ms" << std::endl;
     }
   };
-  test(std::move(this->batch_norm_inputs), std::move(this->batch_norm_name), "batch_norm",
-       this->test_case["batch_norm"]);
+  if (this->batch_norm_inputs.size()) {
+    test(std::move(this->batch_norm_inputs), std::move(this->batch_norm_name),
+         "batch_norm", this->test_case["batch_norm"]);
+  } else
+    FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(BatchnormTest, TwoTests);
 

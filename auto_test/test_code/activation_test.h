@@ -98,6 +98,9 @@ class ActivationTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
 
     for (auto& input : inputs) {
@@ -263,15 +266,18 @@ TYPED_TEST_P(ActivationTest, FourTests) {
                 << " ms" << std::endl;
     }
   };
-
-  test(std::move(this->relu_inputs), std::move(this->relu_inputs_name), "relu",
-       this->test_case["relu"]);
-  test(std::move(this->sigmoid_inputs), std::move(this->sigmoid_inputs_name),
-       "sigmoid", this->test_case["sigmoid"]);
-  test(std::move(this->tanh_inputs), std::move(this->tanh_inputs_name), "tanh",
-       this->test_case["tanh"]);
-  test(std::move(this->sqrt_inputs), std::move(this->sqrt_inputs_name), "sqrt",
-       this->test_case["sqrt"]);
+  if (this->relu_inputs.size() && this->relu_inputs.size() &&
+      this->relu_inputs.size() && this->relu_inputs.size()) {
+    test(std::move(this->relu_inputs), std::move(this->relu_inputs_name),
+         "relu", this->test_case["relu"]);
+    test(std::move(this->sigmoid_inputs), std::move(this->sigmoid_inputs_name),
+         "sigmoid", this->test_case["sigmoid"]);
+    test(std::move(this->tanh_inputs), std::move(this->tanh_inputs_name),
+         "tanh", this->test_case["tanh"]);
+    test(std::move(this->sqrt_inputs), std::move(this->sqrt_inputs_name),
+         "sqrt", this->test_case["sqrt"]);
+  } else
+    FAIL() << "No input test case.";
 }
 
 REGISTER_TYPED_TEST_CASE_P(ActivationTest, FourTests);

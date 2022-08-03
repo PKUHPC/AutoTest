@@ -252,7 +252,11 @@ class Conv2dTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
+
     for (auto& input : inputs) {
       unsigned int input_nelem1 = 1;
       unsigned int input_nelem2 = 1;
@@ -383,8 +387,11 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                 << " ms" << std::endl;
     }
   };
-  test(std::move(this->conv2d_inputs), std::move(this->conv2d_inputs_name),
-       "conv2d", this->test_case["conv2d"]);
+  if (this->conv2d_inputs.size()) {
+    test(std::move(this->conv2d_inputs), std::move(this->conv2d_inputs_name),
+         "conv2d", this->test_case["conv2d"]);
+  } else
+    FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(Conv2dTest, TwoTests);
 

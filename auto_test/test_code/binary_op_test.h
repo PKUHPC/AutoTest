@@ -130,6 +130,9 @@ class BinaryOPTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
 
     for (auto& input : inputs) {
@@ -342,14 +345,18 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
                 << " ms" << std::endl;
     }
   };
-  test(std::move(this->add_inputs), std::move(this->add_inputs_name), "add",
-       this->test_case["add"]);
-  test(std::move(this->sub_inputs), std::move(this->sub_inputs_name), "sub",
-       this->test_case["sub"]);
-  test(std::move(this->mul_inputs), std::move(this->mul_inputs_name), "mul",
-       this->test_case["mul"]);
-  test(std::move(this->div_inputs), std::move(this->div_inputs_name), "div",
-       this->test_case["div"]);
+  if (this->add_inputs.size() && this->sub_inputs.size() &&
+      this->mul_inputs.size() && this->div_inputs.size()) {
+    test(std::move(this->add_inputs), std::move(this->add_inputs_name), "add",
+         this->test_case["add"]);
+    test(std::move(this->sub_inputs), std::move(this->sub_inputs_name), "sub",
+         this->test_case["sub"]);
+    test(std::move(this->mul_inputs), std::move(this->mul_inputs_name), "mul",
+         this->test_case["mul"]);
+    test(std::move(this->div_inputs), std::move(this->div_inputs_name), "div",
+         this->test_case["div"]);
+  } else
+    FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(BinaryOPTest, FourTests);
 

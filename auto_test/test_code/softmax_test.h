@@ -128,6 +128,9 @@ class SoftmaxTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
 
     for (auto& input : inputs) {
@@ -237,8 +240,11 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
                 << " ms" << std::endl;
     }
   };
-  test(std::move(this->softmax_inputs), std::move(this->softmax_name),
-       "softmax", this->test_case["softmax"]);
+  if (this->softmax_inputs.size()) {
+    test(std::move(this->softmax_inputs), std::move(this->softmax_name),
+         "softmax", this->test_case["softmax"]);
+  } else
+    FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(SoftmaxTest, TwoTests);
 

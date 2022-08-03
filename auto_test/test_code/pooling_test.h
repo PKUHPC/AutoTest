@@ -246,6 +246,9 @@ class PoolingTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
 
     for (auto& input : inputs) {
@@ -357,9 +360,11 @@ TYPED_TEST_P(PoolingTest, TwoTests) {
                 << " ms" << std::endl;
     }
   };
-
-  test(std::move(this->pooling_inputs), std::move(this->pooling_name),
-       "pooling", this->test_case["pooling"]);
+  if (this->pooling_inputs.size()) {
+    test(std::move(this->pooling_inputs), std::move(this->pooling_name),
+         "pooling", this->test_case["pooling"]);
+  } else
+    FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(PoolingTest, TwoTests);
 

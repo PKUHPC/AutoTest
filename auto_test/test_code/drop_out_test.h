@@ -142,6 +142,9 @@ class DropoutTest : public ::testing::Test {
         inputs.push_back(std::move(tmp));
         inputs_name.emplace_back(input_name);
       }
+    } else {
+      fprintf(stderr, "Can not find path %s in config.\n", path);
+      return (EXIT_FAILURE);
     }
 
     for (auto& input : inputs) {
@@ -266,9 +269,11 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
                 << " ms" << std::endl;
     }
   };
-
-  test(std::move(this->drop_out_inputs), std::move(this->drop_out_name),
-       "drop_out", this->test_case["drop_out"]);
+  if (this->drop_out_inputs.size()) {
+    test(std::move(this->drop_out_inputs), std::move(this->drop_out_name),
+         "drop_out", this->test_case["drop_out"]);
+  } else
+    FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(DropoutTest, TwoTests);
 
