@@ -192,8 +192,8 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
 
   time_map m;
   auto test = [&m](std::vector<Binary_Input>&& inputs,
-                 std::vector<std::string>&& inputs_name,
-                 const std::string& test_case_name, int test_case_index) {
+                   std::vector<std::string>&& inputs_name,
+                   const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
       // clang-format off
       struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
@@ -344,7 +344,8 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
                 << " ms" << std::endl;
       std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
                 << " ms" << std::endl;
-      m.insert(std::make_pair(test_case_name+" sample "+std::to_string(i),time_map_value(aitisa_time, user_time)));
+      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
+                              time_map_value(aitisa_time, user_time)));
     }
   };
   if (this->add_inputs.size() && this->sub_inputs.size() &&
@@ -357,7 +358,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
          this->test_case["mul"]);
     test(std::move(this->div_inputs), std::move(this->div_inputs_name), "div",
          this->test_case["div"]);
-    draw_fig_fun(m,"binary_op");
+    draw_fig_fun(m, "binary_op");
   } else
     FAIL() << "No input test case.";
 }

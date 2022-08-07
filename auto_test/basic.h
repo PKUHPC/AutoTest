@@ -39,6 +39,8 @@ using AITISA_DataType = DataType;
 
 using time_map_value = std::pair<double, double>;
 using time_map = std::map<std::string, time_map_value>;
+
+void draw_fig_fun(const time_map& m, const std::string& filename);
 #define GREEN "\033[32m"
 #define RESET "\033[0m"
 
@@ -148,47 +150,5 @@ template <size_t N, typename F, typename U>
 struct TypeCompare {
   TypeCompare() { TypeComparer<N, F, U>::compare(); }
 };
-
-static void draw_fig_fun(const time_map& m, const std::string& filename) {
-//  Py_Initialize();
-  if (Py_IsInitialized()) {
-    PyObject* pModule = nullptr;
-    PyRun_SimpleString("import sys");
-    PyRun_SimpleString("sys.path.append('../../script/')");
-    pModule = PyImport_ImportModule("draw_fig");
-    if (pModule) {
-      PyObject* pFunc = PyObject_GetAttrString(pModule, "draw_fig");
-      PyObject* pArgs = PyTuple_New(4);
-
-      PyObject* test_case_list = PyList_New(0);
-      PyObject* time_list = PyList_New(0);
-      PyObject* op_kind_list = PyList_New(0);
-
-      for (const auto& kv : m) {
-        PyList_Append(test_case_list, Py_BuildValue("s", kv.first.c_str()));
-        PyList_Append(time_list, Py_BuildValue("d", kv.second.first));
-        PyList_Append(op_kind_list, Py_BuildValue("s", "aitisa"));
-
-        PyList_Append(test_case_list, Py_BuildValue("s", kv.first.c_str()));
-        PyList_Append(time_list, Py_BuildValue("d", kv.second.second));
-        PyList_Append(op_kind_list, Py_BuildValue("s", "user"));
-      }
-
-      PyTuple_SetItem(pArgs, 0, test_case_list);
-      PyTuple_SetItem(pArgs, 1, time_list);
-      PyTuple_SetItem(pArgs, 2, op_kind_list);
-      PyTuple_SetItem(pArgs, 3, Py_BuildValue("s", filename.c_str()));
-
-      PyEval_CallObject(PyObject_GetAttrString(pModule, "draw_fig"), pArgs);
-
-    } else {
-      printf( "python import failed...\n");
-    }
-  } else {
-    printf("python initialized failed...\n");
-  }
-//  Py_Finalize();
-
-}
 
 }  // namespace aitisa_api

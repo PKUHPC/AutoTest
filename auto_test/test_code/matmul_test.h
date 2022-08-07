@@ -169,8 +169,8 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
 
   time_map m;
   auto test = [&m](std::vector<Binary_Input>&& inputs,
-                 std::vector<std::string>&& inputs_name,
-                 const std::string& test_case_name, int test_case_index) {
+                   std::vector<std::string>&& inputs_name,
+                   const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
       std::clock_t aitisa_start, aitisa_end, user_start, user_end;
       double aitisa_time, user_time;
@@ -254,13 +254,14 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
                 << " ms" << std::endl;
       std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
                 << " ms" << std::endl;
-      m.insert(std::make_pair(test_case_name+" sample "+std::to_string(i),time_map_value(aitisa_time, user_time)));
+      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
+                              time_map_value(aitisa_time, user_time)));
     }
   };
   if (this->matmul_inputs.size()) {
     test(std::move(this->matmul_inputs), std::move(this->matmul_inputs_name),
          "matmul", this->test_case["matmul"]);
-    draw_fig_fun(m,"matmul");
+    draw_fig_fun(m, "matmul");
   } else
     FAIL() << "No input test case.";
 }

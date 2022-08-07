@@ -117,4 +117,43 @@ void full_float(Tensor t, const float value) {
   }
 }
 
+void draw_fig_fun(const time_map& m, const std::string& filename) {
+  if (Py_IsInitialized()) {
+    PyObject* p_module = nullptr;
+    PyRun_SimpleString("import sys");
+    PyRun_SimpleString("sys.path.append('../../script/')");
+    p_module = PyImport_ImportModule("draw_fig");
+    if (p_module) {
+      PyObject* p_func = PyObject_GetAttrString(p_module, "draw_fig");
+      PyObject* p_args = PyTuple_New(4);
+
+      PyObject* test_case_list = PyList_New(0);
+      PyObject* time_list = PyList_New(0);
+      PyObject* op_kind_list = PyList_New(0);
+
+      for (const auto& kv : m) {
+        PyList_Append(test_case_list, Py_BuildValue("s", kv.first.c_str()));
+        PyList_Append(time_list, Py_BuildValue("d", kv.second.first));
+        PyList_Append(op_kind_list, Py_BuildValue("s", "aitisa"));
+
+        PyList_Append(test_case_list, Py_BuildValue("s", kv.first.c_str()));
+        PyList_Append(time_list, Py_BuildValue("d", kv.second.second));
+        PyList_Append(op_kind_list, Py_BuildValue("s", "user"));
+      }
+
+      PyTuple_SetItem(p_args, 0, test_case_list);
+      PyTuple_SetItem(p_args, 1, time_list);
+      PyTuple_SetItem(p_args, 2, op_kind_list);
+      PyTuple_SetItem(p_args, 3, Py_BuildValue("s", filename.c_str()));
+
+      PyEval_CallObject(p_func, p_args);
+
+    } else {
+      printf("python import failed...\n");
+    }
+  } else {
+    printf("python initialized failed...\n");
+  }
+}
+
 }  // namespace aitisa_api

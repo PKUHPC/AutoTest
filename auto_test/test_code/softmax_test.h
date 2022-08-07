@@ -162,8 +162,8 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
 
   time_map m;
   auto test = [&m](std::vector<Softmax_Input>&& inputs,
-                 std::vector<std::string>&& inputs_name,
-                 const std::string& test_case_name, int test_case_index) {
+                   std::vector<std::string>&& inputs_name,
+                   const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
       // clang-format off
       struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
@@ -239,13 +239,14 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
                 << " ms" << std::endl;
       std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
                 << " ms" << std::endl;
-      m.insert(std::make_pair(test_case_name+" sample "+std::to_string(i),time_map_value(aitisa_time, user_time)));
+      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
+                              time_map_value(aitisa_time, user_time)));
     }
   };
   if (this->softmax_inputs.size()) {
     test(std::move(this->softmax_inputs), std::move(this->softmax_name),
          "softmax", this->test_case["softmax"]);
-   draw_fig_fun(m,"softmax");
+    draw_fig_fun(m, "softmax");
   } else
     FAIL() << "No input test case.";
 }
