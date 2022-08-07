@@ -9,14 +9,6 @@
 #include "auto_test/test_code/pooling_test.h"
 #include "auto_test/test_code/softmax_test.h"
 
-#define REGISTER_OP(ADD, SUB, MUL, DIV, MATMUL, CONV) \
-  REGISTER_BINARY_OP(ADD, SUB, MUL, DIV);             \
-  REGISTER_MATMUL(MATMUL);                            \
-  REGISTER_CONV(CONV);                                \
-  REGISTER_POOLING(POOLING);                          \
-  REGISTER_SOFTMAX(SOFTMAX);                          \
-  REGISTER_BATCHNORM()                                \
-  REGISTER_DROPOUT()
 
 #define PERFORM_TEST                      \
   ::testing::InitGoogleTest(&argc, argv); \

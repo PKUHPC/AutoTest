@@ -144,7 +144,8 @@ TYPED_TEST_P(ActivationTest, FourTests) {
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
 
-  auto test = [](std::vector<Unary_Input>&& inputs,
+  time_map m;
+  auto test = [&m](std::vector<Unary_Input>&& inputs,
                  std::vector<std::string>&& inputs_name,
                  const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
@@ -264,6 +265,7 @@ TYPED_TEST_P(ActivationTest, FourTests) {
                 << " ms" << std::endl;
       std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
                 << " ms" << std::endl;
+      m.insert(std::make_pair(test_case_name+" sample "+std::to_string(i),time_map_value(aitisa_time, user_time)));
     }
   };
   if (this->relu_inputs.size() && this->relu_inputs.size() &&
@@ -276,6 +278,7 @@ TYPED_TEST_P(ActivationTest, FourTests) {
          "tanh", this->test_case["tanh"]);
     test(std::move(this->sqrt_inputs), std::move(this->sqrt_inputs_name),
          "sqrt", this->test_case["sqrt"]);
+    draw_fig_fun(m,"activate");
   } else
     FAIL() << "No input test case.";
 }

@@ -295,7 +295,8 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
 
-  auto test = [](std::vector<Conv_Input>&& inputs,
+  time_map m;
+  auto test = [&m](std::vector<Conv_Input>&& inputs,
                  std::vector<std::string>&& inputs_name,
                  const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
@@ -385,11 +386,13 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                 << " ms" << std::endl;
       std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
                 << " ms" << std::endl;
+      m.insert(std::make_pair(test_case_name+" sample "+std::to_string(i),time_map_value(aitisa_time, user_time)));
     }
   };
   if (this->conv2d_inputs.size()) {
     test(std::move(this->conv2d_inputs), std::move(this->conv2d_inputs_name),
          "conv2d", this->test_case["conv2d"]);
+    draw_fig_fun(m,"conv2d");
   } else
     FAIL() << "No input test case.";
 }

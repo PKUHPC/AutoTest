@@ -238,6 +238,8 @@ REGISTER_BATCHNORM(hice::hice_batchnorm_func, hice::hice_batchnorm);
 REGISTER_DROPOUT(hice::hice_dropout_func, hice::hice_dropout);
 
 int main(int argc, char** argv) {
+  Py_Initialize();
   PERFORM_TEST;
+  Py_Finalize();
   return 0;
 }

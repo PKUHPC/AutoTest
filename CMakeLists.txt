@@ -132,7 +132,9 @@ if(AITISA_API_BUILD_AUTO_TESTING)
       AUTO_TEST_SHARED_LIBS
       AUTO_TEST_SHARED_LIBS_EXPORTS
   )
-  target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock aitisa_api::libconfig)
+  find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+  target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock aitisa_api::libconfig Python3::Python Python3::Module)
+
   add_library(aitisa_api::auto_test ALIAS auto_test)
 
   #add user lib
