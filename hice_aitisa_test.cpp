@@ -248,5 +248,5 @@ int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Finalize();
 #endif
-  return 0;
+  return res;
 }
