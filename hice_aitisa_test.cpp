@@ -241,7 +241,6 @@ REGISTER_DROPOUT(hice::hice_dropout_func, hice::hice_dropout);
 
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
-  printf("sss");
   Py_Initialize();
 #endif
   ::testing::InitGoogleTest(&argc, argv);
