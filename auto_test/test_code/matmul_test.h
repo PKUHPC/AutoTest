@@ -267,7 +267,9 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
   if (this->matmul_inputs.size()) {
     test(std::move(this->matmul_inputs), std::move(this->matmul_inputs_name),
          "matmul", this->test_case["matmul"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "matmul");
+#endif
   } else
     FAIL() << "No input test case.";
 }

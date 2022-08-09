@@ -9,6 +9,7 @@ option(AITISA_API_BUILD_TESTING "Build with testing enabled" ON)
 option(AITISA_API_BUILD_AUTO_TESTING "Compile auto testing framework as a shared library" ON)
 option(AITISA_API_BUILD_DOCS "Generate documents with Doxygen" ON)
 option(AITISA_API_USE_GTEST_LOCAL "Download and build with GTest" ON)
+option(AITISA_API_GENERATE_FIGURE "generate figure for test result" ON)
 
 if(AITISA_API_BUILD_SHARED_LIBS)
   set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
@@ -132,8 +133,14 @@ if(AITISA_API_BUILD_AUTO_TESTING)
       AUTO_TEST_SHARED_LIBS
       AUTO_TEST_SHARED_LIBS_EXPORTS
   )
-  find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-  target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock aitisa_api::libconfig Python3::Python Python3::Module)
+
+  if(AITISA_API_GENERATE_FIGURE)
+    find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+    target_link_libraries(auto_test Python3::Python Python3::Module)
+    ADD_DEFINITIONS(-DAITISA_API_GENERATE_FIGURE)
+  endif()
+
+  target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock aitisa_api::libconfig)
 
   add_library(aitisa_api::auto_test ALIAS auto_test)
 

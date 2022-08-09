@@ -240,9 +240,14 @@ REGISTER_BATCHNORM(hice::hice_batchnorm_func, hice::hice_batchnorm);
 REGISTER_DROPOUT(hice::hice_dropout_func, hice::hice_dropout);
 
 int main(int argc, char** argv) {
+#ifdef AITISA_API_GENERATE_FIGURE
+  printf("sss");
   Py_Initialize();
+#endif
   ::testing::InitGoogleTest(&argc, argv);
-  auto res = RUN_ALL_TESTS();;
+  auto res = RUN_ALL_TESTS();
+#ifdef AITISA_API_GENERATE_FIGURE
   Py_Finalize();
-  return res;
+#endif
+  return 0;
 }

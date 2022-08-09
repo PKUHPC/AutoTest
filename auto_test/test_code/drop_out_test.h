@@ -275,7 +275,9 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
   if (this->drop_out_inputs.size()) {
     test(std::move(this->drop_out_inputs), std::move(this->drop_out_name),
          "drop_out", this->test_case["drop_out"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "drop_out");
+#endif
   } else
     FAIL() << "No input test case.";
 }

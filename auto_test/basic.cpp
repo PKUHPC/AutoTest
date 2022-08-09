@@ -117,6 +117,7 @@ void full_float(Tensor t, const float value) {
   }
 }
 
+#ifdef AITISA_API_GENERATE_FIGURE
 void draw_fig_fun(const time_map& m, const std::string& filename) {
   if (Py_IsInitialized()) {
     PyObject* p_module = nullptr;
@@ -155,5 +156,6 @@ void draw_fig_fun(const time_map& m, const std::string& filename) {
     printf("python initialized failed...\n");
   }
 }
+#endif
 
 }  // namespace aitisa_api

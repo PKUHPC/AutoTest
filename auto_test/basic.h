@@ -1,6 +1,8 @@
 #pragma once
 
+#ifdef AITISA_API_GENERATE_FIGURE
 #include <Python.h>
+#endif
 #include <iostream>
 #include "gtest/gtest.h"
 extern "C" {

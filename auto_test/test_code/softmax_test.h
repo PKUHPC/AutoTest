@@ -246,7 +246,9 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
   if (this->softmax_inputs.size()) {
     test(std::move(this->softmax_inputs), std::move(this->softmax_name),
          "softmax", this->test_case["softmax"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "softmax");
+#endif
   } else
     FAIL() << "No input test case.";
 }

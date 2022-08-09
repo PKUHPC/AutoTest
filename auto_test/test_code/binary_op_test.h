@@ -358,7 +358,9 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
          this->test_case["mul"]);
     test(std::move(this->div_inputs), std::move(this->div_inputs_name), "div",
          this->test_case["div"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "binary_op");
+#endif
   } else
     FAIL() << "No input test case.";
 }

@@ -279,7 +279,9 @@ TYPED_TEST_P(ActivationTest, FourTests) {
          "tanh", this->test_case["tanh"]);
     test(std::move(this->sqrt_inputs), std::move(this->sqrt_inputs_name),
          "sqrt", this->test_case["sqrt"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "activate");
+#endif
   } else
     FAIL() << "No input test case.";
 }

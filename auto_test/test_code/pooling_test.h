@@ -366,7 +366,9 @@ TYPED_TEST_P(PoolingTest, TwoTests) {
   if (this->pooling_inputs.size()) {
     test(std::move(this->pooling_inputs), std::move(this->pooling_name),
          "pooling", this->test_case["pooling"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "pooling");
+#endif
   } else
     FAIL() << "No input test case.";
 }

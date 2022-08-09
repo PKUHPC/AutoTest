@@ -393,7 +393,9 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
   if (this->conv2d_inputs.size()) {
     test(std::move(this->conv2d_inputs), std::move(this->conv2d_inputs_name),
          "conv2d", this->test_case["conv2d"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "conv2d");
+#endif
   } else
     FAIL() << "No input test case.";
 }

@@ -389,7 +389,9 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
   if (this->batch_norm_inputs.size()) {
     test(std::move(this->batch_norm_inputs), std::move(this->batch_norm_name),
          "batch_norm", this->test_case["batch_norm"]);
+#ifdef AITISA_API_GENERATE_FIGURE
     draw_fig_fun(m, "batch_norm");
+#endif
   } else
     FAIL() << "No input test case.";
 }
