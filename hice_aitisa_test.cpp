@@ -212,6 +212,8 @@ void hice_dropout(Tensor input, double rate, Tensor* output) {
 typedef std::function<void(Tensor, double, Tensor*)> hice_dropout_func;
 
 }  // namespace hice
+
+//register op
 REGISTER_BASIC(hice::Tensor, hice::DataType, hice::hice_int_to_dtype,
                hice::hice_dtype_to_int, hice::Device, hice::hice_int_to_device,
                hice::hice_device_to_int, hice::hice_create, hice::hice_resolve);
@@ -239,7 +241,8 @@ REGISTER_DROPOUT(hice::hice_dropout_func, hice::hice_dropout);
 
 int main(int argc, char** argv) {
   Py_Initialize();
-  PERFORM_TEST;
+  ::testing::InitGoogleTest(&argc, argv);
+  auto res = RUN_ALL_TESTS();;
   Py_Finalize();
-  return 0;
+  return res;
 }
