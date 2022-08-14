@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <string>
 #include <utility>
 #include "auto_test/basic.h"
@@ -8,7 +9,6 @@
 
 extern "C" {
 #include <math.h>
-#include <sys/time.h>
 #include "src/nn/batch_norm.h"
 }
 
@@ -265,10 +265,6 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      // clang-format off
-      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
-      // clang-format on
-      double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
       float *aitisa_result_data = nullptr, *user_result_data = nullptr;
@@ -306,14 +302,15 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
                     inputs[i].param_ndim(), nullptr, 0, &bias);
       full_float(bias, 0);
 
-      gettimeofday(&aitisa_start, nullptr);
+      auto aitisa_start = std::chrono::steady_clock::now();
 
       aitisa_batch_norm(aitisa_tensor, inputs[i].axis(), scale, bias, mean,
                         variance, inputs[i].epsilon(), &aitisa_result);
 
-      gettimeofday(&aitisa_end, nullptr);
-      aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0 +
-                    (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0;
+      auto aitisa_end = std::chrono::steady_clock::now();
+
+      std::chrono::duration<double> aitisa_elapsed = aitisa_end - aitisa_start;
+
       aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
                      &aitisa_result_dims, &aitisa_result_ndim,
                      (void**)&aitisa_result_data, &aitisa_result_len);
@@ -326,7 +323,6 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
                              inputs[i].ndim(), inputs[i].data(),
                              inputs[i].len(), &user_tensor);
 
-      gettimeofday(&user_start, nullptr);
       std::vector<int64_t> param_dims = {};
       for (int k = 0; k < inputs[i].param_ndim(); k++) {
         param_dims.push_back(inputs[i].param_dims()[k]);
@@ -348,14 +344,14 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
       UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
                              inputs[i].ndim(), NULL, inputs[i].len(),
                              &user_result);
-
+      auto user_start = std::chrono::steady_clock::now();
       UserFuncs::user_batchnorm(
           user_tensor, inputs[i].axis(), bn_scale, bn_bias, running_mean,
           running_var, inputs[i].epsilon(), user_result, bn_mean, bn_var);
 
-      gettimeofday(&user_end, nullptr);
-      user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
-                  (user_end.tv_usec - user_start.tv_usec) / 1000.0;
+      auto user_end = std::chrono::steady_clock::now();
+      std::chrono::duration<double> user_elapsed = user_end - user_start;
+
       UserFuncs::user_resolve(user_result, &user_result_dtype,
                               &user_result_device, &user_result_dims,
                               &user_result_ndim, (void**)&user_result_data,
@@ -378,12 +374,15 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
       // print result of test
       std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
                 << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
-      std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
-                << " ms" << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
-                << " ms" << std::endl;
+      std::cout << /*GREEN <<*/ "\t[ AITISA ] "
+                << /*RESET <<*/ aitisa_elapsed.count() * 1000 << " ms"
+                << std::endl;
+      std::cout << /*GREEN <<*/ "\t[  USER  ] "
+                << /*RESET <<*/ user_elapsed.count() * 1000 << " ms"
+                << std::endl;
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-                              time_map_value(aitisa_time, user_time)));
+                              time_map_value(aitisa_elapsed.count() * 1000,
+                                             user_elapsed.count() * 1000)));
     }
   };
   if (this->batch_norm_inputs.size()) {

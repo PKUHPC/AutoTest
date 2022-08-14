@@ -1,12 +1,12 @@
 #pragma once
 
+#include <chrono>
 #include <string>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
 
 extern "C" {
 #include <math.h>
-#include <sys/time.h>
 #include "src/math/binary_op.h"
 }
 
@@ -195,10 +195,6 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      // clang-format off
-      struct timeval aitisa_start{}, aitisa_end{}, user_start{}, user_end{};
-      // clang-format on
-      double aitisa_time, user_time;
       int64_t aitisa_result_ndim, user_result_ndim;
       int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
       float *aitisa_result_data = nullptr, *user_result_data = nullptr;
@@ -222,7 +218,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
       aitisa_create(aitisa_dtype2, aitisa_device2, inputs[i].dims2(),
                     inputs[i].ndim2(), (void*)(inputs[i].data2()),
                     inputs[i].len2(), &aitisa_tensor2);
-      gettimeofday(&aitisa_start, nullptr);
+      auto aitisa_start = std::chrono::steady_clock::now();
       switch (test_case_index) {
         case 0:
           aitisa_add(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
@@ -239,9 +235,8 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
         default:
           break;
       }
-      gettimeofday(&aitisa_end, nullptr);
-      aitisa_time = (aitisa_end.tv_sec - aitisa_start.tv_sec) * 1000.0 +
-                    (aitisa_end.tv_usec - aitisa_start.tv_usec) / 1000.0;
+      auto aitisa_end = std::chrono::steady_clock::now();
+      std::chrono::duration<double> aitisa_elapsed = aitisa_end - aitisa_start;
       aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
                      &aitisa_result_dims, &aitisa_result_ndim,
                      (void**)&aitisa_result_data, &aitisa_result_len);
@@ -260,7 +255,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
       UserFuncs::user_create(user_dtype2, user_device2, inputs[i].dims2(),
                              inputs[i].ndim2(), inputs[i].data2(),
                              inputs[i].len2(), &user_tensor2);
-      gettimeofday(&user_start, nullptr);
+      auto user_start = std::chrono::steady_clock::now();
       switch (test_case_index) {
         case 0:
           UserFuncs::user_add(user_tensor1, user_tensor2, &user_result);
@@ -277,9 +272,9 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
         default:
           break;
       }
-      gettimeofday(&user_end, nullptr);
-      user_time = (user_end.tv_sec - user_start.tv_sec) * 1000.0 +
-                  (user_end.tv_usec - user_start.tv_usec) / 1000.0;
+      auto user_end = std::chrono::steady_clock::now();
+      std::chrono::duration<double> user_elapsed = user_end - user_start;
+
       UserFuncs::user_resolve(user_result, &user_result_dtype,
                               &user_result_device, &user_result_dims,
                               &user_result_ndim, (void**)&user_result_data,
@@ -340,12 +335,15 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
       // print result of test
       std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
                 << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
-      std::cout << /*GREEN <<*/ "\t[ AITISA ] " << /*RESET <<*/ aitisa_time
-                << " ms" << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] " << /*RESET <<*/ user_time
-                << " ms" << std::endl;
+      std::cout << /*GREEN <<*/ "\t[ AITISA ] "
+                << /*RESET <<*/ aitisa_elapsed.count() * 1000 << " ms"
+                << std::endl;
+      std::cout << /*GREEN <<*/ "\t[  USER  ] "
+                << /*RESET <<*/ user_elapsed.count() * 1000 << " ms"
+                << std::endl;
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-                              time_map_value(aitisa_time, user_time)));
+                              time_map_value(aitisa_elapsed.count() * 1000,
+                                             user_elapsed.count() * 1000)));
     }
   };
   if (this->add_inputs.size() && this->sub_inputs.size() &&

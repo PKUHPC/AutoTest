@@ -15,7 +15,6 @@
 #include "hice/nn/pooling.h"
 #include "hice/nn/softmax.h"
 extern "C" {
-#include <sys/time.h>
 #include "src/math/sqrt.h"
 #include "src/nn/pooling.h"
 }
