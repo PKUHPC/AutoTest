@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <chrono>
 #include <string>
 #include <utility>
@@ -7,7 +8,6 @@
 #include "auto_test/sample.h"
 
 extern "C" {
-#include <math.h>
 #include "src/nn/conv.h"
 }
 

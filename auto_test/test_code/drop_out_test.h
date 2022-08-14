@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cmath>
 #include <string>
 #include <utility>
 #include "auto_test/basic.h"
@@ -8,7 +9,6 @@
 #include "hice/core/tensor_printer.h"
 
 extern "C" {
-#include <math.h>
 #include "src/nn/dropout.h"
 }
 

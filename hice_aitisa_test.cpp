@@ -2,10 +2,8 @@
 #include "auto_test/basic.h"
 
 #include <functional>
-#include <iostream>
 #include "hice/basic/factories.h"
 #include "hice/core/tensor.h"
-#include "hice/core/tensor_printer.h"
 #include "hice/math/binary_expr.h"
 #include "hice/math/matmul.h"
 #include "hice/nn/activation.h"
@@ -14,10 +12,7 @@
 #include "hice/nn/dropout.h"
 #include "hice/nn/pooling.h"
 #include "hice/nn/softmax.h"
-extern "C" {
-#include "src/math/sqrt.h"
-#include "src/nn/pooling.h"
-}
+
 
 namespace hice {
 const DataType hice_dtypes[10] = {

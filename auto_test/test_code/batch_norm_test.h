@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cmath>
 #include <string>
 #include <utility>
 #include "auto_test/basic.h"
@@ -8,7 +9,6 @@
 #include "hice/basic/factories.h"
 
 extern "C" {
-#include <math.h>
 #include "src/nn/batch_norm.h"
 }
 

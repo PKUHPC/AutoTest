@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cmath>
 #include <chrono>
 #include <string>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
 
 extern "C" {
-#include <math.h>
 #include "src/math/binary_op.h"
 }
 
