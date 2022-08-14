@@ -258,7 +258,7 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
                 << std::endl;
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
                               time_map_value(aitisa_elapsed.count() * 1000,
-                                             aitisa_elapsed.count() * 1000)));
+                                             user_elapsed.count() * 1000)));
     }
   };
   if (this->matmul_inputs.size()) {
