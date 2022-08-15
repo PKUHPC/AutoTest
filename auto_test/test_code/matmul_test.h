@@ -26,132 +26,154 @@ class MatmulTest : public ::testing::Test {
   int fetch_test_data(const char* path, std::vector<Binary_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 
-    config_t cfg;
-    config_setting_t* setting;
-    const char* str;
-    config_init(&cfg);
+    libconfig::Config cfg;
 
-    /* Read the file. If there is an error, report it and exit. */
-    if (!config_read_file(&cfg, CONFIG_FILE)) {
-      fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
-              config_error_line(&cfg), config_error_text(&cfg));
-      config_destroy(&cfg);
+    try {
+      cfg.readFile(CONFIG_FILE);
+    } catch (const libconfig::FileIOException& fioex) {
+      std::cerr << "I/O error while reading file." << std::endl;
+      return (EXIT_FAILURE);
+    } catch (const libconfig::ParseException& pex) {
+      std::cerr << "Parse error at " << pex.getFile() << ":" << pex.getLine()
+                << " - " << pex.getError() << std::endl;
       return (EXIT_FAILURE);
     }
 
-    setting = config_lookup(&cfg, path);
-
-    if (setting != nullptr) {
-      int count = config_setting_length(setting);
+    try {
+      const libconfig::Setting& settings = cfg.lookup(path);
+      int count = settings.getLength();
 
       for (int i = 0; i < count; ++i) {
-        config_setting_t* test = config_setting_get_elem(setting, i);
-        config_setting_t* dims1_setting = config_setting_lookup(test, "dims1");
-        if (!dims1_setting) {
-          fprintf(stderr, "No 'dims1' in test case %d from %s.\n", i, path);
-          continue;
-        }
-        config_setting_t* dims2_setting = config_setting_lookup(test, "dims2");
-        if (!dims2_setting) {
-          fprintf(stderr, "No 'dims2' in test case %d from %s.\n", i, path);
-          continue;
-        }
-        int64_t ndim1, ndim2;
-        std::vector<int64_t> dims1, dims2;
-        int dtype1, device1, len1, dtype2, device2, len2;
-        const char* input_name;
+        const libconfig::Setting& setting = settings[i];
 
-        if (!config_setting_lookup_int64(
-                test, "ndim1", reinterpret_cast<long long int*>(&ndim1))) {
-          fprintf(stderr, "No 'ndim1' in test case %d from %s.\n", i, path);
+        std::vector<int64_t> dims1, dims2;
+        int test_index, ndim1, ndim2, dtype1, device1, len1, dtype2, device2,
+            len2;
+        std::string input_name;
+
+        if (!setting.lookupValue("test_index", test_index)) {
+          std::cerr << "Setting \"test_index\" do not exist in " << path
+                    << " !\n"
+                    << std::endl;
           continue;
         }
-        if (config_setting_length(dims1_setting) != ndim1) {
-          fprintf(stderr,
-                  "'dims1' length is not correct in test case %d from %s.\n", i,
-                  path);
+        if (!setting.lookupValue("ndim1", ndim1)) {
+          std::cerr << "Setting \"ndim1\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int64(
-                test, "ndim2", reinterpret_cast<long long int*>(&ndim2))) {
-          fprintf(stderr, "No 'ndim2' in test case %d from %s.\n", i, path);
+        try {
+          const libconfig::Setting& dims1_setting = setting.lookup("dims1");
+          if (dims1_setting.getLength() != ndim1) {
+            std::cerr << " \"dims1\" length is not correct in test index "
+                      << test_index << " from " << path << " !\n"
+                      << std::endl;
+            continue;
+          }
+          for (int n = 0; n < dims1_setting.getLength(); ++n) {
+            dims1.push_back((int64_t) int(dims1_setting[n]));
+          }
+        } catch (libconfig::SettingNotFoundException& nfex) {
+          std::cerr << "Setting \"dims1\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (config_setting_length(dims2_setting) != ndim2) {
-          fprintf(stderr,
-                  "'dims2' length is not correct in test case %d from %s.\n", i,
-                  path);
+        if (!setting.lookupValue("ndim2", ndim2)) {
+          std::cerr << "Setting \"ndim2\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        for (int j = 0; j < ndim1; ++j) {
-          int64_t input = config_setting_get_int_elem(dims1_setting, j);
-          dims1.push_back(input);
-        }
-        for (int j = 0; j < ndim2; ++j) {
-          int64_t input = config_setting_get_int_elem(dims2_setting, j);
-          dims2.push_back(input);
-        }
-        if (!config_setting_lookup_int(test, "dtype1", &dtype1)) {
-          fprintf(stderr, "No 'dtype1' in test case %d from %s.\n", i, path);
+        try {
+          const libconfig::Setting& dims2_setting = setting.lookup("dims2");
+          if (dims2_setting.getLength() != ndim2) {
+            std::cerr << " \"dims2\" length is not correct in test index "
+                      << test_index << " from " << path << " !\n"
+                      << std::endl;
+            continue;
+          }
+          for (int n = 0; n < dims2_setting.getLength(); ++n) {
+            dims2.push_back((int64_t) int(dims2_setting[n]));
+          }
+        } catch (libconfig::SettingNotFoundException& nfex) {
+          std::cerr << "Setting \"dims2\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "dtype2", &dtype2)) {
-          fprintf(stderr, "No 'dtype2' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("dtype1", dtype1)) {
+          std::cerr << "Setting \"dtype1\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "device1", &device1)) {
-          fprintf(stderr, "No 'device1' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("device1", device1)) {
+          std::cerr << "Setting \"device1\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "device2", &device2)) {
-          fprintf(stderr, "No 'device2' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("len1", len1)) {
+          std::cerr << "Setting \"len1\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "len1", &len1)) {
-          fprintf(stderr, "No 'len1' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("dtype2", dtype2)) {
+          std::cerr << "Setting \"dtype2\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "len2", &len2)) {
-          fprintf(stderr, "No 'len2' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("device2", device2)) {
+          std::cerr << "Setting \"device2\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_string(test, "input_name", &input_name)) {
-          fprintf(stderr, "No 'input_name' in test case %d from %s.\n", i,
-                  path);
+        if (!setting.lookupValue("len2", len2)) {
+          std::cerr << "Setting \"len2\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
+          continue;
+        }
+        if (!setting.lookupValue("input_name", input_name)) {
+          std::cerr << "Setting \"input_name\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
 
         Binary_Input tmp(ndim1, dims1, dtype1, device1, nullptr, len1, ndim2,
                          dims2, dtype2, device2, nullptr, len2);
-
         inputs.push_back(std::move(tmp));
-        inputs_name.emplace_back(input_name);
+        inputs_name.push_back(input_name);
       }
-    } else {
-      fprintf(stderr, "Can not find path %s in config.\n", path);
+
+      for (auto& input : inputs) {
+        unsigned int input_nelem1 = 1;
+        unsigned int input_nelem2 = 1;
+        for (unsigned int j = 0; j < input.ndim1(); j++) {
+          input_nelem1 *= input.dims1()[j];
+        }
+        for (unsigned int j = 0; j < input.ndim2(); j++) {
+          input_nelem2 *= input.dims2()[j];
+        }
+        unsigned int input_len1 = input_nelem1 * elem_size(input.dtype1());
+        unsigned int input_len2 = input_nelem2 * elem_size(input.dtype2());
+        void* input_data1 = (void*)new char[input_len1];
+        void* input_data2 = (void*)new char[input_len2];
+        natural_assign(input_data1, input_len1, input.dtype1());
+        natural_assign(input_data2, input_len2, input.dtype2());
+        input.set_data1(input_data1, input_len1);
+        input.set_data2(input_data2, input_len2);
+      }
+    } catch (const libconfig::SettingNotFoundException& nfex) {
+      std::cerr << nfex.getPath() << " do not exist! " << std::endl;
       return (EXIT_FAILURE);
     }
-
-    for (auto& input : inputs) {
-      unsigned int input_nelem1 = 1;
-      unsigned int input_nelem2 = 1;
-      for (unsigned int j = 0; j < input.ndim1(); j++) {
-        input_nelem1 *= input.dims1()[j];
-      }
-      for (unsigned int j = 0; j < input.ndim2(); j++) {
-        input_nelem2 *= input.dims2()[j];
-      }
-      unsigned int input_len1 = input_nelem1 * elem_size(input.dtype1());
-      unsigned int input_len2 = input_nelem2 * elem_size(input.dtype2());
-      void* input_data1 = (void*)new char[input_len1];
-      void* input_data2 = (void*)new char[input_len2];
-      natural_assign(input_data1, input_len1, input.dtype1());
-      natural_assign(input_data2, input_len2, input.dtype2());
-      input.set_data1(input_data1, input_len1);
-      input.set_data2(input_data2, input_len2);
-    }
-
-    config_destroy(&cfg);
     return (EXIT_SUCCESS);
   }
   using InputType = Binary_Input;

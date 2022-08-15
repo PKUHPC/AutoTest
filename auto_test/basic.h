@@ -4,9 +4,9 @@
 #include <Python.h>
 #endif
 #include <iostream>
+#include <libconfig.h++>
 #include "gtest/gtest.h"
 extern "C" {
-#include "libconfig.h"
 #include "src/core/tensor.h"
 }
 #define CONFIG_FILE "../../config/test/test_data.cfg"

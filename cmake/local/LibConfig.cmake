@@ -23,6 +23,12 @@ if(NOT TARGET config)
             EXCLUDE_FROM_ALL)
 endif()
 
-add_library(aitisa_api::libconfig ALIAS config)
+if(CMAKE_HOST_WIN32)
+    set(libname "libconfig")
+else()
+    set(libname "config")
+endif()
+
+add_library(aitisa_api::libconfig ALIAS ${libname}++)
 
 unset(_external_target_name)

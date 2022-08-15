@@ -105,143 +105,159 @@ class BatchnormTest : public ::testing::Test {
   int fetch_test_data(const char* path, std::vector<Batchnorm_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 
-    config_t cfg;
-    config_setting_t* setting;
-    const char* str;
-    config_init(&cfg);
+    libconfig::Config cfg;
 
-    /* Read the file. If there is an error, report it and exit. */
-    if (!config_read_file(&cfg, CONFIG_FILE)) {
-      fprintf(stderr, "%s:%d - %s\n", config_error_file(&cfg),
-              config_error_line(&cfg), config_error_text(&cfg));
-      config_destroy(&cfg);
+    try {
+      cfg.readFile(CONFIG_FILE);
+    } catch (const libconfig::FileIOException& fioex) {
+      std::cerr << "I/O error while reading file." << std::endl;
+      return (EXIT_FAILURE);
+    } catch (const libconfig::ParseException& pex) {
+      std::cerr << "Parse error at " << pex.getFile() << ":" << pex.getLine()
+                << " - " << pex.getError() << std::endl;
       return (EXIT_FAILURE);
     }
 
-    setting = config_lookup(&cfg, path);
-
-    if (setting != nullptr) {
-      int count = config_setting_length(setting);
+    try {
+      const libconfig::Setting& settings = cfg.lookup(path);
+      int count = settings.getLength();
 
       for (int i = 0; i < count; ++i) {
-        config_setting_t* test = config_setting_get_elem(setting, i);
-        config_setting_t* dims_setting = config_setting_lookup(test, "dims");
-        if (!dims_setting) {
-          fprintf(stderr, "No 'dims' in test case %d from %s.\n", i, path);
-          continue;
-        }
-        config_setting_t* param_dims_setting =
-            config_setting_lookup(test, "param_dims");
-        if (!param_dims_setting) {
-          fprintf(stderr, "No 'param_dims' in test case %d from %s.\n", i,
-                  path);
-          continue;
-        }
-        int64_t ndim, param_ndim;
+        const libconfig::Setting& setting = settings[i];
+
         std::vector<int64_t> dims, param_dims;
-        int dtype, device, len, axis;
-        const char* input_name;
-        double value, mean, var;
-        double epsilon;
+        int dtype, device, len, axis, test_index, ndim, param_ndim;
+        std::string input_name;
+        float value, mean, var, epsilon;
 
-        if (!config_setting_lookup_int64(
-                test, "ndim", reinterpret_cast<long long int*>(&ndim))) {
-          fprintf(stderr, "No 'ndim' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("test_index", test_index)) {
+          std::cerr << "Setting \"test_index\" do not exist in " << path
+                    << " !\n"
+                    << std::endl;
           continue;
         }
-        if (config_setting_length(dims_setting) != ndim) {
-          fprintf(stderr,
-                  "'dims' length is not correct in test case %d from %s.\n", i,
-                  path);
+        if (!setting.lookupValue("ndim", ndim)) {
+          std::cerr << "Setting \"ndim\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int64(
-                test, "param_ndim",
-                reinterpret_cast<long long int*>(&param_ndim))) {
-          fprintf(stderr, "No 'param_ndim' in test case %d from %s.\n", i,
-                  path);
+        try {
+          const libconfig::Setting& dims_setting = setting.lookup("dims");
+          if (dims_setting.getLength() != ndim) {
+            std::cerr << " \"dims\" length is not correct in test index "
+                      << test_index << " from " << path << " !\n"
+                      << std::endl;
+            continue;
+          }
+          for (int n = 0; n < dims_setting.getLength(); ++n) {
+            dims.push_back((int64_t) int(dims_setting[n]));
+          }
+        } catch (libconfig::SettingNotFoundException& nfex) {
+          std::cerr << "Setting \"dims\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (config_setting_length(param_dims_setting) != param_ndim) {
-          fprintf(
-              stderr,
-              "'param_dims' length is not correct in test case %d from %s.\n",
-              i, path);
+        if (!setting.lookupValue("param_ndim", param_ndim)) {
+          std::cerr << "Setting \"param_ndim\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        for (int j = 0; j < ndim; ++j) {
-          int64_t input = config_setting_get_int_elem(dims_setting, j);
-          dims.push_back(input);
-        }
-        for (int k = 0; k < param_ndim; ++k) {
-          int64_t input = config_setting_get_int_elem(param_dims_setting, k);
-          param_dims.push_back(input);
-        }
-        if (!config_setting_lookup_int(test, "dtype", &dtype)) {
-          fprintf(stderr, "No 'dtype' in test case %d from %s.\n", i, path);
+        try {
+          const libconfig::Setting& param_dims_setting =
+              setting.lookup("param_dims");
+          if (param_dims_setting.getLength() != param_ndim) {
+            std::cerr << " \"param_dims\" length is not correct in test index "
+                      << test_index << " from " << path << " !\n"
+                      << std::endl;
+            continue;
+          }
+          for (int n = 0; n < param_dims_setting.getLength(); ++n) {
+            param_dims.push_back((int64_t) int(param_dims_setting[n]));
+          }
+        } catch (libconfig::SettingNotFoundException& nfex) {
+          std::cerr << "Setting \"param_dims\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "device", &device)) {
-          fprintf(stderr, "No 'device' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("dtype", dtype)) {
+          std::cerr << "Setting \"dtype\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "len", &len)) {
-          fprintf(stderr, "No 'len' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("device", device)) {
+          std::cerr << "Setting \"device\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_string(test, "input_name", &input_name)) {
-          fprintf(stderr, "No 'input_name' in test case %d from %s.\n", i,
-                  path);
+        if (!setting.lookupValue("len", len)) {
+          std::cerr << "Setting \"len\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_int(test, "axis", &axis)) {
-          fprintf(stderr, "No 'axis' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("axis", axis)) {
+          std::cerr << "Setting \"axis\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_float(test, "epsilon", &epsilon)) {
-          fprintf(stderr, "No 'epsilon' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("value", value)) {
+          std::cerr << "Setting \"value\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_float(test, "value",
-                                         reinterpret_cast<double*>(&value))) {
-          fprintf(stderr, "No 'value' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("mean", mean)) {
+          std::cerr << "Setting \"mean\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_float(test, "mean",
-                                         reinterpret_cast<double*>(&mean))) {
-          fprintf(stderr, "No 'mean' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("var", var)) {
+          std::cerr << "Setting \"var\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
-        if (!config_setting_lookup_float(test, "var",
-                                         reinterpret_cast<double*>(&var))) {
-          fprintf(stderr, "No 'var' in test case %d from %s.\n", i, path);
+        if (!setting.lookupValue("epsilon", epsilon)) {
+          std::cerr << "Setting \"epsilon\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
           continue;
         }
 
-        Batchnorm_Input tmp(
-            /*ndim*/ ndim, /*dims*/ dims, /*dtype=double*/ dtype,
-            /*device=cpu*/ device, /*data*/ nullptr, /*len*/ len, axis, epsilon,
-            param_ndim, param_dims, value, mean, var);
-
+        if (!setting.lookupValue("input_name", input_name)) {
+          std::cerr << "Setting \"input_name\" do not exist in test index "
+                    << test_index << " from " << path << " !\n"
+                    << std::endl;
+          continue;
+        }
+        Batchnorm_Input tmp(ndim, dims, dtype, device, nullptr, len, axis,
+                            epsilon, param_ndim, param_dims, value, mean, var);
         inputs.push_back(std::move(tmp));
-        inputs_name.emplace_back(input_name);
+        inputs_name.push_back(input_name);
       }
-    } else {
-      fprintf(stderr, "Can not find path %s in config.\n", path);
+
+      for (auto& input : inputs) {
+        unsigned int input_nelem = 1;
+        for (unsigned int j = 0; j < input.ndim(); j++) {
+          input_nelem *= input.dims()[j];
+        }
+        unsigned int input_len = input_nelem * elem_size(input.dtype());
+        void* input_data = (void*)new char[input_len];
+        random_assign(input_data, input_len, input.dtype());
+        input.set_data(input_data, input_len);
+      }
+    } catch (const libconfig::SettingNotFoundException& nfex) {
+      std::cerr << nfex.getPath() << " do not exist! " << std::endl;
       return (EXIT_FAILURE);
     }
-
-    for (auto& input : inputs) {
-      unsigned int input_nelem = 1;
-      for (unsigned int j = 0; j < input.ndim(); j++) {
-        input_nelem *= input.dims()[j];
-      }
-      unsigned int input_len = input_nelem * elem_size(input.dtype());
-      void* input_data = (void*)new char[input_len];
-      random_assign(input_data, input_len, input.dtype());
-      input.set_data(input_data, input_len);
-    }
-    config_destroy(&cfg);
     return (EXIT_SUCCESS);
   }
 
