@@ -1,4 +1,5 @@
 #pragma once
+#define loop 100
 
 #ifdef AITISA_API_GENERATE_FIGURE
 #include <Python.h>

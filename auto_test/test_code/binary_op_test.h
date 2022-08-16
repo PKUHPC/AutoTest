@@ -218,155 +218,161 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      int64_t aitisa_result_ndim, user_result_ndim;
-      int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
-      float *aitisa_result_data = nullptr, *user_result_data = nullptr;
-      unsigned int aitisa_result_len, user_result_len;
-      AITISA_Tensor aitisa_tensor1, aitisa_tensor2, aitisa_result;
-      AITISA_DataType aitisa_result_dtype;
-      AITISA_Device aitisa_result_device;
-      UserTensor user_tensor1, user_tensor2, user_result;
-      UserDataType user_result_dtype;
-      UserDevice user_result_device;
-      // aitisa
-      AITISA_DataType aitisa_dtype1 = aitisa_int_to_dtype(inputs[i].dtype1());
-      AITISA_DataType aitisa_dtype2 = aitisa_int_to_dtype(inputs[i].dtype2());
-      AITISA_Device aitisa_device1 =
-          aitisa_int_to_device(0);  // cpu supoorted only
-      AITISA_Device aitisa_device2 =
-          aitisa_int_to_device(0);  // cpu supported only
-      aitisa_create(aitisa_dtype1, aitisa_device1, inputs[i].dims1(),
-                    inputs[i].ndim1(), (void*)(inputs[i].data1()),
-                    inputs[i].len1(), &aitisa_tensor1);
-      aitisa_create(aitisa_dtype2, aitisa_device2, inputs[i].dims2(),
-                    inputs[i].ndim2(), (void*)(inputs[i].data2()),
-                    inputs[i].len2(), &aitisa_tensor2);
-      auto aitisa_start = std::chrono::steady_clock::now();
-      switch (test_case_index) {
-        case 0:
-          aitisa_add(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
-          break;
-        case 1:
-          aitisa_sub(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
-          break;
-        case 2:
-          aitisa_mul(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
-          break;
-        case 3:
-          aitisa_div(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
-          break;
-        default:
-          break;
-      }
-      auto aitisa_end = std::chrono::steady_clock::now();
-      std::chrono::duration<double> aitisa_elapsed = aitisa_end - aitisa_start;
-      aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
-                     &aitisa_result_dims, &aitisa_result_ndim,
-                     (void**)&aitisa_result_data, &aitisa_result_len);
-      // user
-      UserDataType user_dtype1 =
-          UserFuncs::user_int_to_dtype(inputs[i].dtype1());
-      UserDataType user_dtype2 =
-          UserFuncs::user_int_to_dtype(inputs[i].dtype2());
-      UserDevice user_device1 =
-          UserFuncs::user_int_to_device(inputs[i].device1());
-      UserDevice user_device2 =
-          UserFuncs::user_int_to_device(inputs[i].device2());
-      UserFuncs::user_create(user_dtype1, user_device1, inputs[i].dims1(),
-                             inputs[i].ndim1(), inputs[i].data1(),
-                             inputs[i].len1(), &user_tensor1);
-      UserFuncs::user_create(user_dtype2, user_device2, inputs[i].dims2(),
-                             inputs[i].ndim2(), inputs[i].data2(),
-                             inputs[i].len2(), &user_tensor2);
-      auto user_start = std::chrono::steady_clock::now();
-      switch (test_case_index) {
-        case 0:
-          UserFuncs::user_add(user_tensor1, user_tensor2, &user_result);
-          break;
-        case 1:
-          UserFuncs::user_sub(user_tensor1, user_tensor2, &user_result);
-          break;
-        case 2:
-          UserFuncs::user_mul(user_tensor1, user_tensor2, &user_result);
-          break;
-        case 3:
-          UserFuncs::user_div(user_tensor1, user_tensor2, &user_result);
-          break;
-        default:
-          break;
-      }
-      auto user_end = std::chrono::steady_clock::now();
-      std::chrono::duration<double> user_elapsed = user_end - user_start;
+      auto aitisa_elapsed = std::chrono::duration<double>::zero();
+      auto user_elapsed = std::chrono::duration<double>::zero();
+      //loop test
+      for (int n = 0; n < loop; n++) {
+        int64_t aitisa_result_ndim, user_result_ndim;
+        int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
+        float *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        unsigned int aitisa_result_len, user_result_len;
+        AITISA_Tensor aitisa_tensor1, aitisa_tensor2, aitisa_result;
+        AITISA_DataType aitisa_result_dtype;
+        AITISA_Device aitisa_result_device;
+        UserTensor user_tensor1, user_tensor2, user_result;
+        UserDataType user_result_dtype;
+        UserDevice user_result_device;
+        // aitisa
+        AITISA_DataType aitisa_dtype1 = aitisa_int_to_dtype(inputs[i].dtype1());
+        AITISA_DataType aitisa_dtype2 = aitisa_int_to_dtype(inputs[i].dtype2());
+        AITISA_Device aitisa_device1 =
+            aitisa_int_to_device(0);  // cpu supoorted only
+        AITISA_Device aitisa_device2 =
+            aitisa_int_to_device(0);  // cpu supported only
+        aitisa_create(aitisa_dtype1, aitisa_device1, inputs[i].dims1(),
+                      inputs[i].ndim1(), (void*)(inputs[i].data1()),
+                      inputs[i].len1(), &aitisa_tensor1);
+        aitisa_create(aitisa_dtype2, aitisa_device2, inputs[i].dims2(),
+                      inputs[i].ndim2(), (void*)(inputs[i].data2()),
+                      inputs[i].len2(), &aitisa_tensor2);
+        auto aitisa_start = std::chrono::steady_clock::now();
+        switch (test_case_index) {
+          case 0:
+            aitisa_add(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
+            break;
+          case 1:
+            aitisa_sub(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
+            break;
+          case 2:
+            aitisa_mul(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
+            break;
+          case 3:
+            aitisa_div(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
+            break;
+          default:
+            break;
+        }
+        auto aitisa_end = std::chrono::steady_clock::now();
+        aitisa_elapsed += aitisa_end - aitisa_start;
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype,
+                       &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data,
+                       &aitisa_result_len);
+        // user
+        UserDataType user_dtype1 =
+            UserFuncs::user_int_to_dtype(inputs[i].dtype1());
+        UserDataType user_dtype2 =
+            UserFuncs::user_int_to_dtype(inputs[i].dtype2());
+        UserDevice user_device1 =
+            UserFuncs::user_int_to_device(inputs[i].device1());
+        UserDevice user_device2 =
+            UserFuncs::user_int_to_device(inputs[i].device2());
+        UserFuncs::user_create(user_dtype1, user_device1, inputs[i].dims1(),
+                               inputs[i].ndim1(), inputs[i].data1(),
+                               inputs[i].len1(), &user_tensor1);
+        UserFuncs::user_create(user_dtype2, user_device2, inputs[i].dims2(),
+                               inputs[i].ndim2(), inputs[i].data2(),
+                               inputs[i].len2(), &user_tensor2);
+        auto user_start = std::chrono::steady_clock::now();
+        switch (test_case_index) {
+          case 0:
+            UserFuncs::user_add(user_tensor1, user_tensor2, &user_result);
+            break;
+          case 1:
+            UserFuncs::user_sub(user_tensor1, user_tensor2, &user_result);
+            break;
+          case 2:
+            UserFuncs::user_mul(user_tensor1, user_tensor2, &user_result);
+            break;
+          case 3:
+            UserFuncs::user_div(user_tensor1, user_tensor2, &user_result);
+            break;
+          default:
+            break;
+        }
+        auto user_end = std::chrono::steady_clock::now();
+        user_elapsed += user_end - user_start;
 
-      UserFuncs::user_resolve(user_result, &user_result_dtype,
-                              &user_result_device, &user_result_dims,
-                              &user_result_ndim, (void**)&user_result_data,
-                              &user_result_len);
-      // compare
-      int64_t tensor_size = 1;
-      ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-      if (test_case_index == 1) {  // CUDA
-        ASSERT_EQ(
-            /*CUDA*/ 0, UserFuncs::user_device_to_int(user_result_device));
-      } else {  // CPU
-        ASSERT_EQ(aitisa_device_to_int(aitisa_result_device),
-                  UserFuncs::user_device_to_int(user_result_device));
+        UserFuncs::user_resolve(user_result, &user_result_dtype,
+                                &user_result_device, &user_result_dims,
+                                &user_result_ndim, (void**)&user_result_data,
+                                &user_result_len);
+        // compare
+        int64_t tensor_size = 1;
+        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+        if (test_case_index == 1) {  // CUDA
+          ASSERT_EQ(
+              /*CUDA*/ 0, UserFuncs::user_device_to_int(user_result_device));
+        } else {  // CPU
+          ASSERT_EQ(aitisa_device_to_int(aitisa_result_device),
+                    UserFuncs::user_device_to_int(user_result_device));
+        }
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  UserFuncs::user_dtype_to_int(user_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          tensor_size *= aitisa_result_dims[j];
+          ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, user_result_len);
+        switch (test_case_index) {
+          case 0: {
+            auto* aitisa_data = (int32_t*)aitisa_result_data;
+            auto* user_data = (int32_t*)user_result_data;
+            for (int64_t j = 0; j < tensor_size; j++) {
+              ASSERT_EQ(aitisa_data[j], user_data[j]);
+            }
+            break;
+          }
+          case 1: {
+            auto* aitisa_data = (double*)aitisa_result_data;
+            auto* user_data = (double*)user_result_data;
+            for (int64_t j = 0; j < tensor_size; j++) {
+              ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+            }
+            break;
+          }
+          case 2: {
+            auto* aitisa_data = (uint64_t*)aitisa_result_data;
+            auto* user_data = (uint64_t*)user_result_data;
+            for (int64_t j = 0; j < tensor_size; j++) {
+              ASSERT_EQ(aitisa_data[j], user_data[j]);
+            }
+            break;
+          }
+          case 3: {
+            auto* aitisa_data = (float*)aitisa_result_data;
+            auto* user_data = (float*)user_result_data;
+            for (int64_t j = 0; j < tensor_size; j++) {
+              ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+            }
+            break;
+          }
+          default:
+            break;
+        }
       }
-      ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
-                UserFuncs::user_dtype_to_int(user_result_dtype));
-      for (int64_t j = 0; j < aitisa_result_ndim; j++) {
-        tensor_size *= aitisa_result_dims[j];
-        ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
-      }
-      ASSERT_EQ(aitisa_result_len, user_result_len);
-      switch (test_case_index) {
-        case 0: {
-          auto* aitisa_data = (int32_t*)aitisa_result_data;
-          auto* user_data = (int32_t*)user_result_data;
-          for (int64_t j = 0; j < tensor_size; j++) {
-            ASSERT_EQ(aitisa_data[j], user_data[j]);
-          }
-          break;
-        }
-        case 1: {
-          auto* aitisa_data = (double*)aitisa_result_data;
-          auto* user_data = (double*)user_result_data;
-          for (int64_t j = 0; j < tensor_size; j++) {
-            ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
-          }
-          break;
-        }
-        case 2: {
-          auto* aitisa_data = (uint64_t*)aitisa_result_data;
-          auto* user_data = (uint64_t*)user_result_data;
-          for (int64_t j = 0; j < tensor_size; j++) {
-            ASSERT_EQ(aitisa_data[j], user_data[j]);
-          }
-          break;
-        }
-        case 3: {
-          auto* aitisa_data = (float*)aitisa_result_data;
-          auto* user_data = (float*)user_result_data;
-          for (int64_t j = 0; j < tensor_size; j++) {
-            ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
-          }
-          break;
-        }
-        default:
-          break;
-      }
+      auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
+      auto user_time = user_elapsed.count() * 1000 / loop;
+
       // print result of test
-      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
-                << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
-      std::cout << /*GREEN <<*/ "\t[ AITISA ] "
-                << /*RESET <<*/ aitisa_elapsed.count() * 1000 << " ms"
-                << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] "
-                << /*RESET <<*/ user_elapsed.count() * 1000 << " ms"
-                << std::endl;
+      std::cout << "[ " << test_case_name << " sample" << i << " / "
+                << inputs_name[i] << " ] " << std::endl;
+      std::cout << "\t[ AITISA ] " << aitisa_time << " ms average for " << loop
+                << " loop " << std::endl;
+      std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
+                << " loop " << std::endl;
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-                              time_map_value(aitisa_elapsed.count() * 1000,
-                                             user_elapsed.count() * 1000)));
+                              time_map_value(aitisa_time, user_time)));
     }
   };
   if (this->add_inputs.size() && this->sub_inputs.size() &&

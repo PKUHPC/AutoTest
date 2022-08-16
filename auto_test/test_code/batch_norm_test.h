@@ -281,124 +281,132 @@ TYPED_TEST_P(BatchnormTest, TwoTests) {
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
-      int64_t aitisa_result_ndim, user_result_ndim;
-      int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
-      float *aitisa_result_data = nullptr, *user_result_data = nullptr;
-      unsigned int aitisa_result_len, user_result_len;
-      AITISA_Tensor aitisa_tensor, aitisa_result;
-      AITISA_DataType aitisa_result_dtype;
-      AITISA_Device aitisa_result_device;
-      UserTensor user_tensor, user_result;
-      UserDataType user_result_dtype;
-      UserDevice user_result_device;
-      // aitisa
-      AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(inputs[i].dtype());
-      AITISA_Device aitisa_device =
-          aitisa_int_to_device(0);  // cpu supoorted only
-      aitisa_create(aitisa_dtype, aitisa_device, inputs[i].dims(),
-                    inputs[i].ndim(), (void*)(inputs[i].data()),
-                    inputs[i].len(), &aitisa_tensor);
-      full_float(aitisa_tensor, inputs[i].value());
+      auto aitisa_elapsed = std::chrono::duration<double>::zero();
+      auto user_elapsed = std::chrono::duration<double>::zero();
+      //loop test
+      for (int n = 0; n < loop; n++) {
+        int64_t aitisa_result_ndim, user_result_ndim;
+        int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
+        float *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        unsigned int aitisa_result_len, user_result_len;
+        AITISA_Tensor aitisa_tensor, aitisa_result;
+        AITISA_DataType aitisa_result_dtype;
+        AITISA_Device aitisa_result_device;
+        UserTensor user_tensor, user_result;
+        UserDataType user_result_dtype;
+        UserDevice user_result_device;
+        // aitisa
+        AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(inputs[i].dtype());
+        AITISA_Device aitisa_device =
+            aitisa_int_to_device(0);  // cpu supoorted only
+        aitisa_create(aitisa_dtype, aitisa_device, inputs[i].dims(),
+                      inputs[i].ndim(), (void*)(inputs[i].data()),
+                      inputs[i].len(), &aitisa_tensor);
+        full_float(aitisa_tensor, inputs[i].value());
 
-      AITISA_Tensor mean, variance, scale, bias;
+        AITISA_Tensor mean, variance, scale, bias;
 
-      aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
-                    inputs[i].param_ndim(), nullptr, 0, &mean);
-      full_float(mean, inputs[i].mean());
+        aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
+                      inputs[i].param_ndim(), nullptr, 0, &mean);
+        full_float(mean, inputs[i].mean());
 
-      aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
-                    inputs[i].param_ndim(), nullptr, 0, &variance);
-      full_float(variance, inputs[i].var());
+        aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
+                      inputs[i].param_ndim(), nullptr, 0, &variance);
+        full_float(variance, inputs[i].var());
 
-      aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
-                    inputs[i].param_ndim(), nullptr, 0, &scale);
-      full_float(scale, 1);
+        aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
+                      inputs[i].param_ndim(), nullptr, 0, &scale);
+        full_float(scale, 1);
 
-      aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
-                    inputs[i].param_ndim(), nullptr, 0, &bias);
-      full_float(bias, 0);
+        aitisa_create(aitisa_dtype, aitisa_device, inputs[i].param_dims(),
+                      inputs[i].param_ndim(), nullptr, 0, &bias);
+        full_float(bias, 0);
 
-      auto aitisa_start = std::chrono::steady_clock::now();
+        auto aitisa_start = std::chrono::steady_clock::now();
 
-      aitisa_batch_norm(aitisa_tensor, inputs[i].axis(), scale, bias, mean,
-                        variance, inputs[i].epsilon(), &aitisa_result);
+        aitisa_batch_norm(aitisa_tensor, inputs[i].axis(), scale, bias, mean,
+                          variance, inputs[i].epsilon(), &aitisa_result);
 
-      auto aitisa_end = std::chrono::steady_clock::now();
+        auto aitisa_end = std::chrono::steady_clock::now();
 
-      std::chrono::duration<double> aitisa_elapsed = aitisa_end - aitisa_start;
+        aitisa_elapsed += aitisa_end - aitisa_start;
 
-      aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
-                     &aitisa_result_dims, &aitisa_result_ndim,
-                     (void**)&aitisa_result_data, &aitisa_result_len);
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype,
+                       &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data,
+                       &aitisa_result_len);
 
-      // user
-      UserDataType user_dtype = UserFuncs::user_int_to_dtype(inputs[i].dtype());
-      UserDevice user_device =
-          UserFuncs::user_int_to_device(inputs[i].device());
-      UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
-                             inputs[i].ndim(), inputs[i].data(),
-                             inputs[i].len(), &user_tensor);
+        // user
+        UserDataType user_dtype =
+            UserFuncs::user_int_to_dtype(inputs[i].dtype());
+        UserDevice user_device =
+            UserFuncs::user_int_to_device(inputs[i].device());
+        UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
+                               inputs[i].ndim(), inputs[i].data(),
+                               inputs[i].len(), &user_tensor);
 
-      std::vector<int64_t> param_dims = {};
-      for (int k = 0; k < inputs[i].param_ndim(); k++) {
-        param_dims.push_back(inputs[i].param_dims()[k]);
+        std::vector<int64_t> param_dims = {};
+        for (int k = 0; k < inputs[i].param_ndim(); k++) {
+          param_dims.push_back(inputs[i].param_dims()[k]);
+        }
+        UserTensor bn_scale =
+            hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
+        UserTensor bn_bias =
+            hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
+        UserTensor running_mean =
+            hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
+        UserTensor running_var =
+            hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
+
+        UserTensor bn_mean = hice::full(param_dims, inputs[i].mean(),
+                                        device(hice::kCPU).dtype(hice::kFloat));
+        UserTensor bn_var = hice::full(param_dims, inputs[i].var(),
+                                       device(hice::kCPU).dtype(hice::kFloat));
+
+        UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
+                               inputs[i].ndim(), NULL, inputs[i].len(),
+                               &user_result);
+        auto user_start = std::chrono::steady_clock::now();
+        UserFuncs::user_batchnorm(
+            user_tensor, inputs[i].axis(), bn_scale, bn_bias, running_mean,
+            running_var, inputs[i].epsilon(), user_result, bn_mean, bn_var);
+
+        auto user_end = std::chrono::steady_clock::now();
+        user_elapsed += user_end - user_start;
+
+        UserFuncs::user_resolve(user_result, &user_result_dtype,
+                                &user_result_device, &user_result_dims,
+                                &user_result_ndim, (void**)&user_result_data,
+                                &user_result_len);
+        // compare
+        int64_t tensor_size = 1;
+        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+        ASSERT_EQ(/*CUDA*/ 0,
+                  UserFuncs::user_device_to_int(user_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  UserFuncs::user_dtype_to_int(user_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, user_result_len);
+        auto* aitisa_data = (float*)aitisa_result_data;
+        auto* user_data = (float*)user_result_data;
+        for (int64_t j = 0; j < tensor_size; j++) {
+          ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+        }
       }
-      UserTensor bn_scale =
-          hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
-      UserTensor bn_bias =
-          hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
-      UserTensor running_mean =
-          hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
-      UserTensor running_var =
-          hice::empty(param_dims, device(hice::kCPU).dtype(hice::kFloat));
+      auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
+      auto user_time = user_elapsed.count() * 1000 / loop;
 
-      UserTensor bn_mean = hice::full(param_dims, inputs[i].mean(),
-                                      device(hice::kCPU).dtype(hice::kFloat));
-      UserTensor bn_var = hice::full(param_dims, inputs[i].var(),
-                                     device(hice::kCPU).dtype(hice::kFloat));
-
-      UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
-                             inputs[i].ndim(), NULL, inputs[i].len(),
-                             &user_result);
-      auto user_start = std::chrono::steady_clock::now();
-      UserFuncs::user_batchnorm(
-          user_tensor, inputs[i].axis(), bn_scale, bn_bias, running_mean,
-          running_var, inputs[i].epsilon(), user_result, bn_mean, bn_var);
-
-      auto user_end = std::chrono::steady_clock::now();
-      std::chrono::duration<double> user_elapsed = user_end - user_start;
-
-      UserFuncs::user_resolve(user_result, &user_result_dtype,
-                              &user_result_device, &user_result_dims,
-                              &user_result_ndim, (void**)&user_result_data,
-                              &user_result_len);
-      // compare
-      int64_t tensor_size = 1;
-      ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-      ASSERT_EQ(/*CUDA*/ 0, UserFuncs::user_device_to_int(user_result_device));
-      ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
-                UserFuncs::user_dtype_to_int(user_result_dtype));
-      for (int64_t j = 0; j < aitisa_result_ndim; j++) {
-        ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
-      }
-      ASSERT_EQ(aitisa_result_len, user_result_len);
-      auto* aitisa_data = (float*)aitisa_result_data;
-      auto* user_data = (float*)user_result_data;
-      for (int64_t j = 0; j < tensor_size; j++) {
-        ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
-      }
       // print result of test
-      std::cout << /*GREEN <<*/ "[ " << test_case_name << " sample" << i
-                << " / " << inputs_name[i] << " ] " << /*RESET <<*/ std::endl;
-      std::cout << /*GREEN <<*/ "\t[ AITISA ] "
-                << /*RESET <<*/ aitisa_elapsed.count() * 1000 << " ms"
-                << std::endl;
-      std::cout << /*GREEN <<*/ "\t[  USER  ] "
-                << /*RESET <<*/ user_elapsed.count() * 1000 << " ms"
-                << std::endl;
+      std::cout << "[ " << test_case_name << " sample" << i << " / "
+                << inputs_name[i] << " ] " << std::endl;
+      std::cout << "\t[ AITISA ] " << aitisa_time << " ms average for " << loop
+                << " loop " << std::endl;
+      std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
+                << " loop " << std::endl;
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-                              time_map_value(aitisa_elapsed.count() * 1000,
-                                             user_elapsed.count() * 1000)));
+                              time_map_value(aitisa_time, user_time)));
     }
   };
   if (this->batch_norm_inputs.size()) {
