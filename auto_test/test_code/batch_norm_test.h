@@ -126,7 +126,7 @@ class BatchnormTest : public ::testing::Test {
         const libconfig::Setting& setting = settings[i];
 
         std::vector<int64_t> dims, param_dims;
-        int dtype, device, len, axis, test_index, ndim, param_ndim;
+        int test_index, ndim, param_ndim, dtype, device, len, axis;
         std::string input_name;
         float value, mean, var, epsilon;
 

@@ -132,8 +132,8 @@ class Conv2dTest : public ::testing::Test {
         const libconfig::Setting& setting = settings[i];
 
         std::vector<int64_t> dims1, dims2;
-        int test_index, dtype1, device1, len1, dtype2, device2, len2, ndim1,
-            ndim2, groups;
+        int test_index, ndim1, ndim2, dtype1, device1, len1, dtype2, device2,
+            len2, groups;
         std::string input_name;
         std::vector<int> stride, padding, dilation;
 

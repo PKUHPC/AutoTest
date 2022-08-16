@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cmath>
 #include <chrono>
+#include <cmath>
 #include <string>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
@@ -27,7 +27,8 @@ class BinaryOPTest : public ::testing::Test {
   }
   ~BinaryOPTest() override = default;
   int fetch_test_data(const char* path, std::vector<Binary_Input>& inputs,
-                      std::vector<std::string>& inputs_name,int test_case_index) {
+                      std::vector<std::string>& inputs_name,
+                      int test_case_index) {
 
     libconfig::Config cfg;
 
@@ -50,7 +51,8 @@ class BinaryOPTest : public ::testing::Test {
         const libconfig::Setting& setting = settings[i];
 
         std::vector<int64_t> dims1, dims2;
-        int dtype1, device1, len1, dtype2, device2, len2, ndim1, ndim2, test_index;
+        int dtype1, device1, len1, dtype2, device2, len2, ndim1, ndim2,
+            test_index;
         std::string input_name;
 
         if (!setting.lookupValue("test_index", test_index)) {

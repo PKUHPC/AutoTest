@@ -50,7 +50,7 @@ class ActivationTest : public ::testing::Test {
         const libconfig::Setting& setting = settings[i];
 
         std::vector<int64_t> dims;
-        int ndim, dtype, device, len, test_index;
+        int test_index, ndim, dtype, device, len;
         std::string input_name;
         if (!setting.lookupValue("test_index", test_index)) {
           std::cerr << "Setting \"test_index\" do not exist in " << path
