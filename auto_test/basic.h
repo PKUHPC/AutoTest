@@ -1,9 +1,12 @@
 #pragma once
-#define loop 100
-
+//#define loop 100
 #ifdef AITISA_API_GENERATE_FIGURE
 #include <Python.h>
 #endif
+#ifdef AITISA_API_PYTORCH
+#include <torch/torch.h>
+#endif
+
 #include <iostream>
 #include <libconfig.h++>
 #include "gtest/gtest.h"
@@ -13,6 +16,7 @@ extern "C" {
 #define CONFIG_FILE "../../config/test/test_data.cfg"
 
 namespace aitisa_api {
+static constexpr int loop = 100;
 
 extern const DataType aitisa_dtypes[];
 extern const Device aitisa_devices[];

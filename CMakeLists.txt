@@ -10,6 +10,7 @@ option(AITISA_API_BUILD_AUTO_TESTING "Compile auto testing framework as a shared
 option(AITISA_API_BUILD_DOCS "Generate documents with Doxygen" ON)
 option(AITISA_API_USE_GTEST_LOCAL "Download and build with GTest" ON)
 option(AITISA_API_GENERATE_FIGURE "generate figure for test result" ON)
+option(AITISA_API_PYTORCH "test with pytorch" ON)
 
 if(AITISA_API_BUILD_SHARED_LIBS)
   set(BUILD_SHARED_LIBS ON CACHE INTERNAL "")
@@ -18,7 +19,8 @@ endif()
 # Show the detail of compile messages
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_COLOR_MAKEFILE   ON)
-
+set(CMAKE_CXX_STANDARD 14)
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 ##############################################
 # General setup
 ##############################################
@@ -75,7 +77,7 @@ else()
 endif()
 
 target_compile_features(aitisa_api PUBLIC c_std_99)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 target_include_directories(aitisa_api
   PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -118,6 +120,10 @@ if(AITISA_API_BUILD_AUTO_TESTING)
           "${libconfig_SOURCE_DIR}")
   include_directories(${libconfig_build_include_dirs})
 
+  if(AITISA_API_PYTORCH)
+    link_directories(/opt/intel/oneapi/mkl/2022.0.2/lib/intel64)
+  endif()
+
   FILE(GLOB_RECURSE auto_test_srcs "auto_test/*.cpp" "auto_test/*.h")
   add_library(auto_test SHARED ${auto_test_srcs})
   set_target_properties(auto_test
@@ -138,6 +144,16 @@ if(AITISA_API_BUILD_AUTO_TESTING)
     find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
     target_link_libraries(auto_test Python3::Python Python3::Module)
     ADD_DEFINITIONS(-DAITISA_API_GENERATE_FIGURE)
+  endif()
+
+  if(AITISA_API_PYTORCH)
+      set(Torch_DIR "/home/xgy/Downloads/libtorch/share/cmake/Torch")
+      find_package(Torch REQUIRED)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+      target_link_libraries(auto_test "${TORCH_LIBRARIES}")
+      message(${TORCH_LIBRARIES})
+      ADD_DEFINITIONS(-DAITISA_API_PYTORCH)
   endif()
 
   target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock aitisa_api::libconfig)
