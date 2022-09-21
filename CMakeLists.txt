@@ -77,7 +77,6 @@ else()
 endif()
 
 target_compile_features(aitisa_api PUBLIC c_std_99)
-  #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 target_include_directories(aitisa_api
   PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -98,8 +97,6 @@ if(AITISA_API_BUILD_TESTING)
     include(cmake/public/GTest.cmake)
   endif()
   add_subdirectory(test)
-  #include_directories("auto_test")
-  #add_subdirectory(auto_test)
 endif()
 
 ##############################################
@@ -122,7 +119,7 @@ if(AITISA_API_BUILD_AUTO_TESTING)
 
   if(AITISA_API_PYTORCH)
     include(cmake/local/LibTorch.cmake)
-    link_directories(/opt/intel/oneapi/mkl/2022.0.2/lib/intel64)
+    link_directories(${MKL_ROOT}/lib/intel64)
   endif()
 
   FILE(GLOB_RECURSE auto_test_srcs "auto_test/*.cpp" "auto_test/*.h")
