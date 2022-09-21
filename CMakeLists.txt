@@ -121,6 +121,7 @@ if(AITISA_API_BUILD_AUTO_TESTING)
   include_directories(${libconfig_build_include_dirs})
 
   if(AITISA_API_PYTORCH)
+    include(cmake/local/LibTorch.cmake)
     link_directories(/opt/intel/oneapi/mkl/2022.0.2/lib/intel64)
   endif()
 
@@ -147,12 +148,11 @@ if(AITISA_API_BUILD_AUTO_TESTING)
   endif()
 
   if(AITISA_API_PYTORCH)
-      set(Torch_DIR "/home/xgy/Downloads/libtorch/share/cmake/Torch")
+      set(Torch_DIR "${AITISA_API_EXTERNAL_DIR}/libtorch/libtorch-src/libtorch/share/cmake/Torch")
       find_package(Torch REQUIRED)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
       target_link_libraries(auto_test "${TORCH_LIBRARIES}")
-      message(${TORCH_LIBRARIES})
       ADD_DEFINITIONS(-DAITISA_API_PYTORCH)
   endif()
 
