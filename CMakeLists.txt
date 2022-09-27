@@ -119,7 +119,7 @@ if(AITISA_API_BUILD_AUTO_TESTING)
 
   if(AITISA_API_PYTORCH)
     include(cmake/local/LibTorch.cmake)
-    link_directories(${MKL_ROOT}/lib/intel64)
+    link_directories(/opt/intel/oneapi/mkl/2022.0.2/lib/intel64)
   endif()
 
   FILE(GLOB_RECURSE auto_test_srcs "auto_test/*.cpp" "auto_test/*.h")

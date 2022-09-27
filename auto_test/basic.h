@@ -159,3 +159,59 @@ struct TypeCompare {
 };
 
 }  // namespace aitisa_api
+
+namespace libtorch_api {
+
+using Tensor = torch::Tensor;
+using DataType = c10::ScalarType;
+using Device = c10::Device;
+const DataType torch_dtypes[10] = {
+    torch::kInt8,  torch::kUInt8, torch::kInt16, torch::kInt16, torch::kInt32,
+    torch::kInt32, torch::kInt64, torch::kInt64, torch::kFloat, torch::kDouble,
+};
+
+static std::map<const char*, int> torchTypeMap{{"char", 0},  {"Short", 2},
+                                               {"Int", 4},   {"Long", 6},
+                                               {"Float", 8}, {"Double", 9}};
+inline int torch_dtype_to_int(DataType dtype) {
+  return torchTypeMap[c10::toString(dtype)];
+}
+inline DataType torch_int_to_dtype(int n) {
+  return torch_dtypes[n];
+}
+inline Device torch_int_to_device(int n) {
+  return c10::Device(c10::DeviceType::CPU);
+}
+inline int torch_device_to_int(Device device) {
+  return static_cast<int>(device.type());
+}
+inline void torch_create(DataType dtype, Device device, int64_t* dims,
+                         int64_t ndim, void* data, unsigned int len,
+                         Tensor* output) {
+
+  at::IntArrayRef array(dims, ndim);
+  torch::Tensor tensor =
+      torch::empty(array, torch::TensorOptions().device(device).dtype(dtype));
+  torch::DataPtr DataPtr(data, device);
+  tensor.storage().set_data_ptr(std::move(DataPtr));
+
+  *output = tensor;
+}
+inline void torch_resolve(torch::Tensor input, c10::ScalarType* dtype,
+                           int64_t** dims, int64_t* ndim,
+                          void** data, unsigned int* len) {
+  *dtype = input.scalar_type();
+
+  //  std::cout << input.device() << std::endl;
+  //  *device = input.device();
+  //  input.device();
+  //  *device = device1;
+  torch::IntArrayRef array = input.sizes();
+  *dims = const_cast<int64_t*>(array.data());
+  *ndim = input.dim();
+  void* data_ = const_cast<void*>(input.data_ptr());
+  *data = data_;
+  *len = input.numel() * torch::elementSize(input.scalar_type());
+}
+
+}  // namespace libtorch_api
