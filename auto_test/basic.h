@@ -159,7 +159,7 @@ struct TypeCompare {
 };
 
 }  // namespace aitisa_api
-
+#ifdef AITISA_API_PYTORCH
 namespace libtorch_api {
 
 using Tensor = torch::Tensor;
@@ -215,3 +215,4 @@ inline void torch_resolve(torch::Tensor input, c10::ScalarType* dtype,
 }
 
 }  // namespace libtorch_api
+#endif
