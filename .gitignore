@@ -57,7 +57,7 @@ dkms.conf
 .idea
 /cmake-build-debug
 /third_party
-/generate
 /hice-master/.idea
-/hice-master/third_party
+/hice-master/third_party/
 /build
+/generate/
