@@ -207,7 +207,6 @@ inline void torch_resolve(const Tensor& input, DataType* dtype, Device& device,
   *ndim = input.dim();
   void* data_ = const_cast<void*>(input.data_ptr());
   *data = data_;
-  *len = input.numel() * torch::elementSize(input.scalar_type());
   *len = input.nbytes();
 }
 
