@@ -197,21 +197,18 @@ inline void torch_create(DataType dtype, Device device, int64_t* dims,
 
   *output = tensor;
 }
-inline void torch_resolve(torch::Tensor input, c10::ScalarType* dtype,
-                           int64_t** dims, int64_t* ndim,
-                          void** data, unsigned int* len) {
+inline void torch_resolve(const Tensor& input, DataType* dtype, Device& device,
+                          int64_t** dims, int64_t* ndim, void** data,
+                          unsigned int* len) {
   *dtype = input.scalar_type();
-
-  //  std::cout << input.device() << std::endl;
-  //  *device = input.device();
-  //  input.device();
-  //  *device = device1;
+  device = input.device();
   torch::IntArrayRef array = input.sizes();
   *dims = const_cast<int64_t*>(array.data());
   *ndim = input.dim();
   void* data_ = const_cast<void*>(input.data_ptr());
   *data = data_;
   *len = input.numel() * torch::elementSize(input.scalar_type());
+  *len = input.nbytes();
 }
 
 }  // namespace libtorch_api

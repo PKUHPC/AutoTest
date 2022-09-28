@@ -187,6 +187,7 @@ TYPED_TEST_P(ActivationTest, FourTests) {
         unsigned int torch_result_len;
         TorchTensor torch_tensor, torch_result;
         TorchDataType torch_result_dtype;
+        TorchDevice torch_result_device(c10::DeviceType::CPU);
 #endif
         // aitisa
         AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(inputs[i].dtype());
@@ -285,8 +286,9 @@ TYPED_TEST_P(ActivationTest, FourTests) {
         auto torch_end = std::chrono::steady_clock::now();
         torch_elapsed += torch_end - torch_start;
         libtorch_api::torch_resolve(
-            torch_result, &torch_result_dtype, &torch_result_dims,
-            &torch_result_ndim, (void**)&torch_result_data, &torch_result_len);
+            torch_result, &torch_result_dtype, torch_result_device,
+            &torch_result_dims, &torch_result_ndim, (void**)&torch_result_data,
+            &torch_result_len);
 #endif
 
         // compare
@@ -305,7 +307,7 @@ TYPED_TEST_P(ActivationTest, FourTests) {
         ASSERT_EQ(aitisa_result_len, user_result_len);
 #ifdef AITISA_API_PYTORCH
         ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
-        ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result.device()));
+        ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
         ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
                   libtorch_api::torch_dtype_to_int(torch_result_dtype));
         for (int64_t j = 0; j < aitisa_result_ndim; j++) {
