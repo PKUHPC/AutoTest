@@ -317,6 +317,11 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
+#ifdef AITISA_API_PYTORCH
+  using TorchDataType = typename libtorch_api::DataType;
+  using TorchDevice = typename libtorch_api::Device;
+  using TorchTensor = typename libtorch_api::Tensor;
+#endif
 
   time_map m;
   auto test = [&m](std::vector<Conv_Input>&& inputs,
@@ -325,6 +330,9 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
     for (int i = 0; i < inputs.size(); i++) {
       auto aitisa_elapsed = std::chrono::duration<double>::zero();
       auto user_elapsed = std::chrono::duration<double>::zero();
+#ifdef AITISA_API_PYTORCH
+      auto torch_elapsed = std::chrono::duration<double>::zero();
+#endif
       //loop test
       for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
@@ -337,6 +345,15 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
         UserTensor user_tensor1, user_tensor2, user_result;
         UserDataType user_result_dtype;
         UserDevice user_result_device;
+#ifdef AITISA_API_PYTORCH
+        int64_t torch_result_ndim;
+        int64_t* torch_result_dims = nullptr;
+        float* torch_result_data = nullptr;
+        unsigned int torch_result_len;
+        TorchTensor torch_tensor1, torch_tensor2, torch_result;
+        TorchDataType torch_result_dtype;
+        TorchDevice torch_result_device(c10::DeviceType::CPU);
+#endif
         // aitisa
         AITISA_DataType aitisa_dtype1 = aitisa_int_to_dtype(inputs[i].dtype1());
         AITISA_DataType aitisa_dtype2 = aitisa_int_to_dtype(inputs[i].dtype2());
@@ -358,9 +375,10 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
         auto aitisa_end = std::chrono::steady_clock::now();
         aitisa_elapsed += aitisa_end - aitisa_start;
 
-        aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
-                       &aitisa_result_dims, &aitisa_result_ndim,
-                       (void**)&aitisa_result_data, &aitisa_result_len);
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype,
+                       &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data,
+                       &aitisa_result_len);
         // user
         UserDataType user_dtype1 =
             UserFuncs::user_int_to_dtype(inputs[i].dtype1());
@@ -377,19 +395,59 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                                inputs[i].ndim2(), inputs[i].data2(),
                                inputs[i].len2(), &user_tensor2);
         auto user_start = std::chrono::steady_clock::now();
-        UserFuncs::user_conv2d(user_tensor1, user_tensor2, inputs[i].stride(), 2,
-                               inputs[i].padding(), 2, inputs[i].dilation(), 2,
-                               inputs[i].groups(), &user_result);
+        UserFuncs::user_conv2d(user_tensor1, user_tensor2, inputs[i].stride(),
+                               2, inputs[i].padding(), 2, inputs[i].dilation(),
+                               2, inputs[i].groups(), &user_result);
         auto user_end = std::chrono::steady_clock::now();
         user_elapsed += user_end - user_start;
         UserFuncs::user_resolve(user_result, &user_result_dtype,
                                 &user_result_device, &user_result_dims,
                                 &user_result_ndim, (void**)&user_result_data,
                                 &user_result_len);
+#ifdef AITISA_API_PYTORCH
+        //torch
+        TorchDataType torch_dtype1 =
+            libtorch_api::torch_int_to_dtype(inputs[i].dtype1());
+        TorchDataType torch_dtype2 =
+            libtorch_api::torch_int_to_dtype(inputs[i].dtype2());
+        TorchDevice torch_device1 =
+            libtorch_api::torch_int_to_device(inputs[i].device1());
+        TorchDevice torch_device2 =
+            libtorch_api::torch_int_to_device(inputs[i].device2());
+        libtorch_api::torch_create(
+            torch_dtype1, torch_device1, inputs[i].dims1(), inputs[i].ndim1(),
+            inputs[i].data1(), inputs[i].len1(), &torch_tensor1);
+        libtorch_api::torch_create(
+            torch_dtype2, torch_device2, inputs[i].dims2(), inputs[i].ndim2(),
+            inputs[i].data2(), inputs[i].len2(), &torch_tensor2);
+
+        auto torch_start = std::chrono::steady_clock::now();
+        std::vector<int64_t> stride_list, padding_list, dilation_list;
+
+        for (int index = 0; index < 2; index++) {
+          stride_list.push_back(inputs[i].stride()[index]);
+          padding_list.push_back(inputs[i].padding()[index]);
+          dilation_list.push_back(inputs[i].dilation()[index]);
+        }
+        torch_result = torch::nn::functional::conv2d(
+            torch_tensor1, torch_tensor2,
+            torch::nn::functional::Conv2dFuncOptions()
+                .stride(stride_list)
+                .padding(padding_list)
+                .dilation(dilation_list)
+                .groups(inputs[i].groups()));
+
+        auto torch_end = std::chrono::steady_clock::now();
+        torch_elapsed += torch_end - torch_start;
+        libtorch_api::torch_resolve(
+            torch_result, &torch_result_dtype, torch_result_device,
+            &torch_result_dims, &torch_result_ndim, (void**)&torch_result_data,
+            &torch_result_len);
+#endif
         // compare
         int64_t tensor_size = 1;
         ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-        ASSERT_EQ(/*CUDA*/ 0, UserFuncs::user_device_to_int(user_result_device));
+        ASSERT_EQ(0, UserFuncs::user_device_to_int(user_result_device));
         ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
                   UserFuncs::user_dtype_to_int(user_result_dtype));
         for (int64_t j = 0; j < aitisa_result_ndim; j++) {
@@ -397,8 +455,24 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
           ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
         }
         ASSERT_EQ(aitisa_result_len, user_result_len);
+#ifdef AITISA_API_PYTORCH
+        ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
+        ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  libtorch_api::torch_dtype_to_int(torch_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, torch_result_len);
+#endif
         auto* aitisa_data = (float*)aitisa_result_data;
         auto* user_data = (float*)user_result_data;
+#ifdef AITISA_API_PYTORCH
+        auto* torch_data = (float*)torch_result_data;
+        for (int64_t j = 0; j < tensor_size; j++) {
+          ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+        }
+#endif
         for (int64_t j = 0; j < tensor_size; j++) {
           ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
         }
@@ -413,6 +487,11 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                 << " loop " << std::endl;
       std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
                 << " loop " << std::endl;
+#ifdef AITISA_API_PYTORCH
+      auto torch_time = torch_elapsed.count() * 1000 / loop;
+      std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
+                << " loop " << std::endl;
+#endif
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
                               time_map_value(aitisa_time, user_time)));
     }
