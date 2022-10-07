@@ -167,7 +167,6 @@ TYPED_TEST_P(ActivationTest, FourTests) {
 #ifdef AITISA_API_PYTORCH
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
-
       //loop test
       for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
