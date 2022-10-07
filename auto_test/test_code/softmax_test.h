@@ -170,7 +170,11 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
   using UserFuncs = typename TestFixture::UserInterface;
-
+#ifdef AITISA_API_PYTORCH
+  using TorchDataType = typename libtorch_api::DataType;
+  using TorchDevice = typename libtorch_api::Device;
+  using TorchTensor = typename libtorch_api::Tensor;
+#endif
   time_map m;
   auto test = [&m](std::vector<Softmax_Input>&& inputs,
                    std::vector<std::string>&& inputs_name,
@@ -178,6 +182,9 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
     for (int i = 0; i < inputs.size(); i++) {
       auto aitisa_elapsed = std::chrono::duration<double>::zero();
       auto user_elapsed = std::chrono::duration<double>::zero();
+#ifdef AITISA_API_PYTORCH
+      auto torch_elapsed = std::chrono::duration<double>::zero();
+#endif
       //loop test
       for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
@@ -190,6 +197,15 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
         UserTensor user_tensor, user_result;
         UserDataType user_result_dtype;
         UserDevice user_result_device;
+#ifdef AITISA_API_PYTORCH
+        int64_t torch_result_ndim;
+        int64_t* torch_result_dims = nullptr;
+        float* torch_result_data = nullptr;
+        unsigned int torch_result_len;
+        TorchTensor torch_tensor, torch_result;
+        TorchDataType torch_result_dtype;
+        TorchDevice torch_result_device(c10::DeviceType::CPU);
+#endif
         // aitisa
         AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(inputs[i].dtype());
         AITISA_Device aitisa_device =
@@ -227,6 +243,27 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
                                 &user_result_ndim, (void**)&user_result_data,
                                 &user_result_len);
 
+#ifdef AITISA_API_PYTORCH
+        //torch
+        TorchDataType torch_dtype =
+            libtorch_api::torch_int_to_dtype(inputs[i].dtype());
+        TorchDevice torch_device =
+            libtorch_api::torch_int_to_device(inputs[i].device());
+        libtorch_api::torch_create(torch_dtype, torch_device, inputs[i].dims(),
+                                   inputs[i].ndim(), inputs[i].data(),
+                                   inputs[i].len(), &torch_tensor);
+
+        auto torch_start = std::chrono::steady_clock::now();
+
+        torch_result = torch::softmax(torch_tensor,  inputs[i].axis());
+
+        auto torch_end = std::chrono::steady_clock::now();
+        torch_elapsed += torch_end - torch_start;
+        libtorch_api::torch_resolve(
+            torch_result, &torch_result_dtype, torch_result_device,
+            &torch_result_dims, &torch_result_ndim, (void**)&torch_result_data,
+            &torch_result_len);
+#endif
         // compare
         int64_t tensor_size = 1;
         ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
@@ -239,8 +276,24 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
           ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
         }
         ASSERT_EQ(aitisa_result_len, user_result_len);
+#ifdef AITISA_API_PYTORCH
+        ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
+        ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  libtorch_api::torch_dtype_to_int(torch_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, torch_result_len);
+#endif
         auto* aitisa_data = (float*)aitisa_result_data;
         auto* user_data = (float*)user_result_data;
+#ifdef AITISA_API_PYTORCH
+        auto* torch_data = (float*)torch_result_data;
+        for (int64_t j = 0; j < tensor_size; j++) {
+          ASSERT_TRUE(abs(aitisa_data[j] - torch_data[j]) < 1e-3);
+        }
+#endif
         for (int64_t j = 0; j < tensor_size; j++) {
           ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
         }
@@ -255,6 +308,11 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
                 << " loop " << std::endl;
       std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
                 << " loop " << std::endl;
+#ifdef AITISA_API_PYTORCH
+      auto torch_time = torch_elapsed.count() * 1000 / loop;
+      std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
+                << " loop " << std::endl;
+#endif
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
                               time_map_value(aitisa_time, user_time)));
     }
