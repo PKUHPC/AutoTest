@@ -44,8 +44,13 @@ using AITISA_Tensor = Tensor;
 using AITISA_Device = Device;
 using AITISA_DataType = DataType;
 
-using time_map_value = std::pair<double, double>;
+#ifdef AITISA_API_PYTORCH
+using time_map_value = std::tuple<double, double, double>;
 using time_map = std::map<std::string, time_map_value>;
+#else
+using time_map_value = std::tuple<double, double>;
+using time_map = std::map<std::string, time_map_value>;
+#endif
 
 void draw_fig_fun(const time_map& m, const std::string& filename);
 #define GREEN "\033[32m"

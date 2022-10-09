@@ -134,12 +134,17 @@ void draw_fig_fun(const time_map& m, const std::string& filename) {
 
       for (const auto& kv : m) {
         PyList_Append(test_case_list, Py_BuildValue("s", kv.first.c_str()));
-        PyList_Append(time_list, Py_BuildValue("d", kv.second.first));
+        PyList_Append(time_list, Py_BuildValue("d", std::get<0>(kv.second)));
         PyList_Append(op_kind_list, Py_BuildValue("s", "aitisa"));
 
         PyList_Append(test_case_list, Py_BuildValue("s", kv.first.c_str()));
-        PyList_Append(time_list, Py_BuildValue("d", kv.second.second));
+        PyList_Append(time_list, Py_BuildValue("d", std::get<1>(kv.second)));
         PyList_Append(op_kind_list, Py_BuildValue("s", "user"));
+#ifdef AITISA_API_PYTORCH
+        PyList_Append(test_case_list, Py_BuildValue("s", kv.first.c_str()));
+        PyList_Append(time_list, Py_BuildValue("d", std::get<2>(kv.second)));
+        PyList_Append(op_kind_list, Py_BuildValue("s", "torch"));
+#endif
       }
 
       PyTuple_SetItem(p_args, 0, test_case_list);

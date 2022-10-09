@@ -349,9 +349,13 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
       auto torch_time = torch_elapsed.count() * 1000 / loop;
       std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
                 << " loop " << std::endl;
-#endif
+      m.insert(
+          std::make_pair(test_case_name + " sample " + std::to_string(i),
+                         time_map_value(aitisa_time, user_time, torch_time)));
+#else
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
                               time_map_value(aitisa_time, user_time)));
+#endif
     }
   };
   if (this->drop_out_inputs.size()) {

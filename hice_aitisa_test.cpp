@@ -232,119 +232,14 @@ REGISTER_BATCHNORM(hice::hice_batchnorm_func, hice::hice_batchnorm);
 
 REGISTER_DROPOUT(hice::hice_dropout_func, hice::hice_dropout);
 
-
-
-//namespace libtorch {
-//using Tensor = torch::Tensor;
-//using DataType = c10::ScalarType;
-//using Device = c10::Device;
-//const DataType torch_dtypes[10] = {
-//    torch::kInt8,  torch::kUInt8, torch::kInt16, torch::kInt16, torch::kInt32,
-//    torch::kInt32, torch::kInt64, torch::kInt64, torch::kFloat, torch::kDouble,
-//};
-//
-//std::map<const char*, int> torchTypeMap{{"Double", 8}};
-//inline int torch_dtype_to_int(DataType dtype) {
-//  return torchTypeMap[c10::toString(dtype)];
-//}
-//inline DataType torch_int_to_dtype(int n) {
-//  return torch_dtypes[n];
-//}
-//inline Device torch_int_to_device(int n) {
-//  return c10::Device(c10::DeviceType::CPU);
-//}
-//inline int torch_device_to_int(Device device) {
-//  return static_cast<int>(device.type());
-//}
-//void torch_create(DataType dtype, Device device, int64_t* dims, int64_t ndim,
-//                  void* data, unsigned int len, Tensor* output) {
-//  auto tensor = torch::tensor(data,torch::TensorOptions().device(device).dtype(dtype));
-//  *output = tensor;
-//}
-//void torch_resolve(torch::Tensor input, c10::ScalarType* dtype, torch::Device* device, int64_t** dims,
-//                  int64_t* ndim, void** data, unsigned int* len) {
-//
-//}
-//
-//}  // namespace libtorch
-
-
 int main(int argc, char** argv) {
-    #ifdef AITISA_API_GENERATE_FIGURE
-      Py_Initialize();
-    #endif
-      ::testing::InitGoogleTest(&argc, argv);
-      auto res = RUN_ALL_TESTS();
-    #ifdef AITISA_API_GENERATE_FIGURE
-      Py_Finalize();
-    #endif
-      return res;
-
-//  std::cout << libtorch::torch_dtype_to_int(torch::kDouble) << std::endl;
-//  std::cout << libtorch::torch_int_to_dtype(8) << std::endl;
-//  std::cout << libtorch::torch_int_to_device(1) << std::endl;
-//  std::cout << libtorch::torch_device_to_int(c10::DeviceType::CPU) << std::endl;
-//  torch::Tensor* tensor;
-//  auto data = {1,1,1,1};
-
-//  libtorch::torch_create(torch::kFloat,c10::DeviceType::CPU,&data,tensor);
-//  std::cout << tensor << std::endl;
-  //#ifdef AITISA_API_PYTORCH
-  //
-  //  // binary_op
-  //  std::cout << torch::add(torch::arange(1, 9), torch::ones({8})) << std::endl;
-  //  std::cout << torch::sub(torch::arange(1, 9), torch::ones({8})) << std::endl;
-  //  std::cout << torch::div(torch::arange(1, 9), torch::ones({8})) << std::endl;
-  //  std::cout << torch::mul(torch::arange(1, 9), torch::ones({8})) << std::endl;
-
-  //  // matmul
-  //  std::cout << torch::matmul(torch::full({2, 3}, 4), torch::full({3, 4}, 2))
-  //            << std::endl;
-  //
-  //  // relu
-  //  std::cout << torch::relu(torch::arange(-9, 9)) << std::endl;
-  //
-  //  // sigmiod
-  //  std::cout << torch::sigmoid(torch::arange(-9, 9)) << std::endl;
-  //
-  //  // tanh
-  //  std::cout << torch::tanh(torch::arange(-9, 9)) << std::endl;
-  //
-  //  // sqrt
-  //  std::cout << torch::sqrt(torch::tensor({1, 4, 9, 16})) << std::endl;
-  //
-  //  // softmax
-  //  std::cout << torch::softmax(torch::randn({8, 8, 8}), 2) << std::endl;
-  //
-  //  // dropout
-  //  std::cout << torch::dropout(torch::ones({8, 8, 8}), 0.5, true) << std::endl;
-  //
-  //  // batch_norm
-  //  std::cout << torch::nn::functional::batch_norm(
-  //                   torch::ones({2, 5}), torch::ones({5}), torch::zeros({5}),
-  //                   torch::nn::functional::BatchNormFuncOptions()
-  //                       .weight(torch::tensor(
-  //                           {1, 1, 1, 1, 1},
-  //                           torch::TensorOptions().dtype(torch::kFloat32)))
-  //                       .bias(torch::tensor(
-  //                           {1, 2, 3, 4, 5},
-  //                           torch::TensorOptions().dtype(torch::kFloat32)))
-  //                       .momentum(0.1)
-  //                       .eps(1e-05)
-  //                       .training(false))
-  //            << std::endl;
-  //
-  //  // conv
-  //  std::cout << torch::nn::functional::conv2d(
-  //                   torch::ones({6, 8, 16, 16}), torch::randn({32, 8, 2, 2}),
-  //                   torch::nn::functional::Conv2dFuncOptions().stride(1))
-  //            << std::endl;
-  //
-  //  // polling
-  //  std::cout << torch::nn::functional::avg_pool2d(
-  //                   torch::randn({5, 3, 50, 40}),
-  //                   torch::nn::functional::AvgPool2dFuncOptions(3).stride(2))
-  //            << std::endl;
-  //#endif
-  return 0;
+#ifdef AITISA_API_GENERATE_FIGURE
+  Py_Initialize();
+#endif
+  ::testing::InitGoogleTest(&argc, argv);
+  auto res = RUN_ALL_TESTS();
+#ifdef AITISA_API_GENERATE_FIGURE
+  Py_Finalize();
+#endif
+  return res;
 }
