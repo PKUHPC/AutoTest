@@ -175,9 +175,9 @@ const DataType torch_dtypes[10] = {
     torch::kInt32, torch::kInt64, torch::kInt64, torch::kFloat, torch::kDouble,
 };
 
-static std::map<const char*, int> torchTypeMap{{"char", 0},  {"Short", 2},
-                                               {"Int", 4},   {"Long", 6},
-                                               {"Float", 8}, {"Double", 9}};
+static std::map<const char*, int> torchTypeMap{
+    {"Char", 0}, {"Byte", 1},  {"Short", 2}, {"Int", 4},
+    {"Long", 6}, {"Float", 8}, {"Double", 9}};
 inline int torch_dtype_to_int(DataType dtype) {
   return torchTypeMap[c10::toString(dtype)];
 }
