@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(aitisa_api VERSION 0.4.0 LANGUAGES C CXX)
 
 ##############################################
@@ -119,7 +119,7 @@ if(AITISA_API_BUILD_AUTO_TESTING)
 
   if(AITISA_API_PYTORCH)
     include(cmake/local/LibTorch.cmake)
-    link_directories(/opt/intel/oneapi/mkl/2022.0.2/lib/intel64)
+    link_directories(/opt/intel/oneapi/mkl/latest/lib/intel64)
   endif()
 
   FILE(GLOB_RECURSE auto_test_srcs "auto_test/*.cpp" "auto_test/*.h")
