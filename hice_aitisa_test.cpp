@@ -31,7 +31,7 @@ inline DataType hice_int_to_dtype(int n) {
   return hice_dtypes[n];
 }
 inline Device hice_int_to_device(int n) {
-  return Device(DeviceType::CPU);
+  return {DeviceType::CPU};
 }
 inline int hice_dtype_to_int(DataType dtype) {
   return typeMap[dtype.name()];
@@ -49,7 +49,7 @@ void hice_create(DataType dtype, Device device, int64_t* dims, int64_t ndim,
       hice::create(array, data, len, hice::device(kCPU).dtype(type));
   *output = tensor;
 }
-void hice_resolve(Tensor input, DataType* dtype, Device* device, int64_t** dims,
+void hice_resolve(const Tensor& input, DataType* dtype, Device* device, int64_t** dims,
                   int64_t* ndim, void** data, unsigned int* len) {
   *dtype = input.data_type();
   *device = input.device();
@@ -64,7 +64,7 @@ void hice_resolve(Tensor input, DataType* dtype, Device* device, int64_t** dims,
   *len = input.size() * (*dtype).size();
 }
 
-void hice_conv2d(const Tensor input, const Tensor filter, const int* stride,
+void hice_conv2d(const Tensor& input, const Tensor& filter, const int* stride,
                  const int stride_len, const int* padding,
                  const int padding_len, const int* dilation,
                  const int dilation_len, const int groups, Tensor* output_ptr) {
@@ -94,7 +94,7 @@ typedef std::function<void(const Tensor, const Tensor, const int*, const int,
                            const int, Tensor*)>
     hice_conv2d_func;
 
-void hice_pooling(const Tensor input, const int* stride, const int stride_len,
+void hice_pooling(const Tensor& input, const int* stride, const int stride_len,
                   const int* padding, const int padding_len,
                   const int* dilation, const int dilation_len, const int* ksize,
                   const int ksize_len, const char* mode, const int mode_len,
@@ -133,52 +133,52 @@ typedef std::function<void(const Tensor, const int*, const int, const int*,
                            const int, const char*, const int, Tensor*)>
     hice_pooling_func;
 
-void hice_softmax(const Tensor input, const int axis, Tensor* output_ptr) {
+void hice_softmax(const Tensor& input, const int axis, Tensor* output_ptr) {
   *output_ptr = softmax_fwd(input, axis);
 }
 typedef std::function<void(const Tensor, const int, Tensor*)> hice_softmax_func;
 
-void hice_relu(const Tensor input, Tensor* output) {
+void hice_relu(const Tensor& input, Tensor* output) {
   *output = relu_fwd(input);
 }
 typedef std::function<void(Tensor, Tensor*)> hice_relu_func;
 
-void hice_sigmoid(const Tensor input, Tensor* output) {
+void hice_sigmoid(const Tensor& input, Tensor* output) {
   *output = sigmoid_fwd(input);
 }
 typedef std::function<void(Tensor, Tensor*)> hice_sigmoid_func;
 
-void hice_tanh(const Tensor input, Tensor* output) {
+void hice_tanh(const Tensor& input, Tensor* output) {
   *output = tanh_fwd(input);
 }
 typedef std::function<void(Tensor, Tensor*)> hice_tanh_func;
 
-void hice_sqrt(const Tensor input, Tensor* output) {
+void hice_sqrt(const Tensor& input, Tensor* output) {
   *output = sqrt_fwd(input);
 }
 typedef std::function<void(Tensor, Tensor*)> hice_sqrt_func;
 
-void hice_matmul(const Tensor tensor1, const Tensor tensor2, Tensor* output) {
+void hice_matmul(const Tensor& tensor1, const Tensor& tensor2, Tensor* output) {
   *output = matmul(tensor1, tensor2);
 }
 typedef std::function<void(Tensor, Tensor, Tensor*)> hice_matmul_func;
 
-void hice_add(const Tensor tensor1, const Tensor tensor2, Tensor* output) {
+void hice_add(const Tensor& tensor1, const Tensor& tensor2, Tensor* output) {
   *output = add(tensor1, tensor2);
 }
 typedef std::function<void(Tensor, Tensor, Tensor*)> hice_add_func;
 
-void hice_sub(const Tensor tensor1, const Tensor tensor2, Tensor* output) {
+void hice_sub(const Tensor& tensor1, const Tensor& tensor2, Tensor* output) {
   *output = sub(tensor1, tensor2);
 }
 typedef std::function<void(Tensor, Tensor, Tensor*)> hice_sub_func;
 
-void hice_mul(const Tensor tensor1, const Tensor tensor2, Tensor* output) {
+void hice_mul(const Tensor& tensor1, const Tensor& tensor2, Tensor* output) {
   *output = mul(tensor1, tensor2);
 }
 typedef std::function<void(Tensor, Tensor, Tensor*)> hice_mul_func;
 
-void hice_div(const Tensor tensor1, const Tensor tensor2, Tensor* output) {
+void hice_div(const Tensor& tensor1, const Tensor& tensor2, Tensor* output) {
   *output = div(tensor1, tensor2);
 }
 typedef std::function<void(Tensor, Tensor, Tensor*)> hice_div_func;
