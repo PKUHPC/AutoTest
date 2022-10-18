@@ -58,16 +58,16 @@ void natural_assign(void* data, unsigned int len, int dtype) {
 
 template <typename DATATYPE>
 inline void random_assign_int(DATATYPE* data, unsigned int nelem) {
-  std::default_random_engine gen(/*seed*/ 0);
-  std::uniform_int_distribution<DATATYPE> dis(0, 10);
+  std::default_random_engine gen(/*seed*/ time(nullptr));
+  std::uniform_int_distribution<DATATYPE> dis(-10, 10);
   for (unsigned int i = 0; i < nelem; i++) {
     data[i] = dis(gen);
   }
 }
 template <typename DATATYPE>
 inline void random_assign_float(DATATYPE* data, unsigned int nelem) {
-  std::default_random_engine gen(/*seed*/ 0);
-  std::normal_distribution<DATATYPE> dis(0, 1);
+  std::default_random_engine gen(/*seed*/ time(nullptr));
+  std::normal_distribution<DATATYPE> dis(-1, 1);
   for (unsigned int i = 0; i < nelem; i++) {
     data[i] = dis(gen);
   }
