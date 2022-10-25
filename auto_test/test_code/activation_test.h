@@ -369,8 +369,8 @@ TYPED_TEST_P(ActivationTest, FourTests) {
 #endif
     }
   };
-  if (this->relu_inputs.size() && this->relu_inputs.size() &&
-      this->relu_inputs.size() && this->relu_inputs.size()) {
+  if (this->relu_inputs.size() && this->sigmoid_inputs.size() &&
+      this->tanh_inputs.size() && this->sqrt_inputs.size()) {
     test(std::move(this->relu_inputs), std::move(this->relu_inputs_name),
          "relu", this->test_case["relu"]);
     test(std::move(this->sigmoid_inputs), std::move(this->sigmoid_inputs_name),
