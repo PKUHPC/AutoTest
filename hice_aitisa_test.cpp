@@ -232,6 +232,10 @@ REGISTER_BATCHNORM(hice::hice_batchnorm_func, hice::hice_batchnorm);
 
 REGISTER_DROPOUT(hice::hice_dropout_func, hice::hice_dropout);
 
+REGISTER_TRANSPOSE();
+
+REGISTER_ROT90();
+
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Initialize();
