@@ -9,56 +9,50 @@
 #include "hice/core/tensor_printer.h"
 
 extern "C" {
-#include "src/nn/dropout.h"
+#include "src/new_ops1/rot90.h"
 }
 
 namespace aitisa_api {
 
 namespace {
 
-class Dropout_Input : public Unary_Input {
+class Rot90_Input : public Unary_Input {
  public:
-  Dropout_Input() = default;
+  Rot90_Input() = default;
 
-  Dropout_Input(int64_t ndim, std::vector<int64_t> dims, int dtype, int device,
-                void* data, unsigned int len, double rate, int initvalue)
-      : Unary_Input(ndim, std::move(dims), dtype, device, data, len),
-        rate_(rate),
-        initvalue_(initvalue) {}
-  Dropout_Input(Dropout_Input&& input) noexcept
+  Rot90_Input(int64_t ndim, std::vector<int64_t> dims, int dtype, int device,
+              void* data, unsigned int len, int k)
+      : Unary_Input(ndim, std::move(dims), dtype, device, data, len), k_(k) {}
+  Rot90_Input(Rot90_Input&& input) noexcept
       : Unary_Input(input.ndim(), input.dims(), input.dtype(), input.device(),
                     input.data(), input.len()),
-        rate_(input.rate()),
-        initvalue_(input.initvalue()) {
+        k_(input.k()) {
     input.to_nullptr();
   }
-  ~Dropout_Input() override = default;
+  ~Rot90_Input() override = default;
 
-  Dropout_Input& operator=(Dropout_Input& right) {
+  Rot90_Input& operator=(Rot90_Input& right) {
     auto& left = (Unary_Input&)(*this);
     left = (Unary_Input&)right;
-    this->rate_ = right.rate();
-    this->initvalue_ = right.initvalue();
+    this->k_ = right.k();
   }
-  double rate() const { return rate_; }
-  int initvalue() const { return initvalue_; }
+  int k() const { return k_; }
 
  private:
-  double rate_ = 0;
-  int initvalue_ = 0;
+  int k_ = 0;
 };
 }  // namespace
 
 template <typename InterfaceType>
-class DropoutTest : public ::testing::Test {
+class Rot90Test : public ::testing::Test {
  public:
-  DropoutTest() { fetch_test_data("drop_out", drop_out_inputs, drop_out_name); }
-  ~DropoutTest() override = default;
-  static void aitisa_kernel(const AITISA_Tensor input, const double rate,
+  Rot90Test() { fetch_test_data("rot90", rot90_inputs, rot90_name); }
+  ~Rot90Test() override = default;
+  static void aitisa_kernel(const AITISA_Tensor input, const int k,
                             AITISA_Tensor* output) {
-    aitisa_dropout(input, rate, output);
+    aitisa_rot90(input, k, output);
   }
-  int fetch_test_data(const char* path, std::vector<Dropout_Input>& inputs,
+  int fetch_test_data(const char* path, std::vector<Rot90_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 
     libconfig::Config cfg;
@@ -82,9 +76,8 @@ class DropoutTest : public ::testing::Test {
         const libconfig::Setting& setting = settings[i];
 
         std::vector<int64_t> dims;
-        int test_index, ndim, dtype, device, len, initvalue;
+        int test_index, ndim, dtype, device, len, k;
         std::string input_name;
-        float rate;
 
         if (!setting.lookupValue("test_index", test_index)) {
           std::cerr << "Setting \"test_index\" do not exist in " << path
@@ -133,15 +126,9 @@ class DropoutTest : public ::testing::Test {
                     << std::endl;
           continue;
         }
-        if (!setting.lookupValue("initvalue", initvalue)) {
-          std::cerr << "Setting \"initvalue\" do not exist in test index "
-                    << test_index << " from " << path << " !\n"
-                    << std::endl;
-          continue;
-        }
-        if (!setting.lookupValue("rate", rate)) {
-          std::cerr << "Setting \"rate\" do not exist in test index "
-                    << test_index << " from " << path << " !\n"
+        if (!setting.lookupValue("k", k)) {
+          std::cerr << "Setting \"k\" do not exist in test index " << test_index
+                    << " from " << path << " !\n"
                     << std::endl;
           continue;
         }
@@ -151,8 +138,7 @@ class DropoutTest : public ::testing::Test {
                     << std::endl;
           continue;
         }
-        Dropout_Input tmp(ndim, dims, dtype, device, nullptr, len, rate,
-                          initvalue);
+        Rot90_Input tmp(ndim, dims, dtype, device, nullptr, len, k);
         inputs.push_back(std::move(tmp));
         inputs_name.push_back(input_name);
       }
@@ -174,47 +160,41 @@ class DropoutTest : public ::testing::Test {
     }
     return (EXIT_SUCCESS);
   }
-  using InputType = Dropout_Input;
+  using InputType = Rot90_Input;
   using UserInterface = InterfaceType;
   // inputs
-  std::vector<Dropout_Input> drop_out_inputs;
-  std::vector<std::string> drop_out_name;
-  std::map<std::string, int> test_case = {{"drop_out", 0}};
+  std::vector<Rot90_Input> rot90_inputs;
+  std::vector<std::string> rot90_name;
+  std::map<std::string, int> test_case = {{"rot90", 0}};
 };
-TYPED_TEST_CASE_P(DropoutTest);
+TYPED_TEST_CASE_P(Rot90Test);
 
-TYPED_TEST_P(DropoutTest, TwoTests) {
-  using UserDataType = typename TestFixture::UserInterface::UserDataType;
-  using UserDevice = typename TestFixture::UserInterface::UserDevice;
-  using UserTensor = typename TestFixture::UserInterface::UserTensor;
-  using UserFuncs = typename TestFixture::UserInterface;
+TYPED_TEST_P(Rot90Test, TwoTests) {
 #ifdef AITISA_API_PYTORCH
   using TorchDataType = typename libtorch_api::DataType;
   using TorchDevice = typename libtorch_api::Device;
   using TorchTensor = typename libtorch_api::Tensor;
 #endif
-  time_map m;
-  auto test = [&m](std::vector<Dropout_Input>&& inputs,
+  using time_map_value_rot90 = std::tuple<double, double>;
+  using time_map_rot90 = std::map<std::string, time_map_value_rot90>;
+  time_map_rot90 m;
+  auto test = [&m](std::vector<Rot90_Input>&& inputs,
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
       auto aitisa_elapsed = std::chrono::duration<double>::zero();
-      auto user_elapsed = std::chrono::duration<double>::zero();
 #ifdef AITISA_API_PYTORCH
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
       //loop test
       for (int n = 0; n < loop; n++) {
-        int64_t aitisa_result_ndim, user_result_ndim;
-        int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
-        float *aitisa_result_data = nullptr, *user_result_data = nullptr;
-        unsigned int aitisa_result_len, user_result_len;
+        int64_t aitisa_result_ndim;
+        int64_t* aitisa_result_dims = nullptr;
+        float* aitisa_result_data = nullptr;
+        unsigned int aitisa_result_len;
         AITISA_Tensor aitisa_tensor, aitisa_result;
         AITISA_DataType aitisa_result_dtype;
         AITISA_Device aitisa_result_device;
-        UserTensor user_tensor, user_result;
-        UserDataType user_result_dtype;
-        UserDevice user_result_device;
 #ifdef AITISA_API_PYTORCH
         int64_t torch_result_ndim;
         int64_t* torch_result_dims = nullptr;
@@ -231,11 +211,10 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
         aitisa_create(aitisa_dtype, aitisa_device, inputs[i].dims(),
                       inputs[i].ndim(), (void*)(inputs[i].data()),
                       inputs[i].len(), &aitisa_tensor);
-        full_float(aitisa_tensor, inputs[i].initvalue());
 
         auto aitisa_start = std::chrono::steady_clock::now();
 
-        aitisa_dropout(aitisa_tensor, inputs[i].rate(), &aitisa_result);
+        aitisa_rot90(aitisa_tensor, inputs[i].k(), &aitisa_result);
 
         auto aitisa_end = std::chrono::steady_clock::now();
         aitisa_elapsed += aitisa_end - aitisa_start;
@@ -243,27 +222,6 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
                        &aitisa_result_device, &aitisa_result_dims,
                        &aitisa_result_ndim, (void**)&aitisa_result_data,
                        &aitisa_result_len);
-
-        // user
-        UserDataType user_dtype =
-            UserFuncs::user_int_to_dtype(inputs[i].dtype());
-        UserDevice user_device =
-            UserFuncs::user_int_to_device(inputs[i].device());
-        UserFuncs::user_create(user_dtype, user_device, inputs[i].dims(),
-                               inputs[i].ndim(), inputs[i].data(),
-                               inputs[i].len(), &user_tensor);
-
-        auto user_start = std::chrono::steady_clock::now();
-        UserFuncs::user_dropout(user_tensor, inputs[i].rate(), &user_result);
-        auto user_end = std::chrono::steady_clock::now();
-
-        user_elapsed += user_end - user_start;
-
-        UserFuncs::user_resolve(user_result, &user_result_dtype,
-                                &user_result_device, &user_result_dims,
-                                &user_result_ndim, (void**)&user_result_data,
-                                &user_result_len);
-
 #ifdef AITISA_API_PYTORCH
         //torch
         TorchDataType torch_dtype =
@@ -275,9 +233,16 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
                                    inputs[i].len(), &torch_tensor);
 
         auto torch_start = std::chrono::steady_clock::now();
-        torch_result = torch::dropout(torch_tensor, inputs[i].rate(), true);
+        if (inputs[i].ndim() == 3) {
+          torch_result = torch::rot90(torch_tensor, inputs[i].k(), {1, 2});
+        } else if (inputs[i].ndim() == 4) {
+          torch_result = torch::rot90(torch_tensor, inputs[i].k(), {2, 3});
+        }
 
         auto torch_end = std::chrono::steady_clock::now();
+        if (!torch_result.is_contiguous()) {
+          torch_result = torch_result.contiguous();
+        }
         torch_elapsed += torch_end - torch_start;
         libtorch_api::torch_resolve(
             torch_result, &torch_result_dtype, torch_result_device,
@@ -286,119 +251,60 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
 #endif
         // compare
         int64_t tensor_size = 1;
-        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-        ASSERT_EQ(/*CUDA*/ 0,
-                  UserFuncs::user_device_to_int(user_result_device));
-        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
-                  UserFuncs::user_dtype_to_int(user_result_dtype));
-        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
-          tensor_size *= aitisa_result_dims[j];
-          ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
-        }
-        ASSERT_EQ(aitisa_result_len, user_result_len);
+
 #ifdef AITISA_API_PYTORCH
         ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
         ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
         ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
                   libtorch_api::torch_dtype_to_int(torch_result_dtype));
+
         for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          tensor_size *= aitisa_result_dims[j];
           ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
         }
         ASSERT_EQ(aitisa_result_len, torch_result_len);
 #endif
         auto* aitisa_data = (float*)aitisa_result_data;
-        auto* user_data = (float*)user_result_data;
-        int aitisa_count = 0;
-        int user_count = 0;
-        for (int64_t j = 0; j < tensor_size; j++) {
-          if (aitisa_data[j] == 0) {
-            aitisa_count++;
-          }
-          if (user_data[j] == 0) {
-            user_count++;
-          }
-        }
 #ifdef AITISA_API_PYTORCH
-          auto* torch_data = (float*)torch_result_data;
-          int torch_count = 0;
-          for (int64_t j = 0; j < tensor_size; j++) {
-            if (torch_data[j] == 0) {
-              torch_count++;
-            }
-          }
+        auto* torch_data = (float*)torch_result_data;
+        for (int64_t j = 0; j < tensor_size; j++) {
+          ASSERT_FLOAT_EQ(aitisa_data[j], torch_data[j]);
+        }
 
 #endif
-#ifdef AITISA_API_PYTORCH
-        ASSERT_TRUE(abs((double)aitisa_count / (double)tensor_size -
-                        (double)torch_count / (double)tensor_size) < 1e-2);
-#endif
-        ASSERT_TRUE(abs((double)aitisa_count / (double)tensor_size -
-                        (double)user_count / (double)tensor_size) < 1e-2);
       }
       auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
-      auto user_time = user_elapsed.count() * 1000 / loop;
 
       // print result of test
       std::cout << "[ " << test_case_name << " sample" << i << " / "
                 << inputs_name[i] << " ] " << std::endl;
       std::cout << "\t[ AITISA ] " << aitisa_time << " ms average for " << loop
                 << " loop " << std::endl;
-      std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
-                << " loop " << std::endl;
+
 #ifdef AITISA_API_PYTORCH
       auto torch_time = torch_elapsed.count() * 1000 / loop;
       std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
                 << " loop " << std::endl;
-      m.insert(
-          std::make_pair(test_case_name + " sample " + std::to_string(i),
-                         time_map_value(aitisa_time, user_time, torch_time)));
-#else
       m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-                              time_map_value(aitisa_time, user_time)));
+                              time_map_value_rot90(aitisa_time, torch_time)));
 #endif
-    }
+    };
   };
-  if (this->drop_out_inputs.size()) {
-    test(std::move(this->drop_out_inputs), std::move(this->drop_out_name),
-         "drop_out", this->test_case["drop_out"]);
-#ifdef AITISA_API_GENERATE_FIGURE
-    draw_fig_fun(m, "drop_out");
-#endif
+  if (this->rot90_inputs.size()) {
+    test(std::move(this->rot90_inputs), std::move(this->rot90_name), "rot90",
+         this->test_case["rot90"]);
+    //#ifdef AITISA_API_GENERATE_FIGURE
+    //    draw_fig_fun(m, "drop_out");
+    //#endif
   } else
     FAIL() << "No input test case.";
 }
-REGISTER_TYPED_TEST_CASE_P(DropoutTest, TwoTests);
+REGISTER_TYPED_TEST_CASE_P(Rot90Test, TwoTests);
 
-#define REGISTER_DROPOUT(DROPOUT_FUNC, DROPOUT)                                \
-  class Dropout : public Basic {                                               \
-   public:                                                                     \
-    static void user_dropout(UserTensor input, const double rate,              \
-                             UserTensor* output) {                             \
-      typedef std::function<void(UserTensor, double, UserTensor*)>             \
-          dropout_func;                                                        \
-      auto func_args_num = aitisa_api::function_traits<DROPOUT_FUNC>::nargs;   \
-      auto args_num = aitisa_api::function_traits<dropout_func>::nargs;        \
-      if (func_args_num != args_num) {                                         \
-        throw std::invalid_argument("Incorrect parameter numbers: expected " + \
-                                    std::to_string(args_num) +                 \
-                                    " arguments but got " +                    \
-                                    std::to_string(func_args_num));            \
-      }                                                                        \
-      if (!std::is_same<std::remove_cv<aitisa_api::function_traits<            \
-                            dropout_func>::result_type>::type,                 \
-                        aitisa_api::function_traits<                           \
-                            DROPOUT_FUNC>::result_type>::value) {              \
-        throw std::invalid_argument(                                           \
-            "Incorrect return type: type mismatch at return");                 \
-      }                                                                        \
-      aitisa_api::TypeCompare<                                                 \
-          aitisa_api::function_traits<dropout_func>::nargs, dropout_func,      \
-          DROPOUT_FUNC>();                                                     \
-      DROPOUT(input, rate, output);                                            \
-    }                                                                          \
-  };                                                                           \
-  namespace aitisa_api {                                                       \
-  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, DropoutTest, Dropout);             \
+#define REGISTER_ROT90()                                       \
+  class Rot90 : public Basic {};                               \
+  namespace aitisa_api {                                       \
+  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, Rot90Test, Rot90); \
   }
 
 }  // namespace aitisa_api

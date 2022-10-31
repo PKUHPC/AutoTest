@@ -8,3 +8,5 @@
 #include "auto_test/test_code/matmul_test.h"
 #include "auto_test/test_code/pooling_test.h"
 #include "auto_test/test_code/softmax_test.h"
+#include "auto_test/test_code/transpose.h"
+#include "auto_test/test_code/rot90.h"

@@ -1,134 +1,102 @@
 #include "gtest/gtest.h"
-extern "C"
-{
+extern "C" {
 #include "src/new_ops1/rot90.h"
 // #include "src/tool/tool.h"
 }
 
-void rot90_assign_float(Tensor t)
-{
-    int64_t size = aitisa_tensor_size(t);
-    float *data = (float *)aitisa_tensor_data(t);
-    float value = 0;
-    for (int i = 0; i < size; ++i)
-    {
-        value = i * 0.1;
-        data[i] = value;
-    }
+void rot90_assign_float(Tensor t) {
+  int64_t size = aitisa_tensor_size(t);
+  float* data = (float*)aitisa_tensor_data(t);
+  float value = 0;
+  for (int i = 0; i < size; ++i) {
+    value = i * 0.1;
+    data[i] = value;
+  }
 }
 
-namespace aitisa_api
-{
-    namespace
-    {
-        TEST(Rot1, Float2d)
-        {
-            Tensor input;
-            DataType dtype = kFloat;
-            Device device = {DEVICE_CPU, 0};
-            int64_t dims[2] = {2, 3};
-            aitisa_create(dtype, device, dims, 2, NULL, 0, &input);
-            rot90_assign_float(input);
-            // tensor_printer2d(input);
+namespace aitisa_api {
+namespace {
+TEST(Rot1, Float3d) {
+  Tensor input;
+  DataType dtype = kFloat;
+  Device device = {DEVICE_CPU, 0};
+  int64_t dims[3] = {3, 2, 3};
+  aitisa_create(dtype, device, dims, 3, NULL, 0, &input);
+  rot90_assign_float(input);
+  // tensor_printer2d(input);
 
-            Tensor output;
-            aitisa_rot90(input, 1, &output);
-            // tensor_printer2d(output);
+  Tensor output;
+  aitisa_rot90(input, 1, &output);
+  // tensor_printer2d(output);
 
-            float *out_data = (float *)aitisa_tensor_data(output);
-            float test_data[] = {0.2, 0.5, 0.1, 0.4, 0.0, 0.3};
-            int64_t size = aitisa_tensor_size(input);
-            for (int64_t i = 0; i < size; i++)
-            {
-                /* Due to the problem of precision, consider the two numbers
+  float* out_data = (float*)aitisa_tensor_data(output);
+  float test_data[] = {0.2, 0.5, 0.1, 0.4, 0.0, 0.3, 0.8, 1.1, 0.7,
+                       1.,  0.6, 0.9, 1.4, 1.7, 1.3, 1.6, 1.2, 1.5};
+  int64_t size = aitisa_tensor_size(input);
+  for (int64_t i = 0; i < size; i++) {
+    /* Due to the problem of precision, consider the two numbers
                    are equal when their difference is less than 0.000001*/
-                EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
-            }
+    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
+  }
 
-            aitisa_destroy(&input);
-            aitisa_destroy(&output);
-        }
-        TEST(Rot2, Float2d)
-        {
-            Tensor input;
-            DataType dtype = kFloat;
-            Device device = {DEVICE_CPU, 0};
-            int64_t dims[2] = {2, 3};
-            aitisa_create(dtype, device, dims, 2, NULL, 0, &input);
-            rot90_assign_float(input);
-            // tensor_printer2d(input);
+  aitisa_destroy(&input);
+  aitisa_destroy(&output);
+}
+TEST(Rot6, Float3d) {
+  Tensor input;
+  DataType dtype = kFloat;
+  Device device = {DEVICE_CPU, 0};
+  int64_t dims[3] = {3, 2, 3};
+  aitisa_create(dtype, device, dims, 3, NULL, 0, &input);
+  rot90_assign_float(input);
+  // tensor_printer2d(input);
 
-            Tensor output;
-            aitisa_rot90(input, 2, &output);
-            // tensor_printer2d(output);
+  Tensor output;
+  aitisa_rot90(input, 6, &output);
+  // tensor_printer2d(output);
 
-            float *out_data = (float *)aitisa_tensor_data(output);
-            float test_data[] = {0.5, 0.4, 0.3, 0.2, 0.1, 0};
-            int64_t size = aitisa_tensor_size(input);
-            for (int64_t i = 0; i < size; i++)
-            {
-                /* Due to the problem of precision, consider the two numbers
+  float* out_data = (float*)aitisa_tensor_data(output);
+  float test_data[] = {0.5, 0.4, 0.3, 0.2, 0.1, 0,   1.1, 1.,  0.9,
+                       0.8, 0.7, 0.6, 1.7, 1.6, 1.5, 1.4, 1.3, 1.2};
+  int64_t size = aitisa_tensor_size(input);
+  for (int64_t i = 0; i < size; i++) {
+    /* Due to the problem of precision, consider the two numbers
                    are equal when their difference is less than 0.000001*/
-                EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
-            }
+    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
+  }
 
-            aitisa_destroy(&input);
-            aitisa_destroy(&output);
-        }
-        TEST(Rot3, Float2d)
-        {
-            Tensor input;
-            DataType dtype = kFloat;
-            Device device = {DEVICE_CPU, 0};
-            int64_t dims[2] = {2, 3};
-            aitisa_create(dtype, device, dims, 2, NULL, 0, &input);
-            rot90_assign_float(input);
-            // tensor_printer2d(input);
+  aitisa_destroy(&input);
+  aitisa_destroy(&output);
+}
 
-            Tensor output;
-            aitisa_rot90(input, 3, &output);
-            // tensor_printer2d(output);
+TEST(Rot3, Float4d) {
+  Tensor input;
+  DataType dtype = kFloat;
+  Device device = {DEVICE_CPU, 0};
+  int64_t dims[4] = {2, 3, 2, 3};
+  aitisa_create(dtype, device, dims, 4, NULL, 0, &input);
+  rot90_assign_float(input);
+  // tensor_printer2d(input);
 
-            float *out_data = (float *)aitisa_tensor_data(output);
-            float test_data[] = {0.3, 0, 0.4, 0.1, 0.5, 0.2};
-            int64_t size = aitisa_tensor_size(input);
-            for (int64_t i = 0; i < size; i++)
-            {
-                /* Due to the problem of precision, consider the two numbers
+  Tensor output;
+  aitisa_rot90(input, 3, &output);
+  // tensor_printer2d(output);
+
+  float* out_data = (float*)aitisa_tensor_data(output);
+  float test_data[] = {0.3, 0.0, 0.4, 0.1, 0.5, 0.2, 0.9, 0.6, 1.,
+                       0.7, 1.1, 0.8, 1.5, 1.2, 1.6, 1.3, 1.7, 1.4,
+                       2.1, 1.8, 2.2, 1.9, 2.3, 2.,  2.7, 2.4, 2.8,
+                       2.5, 2.9, 2.6, 3.3, 3.,  3.4, 3.1, 3.5, 3.2};
+  int64_t size = aitisa_tensor_size(input);
+  for (int64_t i = 0; i < size; i++) {
+    /* Due to the problem of precision, consider the two numbers
                    are equal when their difference is less than 0.000001*/
-                EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
-            }
+    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
+  }
 
-            aitisa_destroy(&input);
-            aitisa_destroy(&output);
-        }
-        TEST(Rot8, Float2d)
-        {
-            Tensor input;
-            DataType dtype = kFloat;
-            Device device = {DEVICE_CPU, 0};
-            int64_t dims[2] = {2, 3};
-            aitisa_create(dtype, device, dims, 2, NULL, 0, &input);
-            rot90_assign_float(input);
-            // tensor_printer2d(input);
+  aitisa_destroy(&input);
+  aitisa_destroy(&output);
+}
 
-            Tensor output;
-            aitisa_rot90(input, 8, &output);
-            // tensor_printer2d(output);
-
-            float *out_data = (float *)aitisa_tensor_data(output);
-            float test_data[] = {0, 0.1, 0.2, 0.3, 0.4, 0.5};
-            int64_t size = aitisa_tensor_size(input);
-            for (int64_t i = 0; i < size; i++)
-            {
-                /* Due to the problem of precision, consider the two numbers
-                   are equal when their difference is less than 0.000001*/
-                EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
-            }
-
-            aitisa_destroy(&input);
-            aitisa_destroy(&output);
-        }
-        
-    } // namespace
-} // namespace aitisa_api
+}  // namespace
+}  // namespace aitisa_api
