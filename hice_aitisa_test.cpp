@@ -5,6 +5,7 @@
 #include "hice/basic/factories.h"
 #include "hice/core/tensor.h"
 #include "hice/math/binary_expr.h"
+#include "hice/math/compare.h"
 #include "hice/math/matmul.h"
 #include "hice/nn/activation.h"
 #include "hice/nn/batch_norm.h"
@@ -49,8 +50,9 @@ void hice_create(DataType dtype, Device device, int64_t* dims, int64_t ndim,
       hice::create(array, data, len, hice::device(kCPU).dtype(type));
   *output = tensor;
 }
-void hice_resolve(const Tensor& input, DataType* dtype, Device* device, int64_t** dims,
-                  int64_t* ndim, void** data, unsigned int* len) {
+void hice_resolve(const Tensor& input, DataType* dtype, Device* device,
+                  int64_t** dims, int64_t* ndim, void** data,
+                  unsigned int* len) {
   *dtype = input.data_type();
   *device = input.device();
   ConstIntArrayRef array = input.dims();
@@ -236,6 +238,8 @@ REGISTER_TRANSPOSE();
 
 REGISTER_ROT90();
 
+REGISTER_COMPARE(hice::greater_equal, hice::greater, hice::less_equal,
+                 hice::less);
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Initialize();

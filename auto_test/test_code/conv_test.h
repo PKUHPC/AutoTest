@@ -18,7 +18,6 @@ namespace {
 class Conv_Input : public Binary_Input {
  public:
   Conv_Input() = default;
-  ;
   Conv_Input(int64_t ndim1, int64_t* dims1, int dtype1, int device1,
              void* data1, unsigned int len1, int64_t ndim2, int64_t* dims2,
              int dtype2, int device2, void* data2, unsigned int len2,
