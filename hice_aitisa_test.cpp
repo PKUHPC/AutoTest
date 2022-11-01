@@ -238,8 +238,8 @@ REGISTER_TRANSPOSE();
 
 REGISTER_ROT90();
 
-REGISTER_COMPARE(hice::greater_equal, hice::greater, hice::less_equal,
-                 hice::less);
+REGISTER_COMPARE(hice::equal, hice::greater_equal, hice::greater,
+                 hice::less_equal, hice::less);
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Initialize();

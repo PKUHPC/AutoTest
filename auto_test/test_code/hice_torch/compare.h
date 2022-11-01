@@ -12,6 +12,8 @@ template <typename InterfaceType>
 class CompareTest : public ::testing::Test {
  public:
   CompareTest() {
+    fetch_test_data("compare.equal", equal_inputs, equal_inputs_name,
+                    test_case["equal"]);
     fetch_test_data("compare.greater_equal", greater_equal_inputs,
                     greater_equal_inputs_name, test_case["greater_equal"]);
     fetch_test_data("compare.greater", greater_inputs, greater_inputs_name,
@@ -180,6 +182,9 @@ class CompareTest : public ::testing::Test {
   using InputType = Binary_Input;
   using UserInterface = InterfaceType;
   // inputs
+  std::vector<Binary_Input> equal_inputs;
+  std::vector<std::string> equal_inputs_name;
+
   std::vector<Binary_Input> greater_equal_inputs;
   std::vector<std::string> greater_equal_inputs_name;
 
@@ -191,10 +196,11 @@ class CompareTest : public ::testing::Test {
 
   std::vector<Binary_Input> less_inputs;
   std::vector<std::string> less_inputs_name;
-  std::map<std::string, int> test_case = {{"greater_equal", 0},
-                                          {"greater", 1},
-                                          {"less_equal", 2},
-                                          {"less", 3}};
+  std::map<std::string, int> test_case = {{"equal", 0},
+                                          {"greater_equal", 1},
+                                          {"greater", 2},
+                                          {"less_equal", 3},
+                                          {"less", 4}};
 };
 TYPED_TEST_CASE_P(CompareTest);
 
@@ -220,9 +226,9 @@ TYPED_TEST_P(CompareTest, FourTests) {
       //loop test
       for (int n = 0; n < loop; n++) {
         int64_t user_result_ndim;
-        int64_t *user_result_dims = nullptr;
-        float *user_result_data = nullptr;
-        unsigned int  user_result_len;
+        int64_t* user_result_dims = nullptr;
+        float* user_result_data = nullptr;
+        unsigned int user_result_len;
         UserTensor user_tensor1, user_tensor2, user_result;
         UserDataType user_result_dtype;
         UserDevice user_result_device;
@@ -253,15 +259,18 @@ TYPED_TEST_P(CompareTest, FourTests) {
         auto user_start = std::chrono::steady_clock::now();
         switch (test_case_index) {
           case 0:
-            user_result = UserFuncs::user_ge(user_tensor1, user_tensor2);
+            user_result = UserFuncs::user_eq(user_tensor1, user_tensor2);
             break;
           case 1:
-            user_result = UserFuncs::user_gt(user_tensor1, user_tensor2);
+            user_result = UserFuncs::user_ge(user_tensor1, user_tensor2);
             break;
           case 2:
-            user_result = UserFuncs::user_le(user_tensor1, user_tensor2);
+            user_result = UserFuncs::user_gt(user_tensor1, user_tensor2);
             break;
           case 3:
+            user_result = UserFuncs::user_le(user_tensor1, user_tensor2);
+            break;
+          case 4:
             user_result = UserFuncs::user_lt(user_tensor1, user_tensor2);
             break;
           default:
@@ -294,15 +303,18 @@ TYPED_TEST_P(CompareTest, FourTests) {
         auto torch_start = std::chrono::steady_clock::now();
         switch (test_case_index) {
           case 0:
-            torch_result = torch::greater_equal(torch_tensor1, torch_tensor2);
+            torch_result = torch::eq(torch_tensor1, torch_tensor2);
             break;
           case 1:
-            torch_result = torch::greater(torch_tensor1, torch_tensor2);
+            torch_result = torch::greater_equal(torch_tensor1, torch_tensor2);
             break;
           case 2:
-            torch_result = torch::less_equal(torch_tensor1, torch_tensor2);
+            torch_result = torch::greater(torch_tensor1, torch_tensor2);
             break;
           case 3:
+            torch_result = torch::less_equal(torch_tensor1, torch_tensor2);
+            break;
+          case 4:
             torch_result = torch::less(torch_tensor1, torch_tensor2);
             break;
           default:
@@ -359,8 +371,11 @@ TYPED_TEST_P(CompareTest, FourTests) {
 #endif
     }
   };
-  if (this->greater_equal_inputs.size() && this->greater_inputs.size() &&
-      this->less_equal_inputs.size() && this->less_inputs.size()) {
+  if (this->equal_inputs.size() && this->greater_equal_inputs.size() &&
+      this->greater_inputs.size() && this->less_equal_inputs.size() &&
+      this->less_inputs.size()) {
+    test(std::move(this->equal_inputs), std::move(this->equal_inputs_name),
+         "equal", this->test_case["equal"]);
     test(std::move(this->greater_equal_inputs),
          std::move(this->greater_equal_inputs_name), "greater_equal",
          this->test_case["greater_equal"]);
@@ -379,9 +394,12 @@ TYPED_TEST_P(CompareTest, FourTests) {
 }
 REGISTER_TYPED_TEST_CASE_P(CompareTest, FourTests);
 
-#define REGISTER_COMPARE(GE, GT, LE, LT)                                \
+#define REGISTER_COMPARE(EQ, GE, GT, LE, LT)                            \
   class Compare : public Basic {                                        \
    public:                                                              \
+    static UserTensor user_eq(UserTensor tensor1, UserTensor tensor2) { \
+      return EQ(tensor1, tensor2);                                      \
+    }                                                                   \
     static UserTensor user_ge(UserTensor tensor1, UserTensor tensor2) { \
       return GE(tensor1, tensor2);                                      \
     }                                                                   \
