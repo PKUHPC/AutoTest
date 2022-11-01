@@ -18,6 +18,10 @@ class UnaryExprTest : public ::testing::Test {
                     test_case["log"]);
     fetch_test_data("unary_expr.neg", neg_inputs, neg_inputs_name,
                     test_case["neg"]);
+    fetch_test_data("unary_expr.abs", abs_inputs, abs_inputs_name,
+                    test_case["abs"]);
+    fetch_test_data("unary_expr.square", square_inputs, square_inputs_name,
+                    test_case["square"]);
   }
   ~UnaryExprTest() override = default;
 
@@ -138,7 +142,17 @@ class UnaryExprTest : public ::testing::Test {
   std::vector<Unary_Input> neg_inputs;
   std::vector<std::string> neg_inputs_name;
 
-  std::map<std::string, int> test_case = {{"exp", 0}, {"log", 1}, {"neg", 2}};
+  std::vector<Unary_Input> abs_inputs;
+  std::vector<std::string> abs_inputs_name;
+
+  std::vector<Unary_Input> square_inputs;
+  std::vector<std::string> square_inputs_name;
+
+  std::map<std::string, int> test_case = {{"exp", 0},
+                                          {"log", 1},
+                                          {"neg", 2},
+                                          {"abs", 3},
+                                          {"square", 4}};
 };
 TYPED_TEST_CASE_P(UnaryExprTest);
 
@@ -200,6 +214,12 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
           case 2:
             user_result = UserFuncs::user_neg(user_tensor);
             break;
+          case 3:
+            user_result = UserFuncs::user_abs(user_tensor);
+            break;
+          case 4:
+            user_result = UserFuncs::user_square(user_tensor);
+            break;
           default:
             break;
         }
@@ -229,6 +249,12 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
             break;
           case 2:
             torch_result = torch::neg(torch_tensor);
+            break;
+          case 3:
+            torch_result = torch::abs(torch_tensor);
+            break;
+          case 4:
+            torch_result = torch::square(torch_tensor);
             break;
           default:
             break;
@@ -286,13 +312,18 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
     }
   };
   if (this->exp_inputs.size() && this->log_inputs.size() &&
-      this->neg_inputs.size()) {
+      this->neg_inputs.size() && this->abs_inputs.size() &&
+      this->square_inputs.size()) {
     test(std::move(this->exp_inputs), std::move(this->exp_inputs_name), "exp",
          this->test_case["exp"]);
     test(std::move(this->log_inputs), std::move(this->log_inputs_name), "log",
          this->test_case["log"]);
     test(std::move(this->neg_inputs), std::move(this->neg_inputs_name), "neg",
          this->test_case["neg"]);
+    test(std::move(this->abs_inputs), std::move(this->abs_inputs_name), "abs",
+         this->test_case["abs"]);
+    test(std::move(this->square_inputs), std::move(this->square_inputs_name),
+         "square", this->test_case["square"]);
 #ifdef AITISA_API_GENERATE_FIGURE
 //    draw_fig_fun(m, "unary_expr");
 #endif
@@ -302,7 +333,8 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
 
 REGISTER_TYPED_TEST_CASE_P(UnaryExprTest, FourTests);
 
-#define REGISTER_UNARYEXPR(UNARY_EXP, UNARY_LOG, UNARY_NEG)            \
+#define REGISTER_UNARYEXPR(UNARY_EXP, UNARY_LOG, UNARY_NEG, UNARY_ABS, \
+                           UNARY_SQUARE)                               \
   class Unaryexpr : public Basic {                                     \
    public:                                                             \
     static UserTensor user_exp(UserTensor tensor) {                    \
@@ -313,6 +345,12 @@ REGISTER_TYPED_TEST_CASE_P(UnaryExprTest, FourTests);
     }                                                                  \
     static UserTensor user_neg(UserTensor tensor) {                    \
       return UNARY_NEG(tensor);                                        \
+    }                                                                  \
+    static UserTensor user_abs(UserTensor tensor) {                    \
+      return UNARY_ABS(tensor);                                        \
+    }                                                                  \
+    static UserTensor user_square(UserTensor tensor) {                 \
+      return UNARY_SQUARE(tensor);                                     \
     }                                                                  \
   };                                                                   \
   namespace aitisa_api {                                               \
