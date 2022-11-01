@@ -7,6 +7,7 @@
 #include "hice/math/binary_expr.h"
 #include "hice/math/compare.h"
 #include "hice/math/matmul.h"
+#include "hice/math/unary_expr.h"
 #include "hice/nn/activation.h"
 #include "hice/nn/batch_norm.h"
 #include "hice/nn/conv.h"
@@ -240,6 +241,8 @@ REGISTER_ROT90();
 
 REGISTER_COMPARE(hice::equal, hice::greater_equal, hice::greater,
                  hice::less_equal, hice::less);
+
+REGISTER_UNARYEXPR(hice::exp, hice::log, hice::neg);
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Initialize();
