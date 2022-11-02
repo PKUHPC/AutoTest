@@ -58,7 +58,10 @@ void natural_assign(void* data, unsigned int len, int dtype) {
 
 template <typename DATATYPE>
 inline void random_assign_int(DATATYPE* data, unsigned int nelem) {
-  static std::default_random_engine gen(/*seed*/ time(nullptr));
+  unsigned long milliseconds_since_epoch =
+      std::chrono::duration_cast<std::chrono::milliseconds>
+      (std::chrono::system_clock::now().time_since_epoch()).count();
+  static std::default_random_engine gen(/*seed*/ milliseconds_since_epoch);
   static std::uniform_int_distribution<DATATYPE> dis(-10, 10);
   for (unsigned int i = 0; i < nelem; i++) {
     data[i] = dis(gen);
@@ -66,7 +69,10 @@ inline void random_assign_int(DATATYPE* data, unsigned int nelem) {
 }
 template <typename DATATYPE>
 inline void random_assign_float(DATATYPE* data, unsigned int nelem) {
-  static std::default_random_engine gen(/*seed*/ time(nullptr));
+  unsigned long milliseconds_since_epoch =
+      std::chrono::duration_cast<std::chrono::milliseconds>
+      (std::chrono::system_clock::now().time_since_epoch()).count();
+  static std::default_random_engine gen(/*seed*/ milliseconds_since_epoch);
   static std::normal_distribution<DATATYPE> dis(-1, 1);
   for (unsigned int i = 0; i < nelem; i++) {
     data[i] = dis(gen);
