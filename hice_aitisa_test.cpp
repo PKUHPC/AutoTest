@@ -14,7 +14,7 @@
 #include "hice/nn/dropout.h"
 #include "hice/nn/pooling.h"
 #include "hice/nn/softmax.h"
-
+#include "hice/math/arg_reduce.h"
 namespace hice {
 const DataType hice_dtypes[10] = {
     DataType::make<__int8_t>(), DataType::make<uint8_t>(),
@@ -241,8 +241,13 @@ REGISTER_ROT90();
 
 REGISTER_COMPARE(hice::equal, hice::greater_equal, hice::greater,
                  hice::less_equal, hice::less);
+
 REGISTER_ELU(hice::elu_fwd);
+
 REGISTER_UNARYEXPR(hice::exp, hice::log, hice::neg, hice::abs_fwd, hice::square_fwd);
+
+REGISTER_ARGREDUCE(hice::argmin, hice::argmax);
+
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Initialize();
