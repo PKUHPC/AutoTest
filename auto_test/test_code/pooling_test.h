@@ -17,7 +17,6 @@ namespace {
 class Pooling_Input : public Unary_Input {
  public:
   Pooling_Input() = default;
-  ;
   Pooling_Input(int64_t ndim, int64_t* dims, int dtype, int device, void* data,
                 unsigned int len, int* stride, int* padding, int* dilation,
                 int* ksize, char* mode)

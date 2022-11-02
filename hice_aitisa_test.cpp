@@ -15,6 +15,7 @@
 #include "hice/nn/pooling.h"
 #include "hice/nn/softmax.h"
 #include "hice/math/arg_reduce.h"
+#include "hice/math/reduce.h"
 namespace hice {
 const DataType hice_dtypes[10] = {
     DataType::make<__int8_t>(), DataType::make<uint8_t>(),
@@ -247,6 +248,8 @@ REGISTER_ELU(hice::elu_fwd);
 REGISTER_UNARYEXPR(hice::exp, hice::log, hice::neg, hice::abs_fwd, hice::square_fwd);
 
 REGISTER_ARGREDUCE(hice::argmin, hice::argmax);
+
+REGISTER_REDUCE(hice::reduce_sum,hice::reduce_mean);
 
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
