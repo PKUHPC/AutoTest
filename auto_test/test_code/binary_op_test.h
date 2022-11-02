@@ -349,10 +349,10 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
             torch_result = torch::sub(torch_tensor1, torch_tensor2);
             break;
           case 2:
-            torch_result = torch::div(torch_tensor1, torch_tensor2);
+            torch_result = torch::mul(torch_tensor1, torch_tensor2);
             break;
           case 3:
-            torch_result = torch::mul(torch_tensor1, torch_tensor2);
+            torch_result = torch::div(torch_tensor1, torch_tensor2);
             break;
           default:
             break;
@@ -368,10 +368,9 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
         // compare
         int64_t tensor_size = 1;
         ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
-        if (test_case_index == 1) {  // CUDA
-          ASSERT_EQ(
-              0, UserFuncs::user_device_to_int(user_result_device));
-        } else {  // CPU
+        if (test_case_index == 1) {
+          ASSERT_EQ(0, UserFuncs::user_device_to_int(user_result_device));
+        } else {
           ASSERT_EQ(aitisa_device_to_int(aitisa_result_device),
                     UserFuncs::user_device_to_int(user_result_device));
         }
@@ -399,7 +398,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
 #ifdef AITISA_API_PYTORCH
             auto* torch_data = (int32_t*)torch_result_data;
             for (int64_t j = 0; j < tensor_size; j++) {
-              ASSERT_EQ(aitisa_data[j], user_data[j]);
+              ASSERT_EQ(aitisa_data[j], torch_data[j]);
             }
 #endif
             for (int64_t j = 0; j < tensor_size; j++) {
@@ -413,7 +412,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
 #ifdef AITISA_API_PYTORCH
             auto* torch_data = (double*)torch_result_data;
             for (int64_t j = 0; j < tensor_size; j++) {
-              ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+              ASSERT_TRUE(abs(aitisa_data[j] - torch_data[j]) < 1e-3);
             }
 #endif
             for (int64_t j = 0; j < tensor_size; j++) {
@@ -427,7 +426,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
 #ifdef AITISA_API_PYTORCH
             auto* torch_data = (float*)torch_result_data;
             for (int64_t j = 0; j < tensor_size; j++) {
-              ASSERT_EQ(aitisa_data[j], user_data[j]);
+              ASSERT_EQ(aitisa_data[j], torch_data[j]);
             }
 #endif
             for (int64_t j = 0; j < tensor_size; j++) {
@@ -441,7 +440,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
 #ifdef AITISA_API_PYTORCH
             auto* torch_data = (float*)torch_result_data;
             for (int64_t j = 0; j < tensor_size; j++) {
-              ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+              ASSERT_TRUE(abs(aitisa_data[j] - torch_data[j]) < 1e-3);
             }
 #endif
             for (int64_t j = 0; j < tensor_size; j++) {
