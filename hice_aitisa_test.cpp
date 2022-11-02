@@ -241,7 +241,7 @@ REGISTER_ROT90();
 
 REGISTER_COMPARE(hice::equal, hice::greater_equal, hice::greater,
                  hice::less_equal, hice::less);
-
+REGISTER_ELU(hice::elu_fwd);
 REGISTER_UNARYEXPR(hice::exp, hice::log, hice::neg, hice::abs_fwd, hice::square_fwd);
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE

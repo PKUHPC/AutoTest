@@ -12,3 +12,4 @@
 #include "auto_test/test_code/softmax_test.h"
 #include "auto_test/test_code/hice_torch/compare.h"
 #include "auto_test/test_code/hice_torch/unary_expr.h"
+#include "auto_test/test_code/hice_torch/elu.h"
