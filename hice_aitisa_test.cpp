@@ -4,9 +4,11 @@
 #include <functional>
 #include "hice/basic/factories.h"
 #include "hice/core/tensor.h"
+#include "hice/math/arg_reduce.h"
 #include "hice/math/binary_expr.h"
 #include "hice/math/compare.h"
 #include "hice/math/matmul.h"
+#include "hice/math/reduce.h"
 #include "hice/math/unary_expr.h"
 #include "hice/nn/activation.h"
 #include "hice/nn/batch_norm.h"
@@ -14,8 +16,6 @@
 #include "hice/nn/dropout.h"
 #include "hice/nn/pooling.h"
 #include "hice/nn/softmax.h"
-#include "hice/math/arg_reduce.h"
-#include "hice/math/reduce.h"
 namespace hice {
 const DataType hice_dtypes[10] = {
     DataType::make<__int8_t>(), DataType::make<uint8_t>(),
@@ -245,11 +245,13 @@ REGISTER_COMPARE(hice::equal, hice::greater_equal, hice::greater,
 
 REGISTER_ELU(hice::elu_fwd);
 
-REGISTER_UNARYEXPR(hice::exp, hice::log, hice::neg, hice::abs_fwd, hice::square_fwd);
+REGISTER_UNARYEXPR(hice::exp, hice::log, hice::neg, hice::abs_fwd,
+                   hice::square_fwd);
 
 REGISTER_ARGREDUCE(hice::argmin, hice::argmax);
 
-REGISTER_REDUCE(hice::reduce_sum,hice::reduce_mean);
+REGISTER_REDUCE(hice::reduce_sum, hice::reduce_mean, hice::reduce_min,
+                hice::reduce_max);
 
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE

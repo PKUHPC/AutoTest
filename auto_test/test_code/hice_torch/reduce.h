@@ -68,6 +68,10 @@ class ReduceTest : public ::testing::Test {
                     reduce_sum_inputs_name);
     fetch_test_data("reduce.reduce_mean", reduce_mean_inputs,
                     reduce_mean_inputs_name);
+    fetch_test_data("reduce.reduce_min", reduce_min_inputs,
+                    reduce_min_inputs_name);
+    fetch_test_data("reduce.reduce_max", reduce_max_inputs,
+                    reduce_max_inputs_name);
   }
   ~ReduceTest() override = default;
   using InputType = Reduce_Input;
@@ -200,8 +204,16 @@ class ReduceTest : public ::testing::Test {
 
   std::vector<Reduce_Input> reduce_mean_inputs;
   std::vector<std::string> reduce_mean_inputs_name;
+
+  std::vector<Reduce_Input> reduce_min_inputs;
+  std::vector<std::string> reduce_min_inputs_name;
+
+  std::vector<Reduce_Input> reduce_max_inputs;
+  std::vector<std::string> reduce_max_inputs_name;
   std::map<std::string, int> test_case = {{"reduce_sum", 0},
-                                          {"reduce_mean", 1}};
+                                          {"reduce_mean", 1},
+                                          {"reduce_min", 2},
+                                          {"reduce_max", 3}};
 };
 TYPED_TEST_CASE_P(ReduceTest);
 
@@ -262,6 +274,16 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
                 user_tensor, inputs[i].dim(), inputs[i].dim_len(),
                 inputs[i].keepdim());
             break;
+          case 2:
+            user_result = UserFuncs::user_reduce_min(
+                user_tensor, inputs[i].dim(), inputs[i].dim_len(),
+                inputs[i].keepdim());
+            break;
+          case 3:
+            user_result = UserFuncs::user_reduce_max(
+                user_tensor, inputs[i].dim(), inputs[i].dim_len(),
+                inputs[i].keepdim());
+            break;
           default:
             break;
         }
@@ -287,6 +309,8 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
           dim_list.push_back(inputs[i].dim()[index]);
         }
         auto torch_start = std::chrono::steady_clock::now();
+        //        std::cout << torch_tensor << std::endl ;
+
         switch (test_case_index) {
           case 0:
             torch_result =
@@ -295,9 +319,19 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
           case 1:
             torch_result =
                 torch::mean(torch_tensor, dim_list, inputs[i].keepdim());
+            break;
+          case 2:
+            torch_result = std::get<0>(
+                torch::min(torch_tensor, dim_list[0], inputs[i].keepdim()));
+            break;
+          case 3:
+            torch_result = std::get<0>(
+                torch::max(torch_tensor, dim_list[0], inputs[i].keepdim()));
+            break;
           default:
             break;
         }
+        //        std::cout << torch_result << std::endl ;
 
         auto torch_end = std::chrono::steady_clock::now();
         torch_elapsed += torch_end - torch_start;
@@ -324,7 +358,11 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
         auto* user_data = (float*)user_result_data;
         auto* torch_data = (float*)torch_result_data;
         for (int64_t j = 0; j < tensor_size; j++) {
-          ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-2);
+          if (test_case_index == 2 || test_case_index == 3) {
+            ASSERT_EQ(user_data[j], torch_data[j]);
+          } else {
+            ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-2);
+          }
         }
       }
       auto user_time = user_elapsed.count() * 1000 / loop;
@@ -347,13 +385,20 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
 #endif
     }
   };
-  if (this->reduce_sum_inputs.size(), this->reduce_mean_inputs.size()) {
+  if (this->reduce_sum_inputs.size() && this->reduce_mean_inputs.size() &&
+      this->reduce_min_inputs.size() && this->reduce_max_inputs.size()) {
     test(std::move(this->reduce_sum_inputs),
          std::move(this->reduce_sum_inputs_name), "reduce_sum",
          this->test_case["reduce_sum"]);
     test(std::move(this->reduce_mean_inputs),
          std::move(this->reduce_mean_inputs_name), "reduce_mean",
          this->test_case["reduce_mean"]);
+    test(std::move(this->reduce_min_inputs),
+         std::move(this->reduce_min_inputs_name), "reduce_min",
+         this->test_case["reduce_min"]);
+    test(std::move(this->reduce_max_inputs),
+         std::move(this->reduce_max_inputs_name), "reduce_max",
+         this->test_case["reduce_max"]);
 #ifdef AITISA_API_GENERATE_FIGURE
 //    draw_fig_fun(m, "pooling");
 #endif
@@ -362,7 +407,7 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
 }
 REGISTER_TYPED_TEST_CASE_P(ReduceTest, TwoTests);
 
-#define REGISTER_REDUCE(REDUCE_SUM, REDUCE_MEAN)                               \
+#define REGISTER_REDUCE(REDUCE_SUM, REDUCE_MEAN, REDUCE_MIN, REDUCE_MAX)       \
   class Reduce : public Basic {                                                \
    public:                                                                     \
     static UserTensor user_reduce_sum(UserTensor input, const int* dim,        \
@@ -383,6 +428,24 @@ REGISTER_TYPED_TEST_CASE_P(ReduceTest, TwoTests);
         dim_vector.push_back(dim[i]);                                          \
       }                                                                        \
       return REDUCE_MEAN(input, dim_vector, keepdim);                          \
+    }                                                                          \
+    static UserTensor user_reduce_min(UserTensor input, const int* dim,        \
+                                      const int dim_len, const bool keepdim) { \
+      std::vector<int64_t> dim_vector = {};                                    \
+      dim_vector.reserve(dim_len);                                             \
+      for (auto i = 0; i < dim_len; i++) {                                     \
+        dim_vector.push_back(dim[i]);                                          \
+      }                                                                        \
+      return REDUCE_MIN(input, dim_vector, keepdim);                           \
+    }                                                                          \
+    static UserTensor user_reduce_max(UserTensor input, const int* dim,        \
+                                      const int dim_len, const bool keepdim) { \
+      std::vector<int64_t> dim_vector = {};                                    \
+      dim_vector.reserve(dim_len);                                             \
+      for (auto i = 0; i < dim_len; i++) {                                     \
+        dim_vector.push_back(dim[i]);                                          \
+      }                                                                        \
+      return REDUCE_MAX(input, dim_vector, keepdim);                           \
     }                                                                          \
   };                                                                           \
   namespace aitisa_api {                                                       \
