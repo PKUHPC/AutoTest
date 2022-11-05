@@ -64,13 +64,13 @@ template <typename InterfaceType>
 class ReduceTest : public ::testing::Test {
  public:
   ReduceTest() {
-    fetch_test_data("reduce.reduce_sum", reduce_sum_inputs,
+    fetch_test_data("reduce.sum", reduce_sum_inputs,
                     reduce_sum_inputs_name);
-    fetch_test_data("reduce.reduce_mean", reduce_mean_inputs,
+    fetch_test_data("reduce.mean", reduce_mean_inputs,
                     reduce_mean_inputs_name);
-    fetch_test_data("reduce.reduce_min", reduce_min_inputs,
+    fetch_test_data("reduce.min", reduce_min_inputs,
                     reduce_min_inputs_name);
-    fetch_test_data("reduce.reduce_max", reduce_max_inputs,
+    fetch_test_data("reduce.max", reduce_max_inputs,
                     reduce_max_inputs_name);
   }
   ~ReduceTest() override = default;
