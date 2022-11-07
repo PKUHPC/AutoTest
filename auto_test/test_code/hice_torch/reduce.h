@@ -309,7 +309,6 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
           dim_list.push_back(inputs[i].dim()[index]);
         }
         auto torch_start = std::chrono::steady_clock::now();
-        //        std::cout << torch_tensor << std::endl ;
 
         switch (test_case_index) {
           case 0:
@@ -331,7 +330,6 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
           default:
             break;
         }
-        //        std::cout << torch_result << std::endl ;
 
         auto torch_end = std::chrono::steady_clock::now();
         torch_elapsed += torch_end - torch_start;
