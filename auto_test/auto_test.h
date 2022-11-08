@@ -11,6 +11,7 @@
 #include "auto_test/test_code/hice_torch/compare.h"
 #include "auto_test/test_code/hice_torch/elu.h"
 #include "auto_test/test_code/hice_torch/l1_loss.h"
+#include "auto_test/test_code/hice_torch/smooth_l1_loss.h"
 #include "auto_test/test_code/hice_torch/reduce.h"
 #include "auto_test/test_code/hice_torch/unary_expr.h"
 #include "auto_test/test_code/matmul_test.h"
