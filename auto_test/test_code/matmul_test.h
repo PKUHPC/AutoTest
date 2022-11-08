@@ -17,12 +17,6 @@ class MatmulTest : public ::testing::Test {
  public:
   MatmulTest() { fetch_test_data("matmul", matmul_inputs, matmul_inputs_name); }
   ~MatmulTest() override = default;
-
-  static void aitisa_kernel(AITISA_Tensor in1, AITISA_Tensor in2,
-                            AITISA_Tensor* out) {
-    aitisa_matmul(in1, in2, out);
-  }
-
   int fetch_test_data(const char* path, std::vector<Binary_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 

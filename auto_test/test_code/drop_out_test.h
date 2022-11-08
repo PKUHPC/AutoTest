@@ -54,10 +54,6 @@ class DropoutTest : public ::testing::Test {
  public:
   DropoutTest() { fetch_test_data("drop_out", drop_out_inputs, drop_out_name); }
   ~DropoutTest() override = default;
-  static void aitisa_kernel(const AITISA_Tensor input, const double rate,
-                            AITISA_Tensor* output) {
-    aitisa_dropout(input, rate, output);
-  }
   int fetch_test_data(const char* path, std::vector<Dropout_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 

@@ -113,12 +113,6 @@ class PoolingTest : public ::testing::Test {
   ~PoolingTest() override = default;
   using InputType = Pooling_Input;
   using UserInterface = InterfaceType;
-  static void aitisa_kernel(const AITISA_Tensor input, const char* mode,
-                            const int* ksize, const int* stride,
-                            const int* padding, const int* dilation,
-                            AITISA_Tensor* output) {
-    aitisa_pooling(input, mode, ksize, stride, padding, dilation, output);
-  }
 
   int fetch_test_data(const char* path, std::vector<Pooling_Input>& inputs,
                       std::vector<std::string>& inputs_name) {

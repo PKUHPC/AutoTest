@@ -48,10 +48,6 @@ class Rot90Test : public ::testing::Test {
  public:
   Rot90Test() { fetch_test_data("rot90", rot90_inputs, rot90_name); }
   ~Rot90Test() override = default;
-  static void aitisa_kernel(const AITISA_Tensor input, const int k,
-                            AITISA_Tensor* output) {
-    aitisa_rot90(input, k, output);
-  }
   int fetch_test_data(const char* path, std::vector<Rot90_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 

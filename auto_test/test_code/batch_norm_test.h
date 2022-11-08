@@ -95,13 +95,6 @@ class BatchnormTest : public ::testing::Test {
     fetch_test_data("batch_norm", batch_norm_inputs, batch_norm_name);
   }
   ~BatchnormTest() override = default;
-  static void aitisa_kernel(const Tensor input, const int axis,
-                            const Tensor scale, const Tensor bias,
-                            const Tensor mean, const Tensor variance,
-                            const double epsilon, Tensor* output) {
-    aitisa_batch_norm(input, axis, scale, bias, mean, variance, epsilon,
-                      output);
-  }
   int fetch_test_data(const char* path, std::vector<Batchnorm_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 

@@ -47,10 +47,6 @@ class SoftmaxTest : public ::testing::Test {
   ~SoftmaxTest() override = default;
   using InputType = Softmax_Input;
   using UserInterface = InterfaceType;
-  static void aitisa_kernel(const AITISA_Tensor input, const int axis,
-                            AITISA_Tensor* output) {
-    aitisa_softmax(input, axis, output);
-  }
   int fetch_test_data(const char* path, std::vector<Softmax_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 
