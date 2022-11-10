@@ -9,63 +9,15 @@
 
 namespace aitisa_api {
 
-namespace {
-
-class L1LossInput : public Binary_Input {
- public:
-  L1LossInput() = default;
-  L1LossInput(int64_t ndim1, std::vector<int64_t> dims1, int dtype1,
-              int device1, void* data1, unsigned int len1, int64_t ndim2,
-              std::vector<int64_t> dims2, int dtype2, int device2, void* data2,
-              unsigned int len2, std::vector<int> weight, int64_t reduction)
-      : Binary_Input(ndim1, std::move(dims1), dtype1, device1, data1, len1,
-                     ndim2, std::move(dims2), dtype2, device2, data2, len2),
-        weight_(nullptr),
-        reduction_(reduction) {
-    int spatial_len = ndim1;
-    this->weight_ = new int[spatial_len];
-    for (int i = 0; i < spatial_len; i++) {
-      this->weight_[i] = weight[i];
-    }
-  }
-  L1LossInput(L1LossInput&& input) noexcept
-      : Binary_Input(input.ndim1(), input.dims1(), input.dtype1(),
-                     input.device1(), input.data1(), input.len1(),
-                     input.ndim2(), input.dims2(), input.dtype2(),
-                     input.device2(), input.data2(), input.len2()),
-        weight_(input.weight()),
-        reduction_(input.reduction()) {
-    input.to_nullptr();
-    input.weight_ = nullptr;
-  }
-  ~L1LossInput() override { delete[] weight_; }
-  L1LossInput& operator=(L1LossInput&& right)  noexcept {
-    int spatial_len = right.ndim1();
-    auto& left = (Binary_Input&)(*this);
-    left = (Binary_Input&)right;
-    this->weight_ = new int[spatial_len];
-    this->reduction_ = right.reduction();
-    memcpy(this->weight_, right.weight(), spatial_len * sizeof(int));
-  }
-  int* weight() { return weight_; }
-  int64_t reduction() const { return reduction_; }
-
- private:
-  int* weight_ = nullptr;
-  int64_t reduction_ = 1;
-};
-
-}  // namespace
-
 template <typename InterfaceType>
-class L1LossTest : public ::testing::Test {
+class NllLossTest : public ::testing::Test {
  public:
-  L1LossTest() {
-    fetch_test_data("l1_loss", l1_loss_inputs, l1_loss_inputs_name);
+  NllLossTest() {
+    fetch_test_data("nll_loss", nll_loss_inputs, nll_loss_inputs_name);
   }
-  ~L1LossTest() override = default;
+  ~NllLossTest() override = default;
 
-  int fetch_test_data(const char* path, std::vector<L1LossInput>& inputs,
+  int fetch_test_data(const char* path, std::vector<Binary_Input>& inputs,
                       std::vector<std::string>& inputs_name) {
 
     libconfig::Config cfg;
@@ -90,9 +42,8 @@ class L1LossTest : public ::testing::Test {
 
         std::vector<int64_t> dims1, dims2;
         int test_index, ndim1, ndim2, dtype1, device1, len1, dtype2, device2,
-            len2, reduction;
+            len2;
         std::string input_name;
-        std::vector<int> weight;
 
         if (!setting.lookupValue("test_index", test_index)) {
           std::cerr << "Setting \"test_index\" do not exist in " << path
@@ -182,33 +133,15 @@ class L1LossTest : public ::testing::Test {
                     << std::endl;
           continue;
         }
-        if (!setting.lookupValue("reduction", reduction)) {
-          std::cerr << "Setting \"reduction\" do not exist in test index "
-                    << test_index << " from " << path << " !\n"
-                    << std::endl;
-          continue;
-        }
         if (!setting.lookupValue("input_name", input_name)) {
           std::cerr << "Setting \"input_name\" do not exist in test index "
                     << test_index << " from " << path << " !\n"
                     << std::endl;
           continue;
         }
-        try {
-          const libconfig::Setting& weight_setting = setting.lookup("weight");
-          for (int n = 0; n < weight_setting.getLength(); ++n) {
-            weight.push_back(int(weight_setting[n]));
-          }
-        } catch (libconfig::SettingNotFoundException& nfex) {
-          std::cerr << "Setting \"weight\" do not exist in test index "
-                    << test_index << " from " << path << " !\n"
-                    << std::endl;
-          continue;
-        }
 
-        L1LossInput tmp(ndim1, dims1, dtype1, device1, nullptr, len1, ndim2,
-                        dims2, dtype2, device2, nullptr, len2, weight,
-                        reduction);
+        Binary_Input tmp(ndim1, dims1, dtype1, device1, nullptr, len1, ndim2,
+                         dims2, dtype2, device2, nullptr, len2);
         inputs.push_back(std::move(tmp));
         inputs_name.push_back(input_name);
       }
@@ -226,8 +159,8 @@ class L1LossTest : public ::testing::Test {
         unsigned int input_len2 = input_nelem2 * elem_size(input.dtype2());
         void* input_data1 = (void*)new char[input_len1];
         void* input_data2 = (void*)new char[input_len2];
-        random_assign(input_data1, input_len1, input.dtype1());
-        random_assign(input_data2, input_len2, input.dtype2());
+        natural_assign(input_data1, input_len1, input.dtype1());
+        natural_assign(input_data2, input_len2, input.dtype2());
         input.set_data1(input_data1, input_len1);
         input.set_data2(input_data2, input_len2);
       }
@@ -237,16 +170,16 @@ class L1LossTest : public ::testing::Test {
     }
     return (EXIT_SUCCESS);
   }
-  using InputType = L1LossInput;
+  using InputType = Binary_Input;
   using UserInterface = InterfaceType;
   // inputs
-  std::vector<L1LossInput> l1_loss_inputs;
-  std::vector<std::string> l1_loss_inputs_name;
-  std::map<std::string, int> test_case = {{"l1_loss", 0}};
+  std::vector<Binary_Input> nll_loss_inputs;
+  std::vector<std::string> nll_loss_inputs_name;
+  std::map<std::string, int> test_case = {{"nll_loss", 0}};
 };
-TYPED_TEST_CASE_P(L1LossTest);
+TYPED_TEST_CASE_P(NllLossTest);
 
-TYPED_TEST_P(L1LossTest, TwoTests) {
+TYPED_TEST_P(NllLossTest, TwoTests) {
   using UserDataType = typename TestFixture::UserInterface::UserDataType;
   using UserDevice = typename TestFixture::UserInterface::UserDevice;
   using UserTensor = typename TestFixture::UserInterface::UserTensor;
@@ -258,7 +191,7 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
 #endif
 
   time_map m;
-  auto test = [&m](std::vector<L1LossInput>&& inputs,
+  auto test = [&m](std::vector<Binary_Input>&& inputs,
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
@@ -301,9 +234,7 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
                                inputs[i].len2(), &user_tensor2);
         auto user_start = std::chrono::steady_clock::now();
 
-        user_result = UserFuncs::user_l1_loss(
-            user_tensor1, user_tensor2, inputs[i].weight(),
-            inputs[i].reduction(), inputs[i].ndim1());
+        user_result = UserFuncs::user_nll_loss(user_tensor1, user_tensor2);
 
         auto user_end = std::chrono::steady_clock::now();
         user_elapsed += user_end - user_start;
@@ -329,15 +260,9 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
             inputs[i].data2(), inputs[i].len2(), &torch_tensor2);
 
         auto torch_start = std::chrono::steady_clock::now();
-        std::vector<int64_t> weight_list;
 
-        for (int index = 0; index < inputs[i].ndim1(); index++) {
-          weight_list.push_back(inputs[i].weight()[index]);
-        }
-        torch_result =
-            torch::l1_loss(torch_tensor1, torch_tensor2,
-                           (inputs[i].reduction() == 1 ? at::Reduction::Mean
-                                                       : at::Reduction::Sum));
+        torch_result = torch::nll_loss(torch_tensor1, torch_tensor2, {},
+                                       at::Reduction::None);
 
         auto torch_end = std::chrono::steady_clock::now();
         torch_elapsed += torch_end - torch_start;
@@ -364,11 +289,7 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
 #ifdef AITISA_API_PYTORCH
         auto* torch_data = (float*)torch_result_data;
         for (int64_t j = 0; j < tensor_size; j++) {
-          if (inputs[i].reduction() == 2) {
-            ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-1);
-          } else {
-            ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-2);
-          }
+          ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-2);
         }
 #endif
       }
@@ -392,40 +313,28 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
 #endif
     }
   };
-  if (this->l1_loss_inputs.size()) {
-    test(std::move(this->l1_loss_inputs), std::move(this->l1_loss_inputs_name),
-         "l1_loss", this->test_case["l1_loss"]);
+  if (this->nll_loss_inputs.size()) {
+    test(std::move(this->nll_loss_inputs),
+         std::move(this->nll_loss_inputs_name), "nll_loss",
+         this->test_case["nll_loss"]);
 #ifdef AITISA_API_GENERATE_FIGURE
 //    draw_fig_fun(m, "conv2d");
 #endif
   } else
     FAIL() << "No input test case.";
 }
-REGISTER_TYPED_TEST_CASE_P(L1LossTest, TwoTests);
+REGISTER_TYPED_TEST_CASE_P(NllLossTest, TwoTests);
 
-#define REGISTER_L1LOSS(L1LOSS)                                                \
-  class L1Loss : public Basic {                                                \
-   public:                                                                     \
-    static UserTensor user_l1_loss(UserTensor input, UserTensor target,        \
-                                   const int* weight, const int64_t reduction, \
-                                   const int stride_len) {                     \
-                                                                               \
-      std::vector<int64_t> weight_vector = {};                                 \
-                                                                               \
-      weight_vector.reserve(stride_len);                                       \
-      for (auto i = 0; i < stride_len; i++) {                                  \
-        weight_vector.push_back(weight[i]);                                    \
-      }                                                                        \
-      hice::Tensor weight_one = full(                                          \
-          weight_vector, 1.0, hice::device(hice::kCPU).dtype(hice::kFloat));   \
-                                                                               \
-      return L1LOSS(                                                           \
-          input, target, weight_one,                                           \
-          (reduction == 1 ? hice::Reduction::mean : hice::Reduction::sum));    \
-    }                                                                          \
-  };                                                                           \
-  namespace aitisa_api {                                                       \
-  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, L1LossTest, L1Loss);               \
+#define REGISTER_NLLLOSS(NLLLOSS)                                          \
+  class NllLoss : public Basic {                                           \
+   public:                                                                 \
+    static UserTensor user_nll_loss(UserTensor input, UserTensor target) { \
+                                                                           \
+      return NLLLOSS(input, target, {});                                   \
+    }                                                                      \
+  };                                                                       \
+  namespace aitisa_api {                                                   \
+  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, NllLossTest, NllLoss);         \
   }
 
 }  // namespace aitisa_api

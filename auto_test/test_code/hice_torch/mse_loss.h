@@ -45,6 +45,7 @@ class MseLossInput : public Binary_Input {
     left = (Binary_Input&)right;
     this->weight_ = new int[spatial_len];
     memcpy(this->weight_, right.weight(), spatial_len * sizeof(int));
+    this->reduction_ = right.reduction();
   }
   int* weight() { return weight_; }
   int64_t reduction() const { return reduction_; }

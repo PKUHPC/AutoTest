@@ -12,6 +12,7 @@
 #include "auto_test/test_code/hice_torch/elu.h"
 #include "auto_test/test_code/hice_torch/l1_loss.h"
 #include "auto_test/test_code/hice_torch/mse_loss.h"
+#include "auto_test/test_code/hice_torch/nll_loss.h"
 #include "auto_test/test_code/hice_torch/reduce.h"
 #include "auto_test/test_code/hice_torch/smooth_l1_loss.h"
 #include "auto_test/test_code/hice_torch/unary_expr.h"
