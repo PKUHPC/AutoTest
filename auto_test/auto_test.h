@@ -9,6 +9,7 @@
 #include "auto_test/test_code/drop_out_test.h"
 #include "auto_test/test_code/hice_torch/arg_reduce.h"
 #include "auto_test/test_code/hice_torch/compare.h"
+#include "auto_test/test_code/hice_torch/ctc_loss.h"
 #include "auto_test/test_code/hice_torch/elu.h"
 #include "auto_test/test_code/hice_torch/l1_loss.h"
 #include "auto_test/test_code/hice_torch/mse_loss.h"

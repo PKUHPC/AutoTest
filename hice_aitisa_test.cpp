@@ -20,6 +20,7 @@
 #include "hice/nn/pooling.h"
 #include "hice/nn/smooth_l1_loss.h"
 #include "hice/nn/softmax.h"
+#include "hice/nn/ctc_loss.h"
 namespace hice {
 const DataType hice_dtypes[10] = {
     DataType::make<__int8_t>(), DataType::make<uint8_t>(),
@@ -264,6 +265,8 @@ REGISTER_SMOOTHL1LOSS(hice::smooth_l1_loss_fwd);
 REGISTER_MSELOSS(hice::mse_loss_fwd);
 
 REGISTER_NLLLOSS(hice::nll_loss_fwd);
+
+REGISTER_CTCLOSS(hice::ctc_loss_fwd);
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Initialize();
