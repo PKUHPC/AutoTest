@@ -451,6 +451,11 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
           default:
             break;
         }
+        aitisa_tensor1->storage->data = nullptr;
+        aitisa_tensor2->storage->data = nullptr;
+        aitisa_destroy(&aitisa_tensor1);
+        aitisa_destroy(&aitisa_tensor2);
+        aitisa_destroy(&aitisa_result);
       }
       auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
       auto user_time = user_elapsed.count() * 1000 / loop;

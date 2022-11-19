@@ -266,8 +266,10 @@ TYPED_TEST_P(Rot90Test, TwoTests) {
         for (int64_t j = 0; j < tensor_size; j++) {
           ASSERT_FLOAT_EQ(aitisa_data[j], torch_data[j]);
         }
-
 #endif
+        aitisa_tensor->storage->data = nullptr;
+        aitisa_destroy(&aitisa_tensor);
+        aitisa_destroy(&aitisa_result);
       }
       auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
 

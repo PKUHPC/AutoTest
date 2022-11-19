@@ -330,6 +330,9 @@ TYPED_TEST_P(DropoutTest, TwoTests) {
 #endif
         ASSERT_TRUE(abs((double)aitisa_count / (double)tensor_size -
                         (double)user_count / (double)tensor_size) < 1e-2);
+          aitisa_tensor->storage->data = nullptr;
+          aitisa_destroy(&aitisa_tensor);
+          aitisa_destroy(&aitisa_result);
       }
       auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
       auto user_time = user_elapsed.count() * 1000 / loop;

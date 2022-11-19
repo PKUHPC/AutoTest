@@ -293,6 +293,9 @@ TYPED_TEST_P(SoftmaxTest, TwoTests) {
         for (int64_t j = 0; j < tensor_size; j++) {
           ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
         }
+        aitisa_tensor->storage->data = nullptr;
+        aitisa_destroy(&aitisa_tensor);
+        aitisa_destroy(&aitisa_result);
       }
       auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
       auto user_time = user_elapsed.count() * 1000 / loop;
