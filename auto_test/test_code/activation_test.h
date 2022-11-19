@@ -171,7 +171,7 @@ TYPED_TEST_P(ActivationTest, FourTests) {
       for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
         int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
-        float *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        void *aitisa_result_data = nullptr, *user_result_data = nullptr;
         unsigned int aitisa_result_len, user_result_len;
         AITISA_Tensor aitisa_tensor, aitisa_result;
         AITISA_DataType aitisa_result_dtype;

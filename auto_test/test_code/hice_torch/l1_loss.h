@@ -270,7 +270,7 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
       for (int n = 0; n < loop; n++) {
         int64_t user_result_ndim;
         int64_t* user_result_dims = nullptr;
-        float* user_result_data = nullptr;
+        void* user_result_data = nullptr;
         unsigned user_result_len;
         UserTensor user_tensor1, user_tensor2, user_result;
         UserDataType user_result_dtype;
@@ -278,7 +278,7 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
 #ifdef AITISA_API_PYTORCH
         int64_t torch_result_ndim;
         int64_t* torch_result_dims = nullptr;
-        float* torch_result_data = nullptr;
+        void* torch_result_data = nullptr;
         unsigned int torch_result_len;
         TorchTensor torch_tensor1, torch_tensor2, torch_result;
         TorchDataType torch_result_dtype;

@@ -180,7 +180,7 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
       for (int n = 0; n < loop; n++) {
         int64_t user_result_ndim;
         int64_t* user_result_dims = nullptr;
-        float* user_result_data = nullptr;
+        void* user_result_data = nullptr;
         unsigned int user_result_len;
         UserTensor user_tensor, user_result;
         UserDataType user_result_dtype;
@@ -188,7 +188,7 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
 #ifdef AITISA_API_PYTORCH
         int64_t torch_result_ndim;
         int64_t* torch_result_dims = nullptr;
-        float* torch_result_data = nullptr;
+        void* torch_result_data = nullptr;
         unsigned int torch_result_len;
         TorchTensor torch_tensor, torch_result;
         TorchDataType torch_result_dtype;

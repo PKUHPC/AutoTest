@@ -202,7 +202,7 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
       for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
         int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
-        float *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        void *aitisa_result_data = nullptr, *user_result_data = nullptr;
         unsigned int aitisa_result_len, user_result_len;
         AITISA_Tensor aitisa_tensor1, aitisa_tensor2, aitisa_result;
         AITISA_DataType aitisa_result_dtype;
@@ -213,7 +213,7 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
 #ifdef AITISA_API_PYTORCH
         int64_t torch_result_ndim;
         int64_t* torch_result_dims = nullptr;
-        float* torch_result_data = nullptr;
+        void* torch_result_data = nullptr;
         unsigned int torch_result_len;
         TorchTensor torch_tensor1, torch_tensor2, torch_result;
         TorchDataType torch_result_dtype;
@@ -308,19 +308,22 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
         }
         ASSERT_EQ(aitisa_result_len, user_result_len);
 #ifdef AITISA_API_PYTORCH
-//        ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
+        //        ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
         ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
         ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
                   libtorch_api::torch_dtype_to_int(torch_result_dtype));
         for (int64_t j = 0; j < aitisa_result_ndim; j++) {
-//          ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
+          //          ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
         }
         ASSERT_EQ(aitisa_result_len, torch_result_len);
 #endif
+        auto* aitisa_data = (float*)aitisa_result_data;
+        auto* user_data = (float*)user_result_data;
         for (int64_t j = 0; j < tensor_size; j++) {
-          ASSERT_TRUE(abs(aitisa_result_data[j] - user_result_data[j]) < 1e-3);
+          ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
 #ifdef AITISA_API_PYTORCH
-          ASSERT_TRUE(abs(aitisa_result_data[j] - torch_result_data[j]) < 1e-3);
+          auto* torch_data = (float*)torch_result_data;
+          ASSERT_TRUE(abs(aitisa_data[j] - torch_data[j]) < 1e-3);
 #endif
         }
       }

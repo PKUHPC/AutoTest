@@ -240,7 +240,7 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
       for (int n = 0; n < 1; n++) {
         int64_t user_result_ndim;
         int64_t* user_result_dims = nullptr;
-        float* user_result_data = nullptr;
+        void* user_result_data = nullptr;
         unsigned int user_result_len;
         UserTensor user_tensor, user_result;
         UserDataType user_result_dtype;
@@ -248,7 +248,7 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
 #ifdef AITISA_API_PYTORCH
         int64_t torch_result_ndim;
         int64_t* torch_result_dims = nullptr;
-        float* torch_result_data = nullptr;
+        void* torch_result_data = nullptr;
         unsigned int torch_result_len;
         TorchTensor torch_prods_tensor, torch_target_tensor,
             torch_probs_lengths_tensor, torch_target_lengths_tensor,
@@ -311,7 +311,7 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
             libtorch_api::torch_int_to_device(inputs[i].device());
 
         int64_t* prods_dims = new int64_t[3];
-        ;
+
         prods_dims[0] = inputs[i].max_time();
         prods_dims[1] = inputs[i].batch_size();
         prods_dims[2] = inputs[i].n_classes();

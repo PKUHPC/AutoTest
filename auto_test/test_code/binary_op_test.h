@@ -231,7 +231,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
       for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
         int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
-        float *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        void *aitisa_result_data = nullptr, *user_result_data = nullptr;
         unsigned int aitisa_result_len, user_result_len;
         AITISA_Tensor aitisa_tensor1, aitisa_tensor2, aitisa_result;
         AITISA_DataType aitisa_result_dtype;
@@ -242,7 +242,7 @@ TYPED_TEST_P(BinaryOPTest, FourTests) {
 #ifdef AITISA_API_PYTORCH
         int64_t torch_result_ndim;
         int64_t* torch_result_dims = nullptr;
-        float* torch_result_data = nullptr;
+        void* torch_result_data = nullptr;
         unsigned int torch_result_len;
         TorchTensor torch_tensor1, torch_tensor2, torch_result;
         TorchDataType torch_result_dtype;

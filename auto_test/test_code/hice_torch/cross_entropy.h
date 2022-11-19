@@ -192,7 +192,7 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
       for (int n = 0; n < 1; n++) {
         int64_t user_result_ndim;
         int64_t* user_result_dims = nullptr;
-        float* user_result_data = nullptr;
+        void* user_result_data = nullptr;
         unsigned int user_result_len;
         UserTensor user_tensor, user_result;
         UserDataType user_result_dtype;
@@ -200,7 +200,7 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
 #ifdef AITISA_API_PYTORCH
         int64_t torch_result_ndim;
         int64_t* torch_result_dims = nullptr;
-        float* torch_result_data = nullptr;
+        void* torch_result_data = nullptr;
         unsigned int torch_result_len;
         TorchTensor torch_tensor, torch_result, torch_target_tensor;
         TorchDataType torch_result_dtype;
