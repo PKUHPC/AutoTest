@@ -10,6 +10,7 @@
 
 extern "C" {
 #include "src/new_ops6/cross_entropy.h"
+#include "src/nn/softmax.h"
 }
 
 namespace aitisa_api {
@@ -193,7 +194,7 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
       //loop test
-      for (int n = 0; n < 1; n++) {
+      for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
         int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
         void *aitisa_result_data = nullptr, *user_result_data = nullptr;
@@ -257,7 +258,9 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
                       &aitisa_target_tensor);
         auto aitisa_start = std::chrono::steady_clock::now();
 
-        aitisa_cross_entropy(aitisa_tensor, aitisa_target_tensor, NULL,
+        AITISA_Tensor aitisa_input;
+        aitisa_softmax(aitisa_tensor, 1, &aitisa_input);
+        aitisa_cross_entropy(aitisa_input, aitisa_target_tensor, NULL,
                              &aitisa_result);
 
         auto aitisa_end = std::chrono::steady_clock::now();
@@ -324,9 +327,12 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
         for (int64_t j = 0; j < tensor_size; j++) {
           ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
         }
-//        aitisa_tensor->storage->data = nullptr;
-//        aitisa_destroy(&aitisa_tensor);
-//        aitisa_destroy(&aitisa_result);
+        aitisa_tensor->storage->data = nullptr;
+        aitisa_destroy(&aitisa_tensor);
+        aitisa_destroy(&aitisa_input);
+        aitisa_target_tensor->storage->data = nullptr;
+        aitisa_destroy(&aitisa_target_tensor);
+        aitisa_destroy(&aitisa_result);
       }
       auto user_time = user_elapsed.count() * 1000 / loop;
       auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
