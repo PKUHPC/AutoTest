@@ -21,7 +21,7 @@
 #include "hice/nn/smooth_l1_loss.h"
 #include "hice/nn/softmax.h"
 #include "hice/nn/ctc_loss.h"
-#include "hice/nn/cross_entropy.h"
+#include "hice/nn/softmax_cross_entropy.h"
 namespace hice {
 const DataType hice_dtypes[10] = {
     DataType::make<__int8_t>(), DataType::make<uint8_t>(),
@@ -269,7 +269,7 @@ REGISTER_NLLLOSS(hice::nll_loss_fwd);
 
 REGISTER_CTCLOSS(hice::ctc_loss_fwd);
 
-REGISTER_CROSSENTROPYLOSS(hice::cross_entropy_fwd);
+REGISTER_CROSSENTROPYLOSS(hice::softmax_cross_entropy_fwd);
 int main(int argc, char** argv) {
 #ifdef AITISA_API_GENERATE_FIGURE
   Py_Initialize();

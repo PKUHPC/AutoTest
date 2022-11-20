@@ -7,7 +7,6 @@
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
 #include "hice/basic/one_hot.h"
-#include "hice/core/tensor_printer.h"
 
 namespace aitisa_api {
 
@@ -189,7 +188,7 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
       //loop test
-      for (int n = 0; n < 1; n++) {
+      for (int n = 0; n < loop; n++) {
         int64_t user_result_ndim;
         int64_t* user_result_dims = nullptr;
         void* user_result_data = nullptr;
@@ -226,13 +225,8 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
         inputs[i].cross_entropy_loss_set_data(
             const_cast<void*>(target.raw_data()), target.ndim(),
             const_cast<int64_t*>(target.dims().data()));
-        tp.print(user_tensor);
-        tp.print(target);
-
-        user_result =
-            UserFuncs::user_cross_entropy_loss(user_tensor, target);
+        user_result = UserFuncs::user_cross_entropy_loss(user_tensor, target);
         auto user_end = std::chrono::steady_clock::now();
-        tp.print(user_result);
 
         user_elapsed += user_end - user_start;
 
@@ -256,14 +250,8 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
                                    inputs[i].target_ndim(), inputs[i].target(),
                                    inputs[i].len(), &torch_target_tensor);
         auto torch_start = std::chrono::steady_clock::now();
-        std::cout << "torch_tensor" << std::endl
-                  << torch_tensor << std::endl;
-        std::cout << "torch_target_tensor" << std::endl
-                  << torch_target_tensor << std::endl;
-        torch_result =
-            torch::cross_entropy_loss(torch_tensor, torch_target_tensor,{},at::Reduction::None);
-        std::cout << "torch_result" << std::endl
-                  << torch_result << std::endl;
+        torch_result = torch::cross_entropy_loss(
+            torch_tensor, torch_target_tensor, {}, at::Reduction::None);
         auto torch_end = std::chrono::steady_clock::now();
         torch_elapsed += torch_end - torch_start;
         libtorch_api::torch_resolve(
@@ -323,17 +311,17 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
 }
 REGISTER_TYPED_TEST_CASE_P(CrossEntropyLossTest, TwoTests);
 
-#define REGISTER_CROSSENTROPYLOSS(CROSSENTROPYLOSS)                \
-  class CrossEntropyLoss : public Basic {                          \
-   public:                                                         \
-    static UserTensor user_cross_entropy_loss(UserTensor input,    \
-                                              UserTensor target) { \
-      return CROSSENTROPYLOSS(input, target, hice::nullopt, 1);    \
-    }                                                              \
-  };                                                               \
-  namespace aitisa_api {                                           \
-  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, CrossEntropyLossTest,  \
-                                CrossEntropyLoss);                 \
+#define REGISTER_CROSSENTROPYLOSS(CROSSENTROPYLOSS)                          \
+  class CrossEntropyLoss : public Basic {                                    \
+   public:                                                                   \
+    static UserTensor user_cross_entropy_loss(UserTensor input,              \
+                                              UserTensor target) {           \
+      return std::get<1>(CROSSENTROPYLOSS(input, target, hice::nullopt, 1)); \
+    }                                                                        \
+  };                                                                         \
+  namespace aitisa_api {                                                     \
+  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, CrossEntropyLossTest,            \
+                                CrossEntropyLoss);                           \
   }
 
 }  // namespace aitisa_api
