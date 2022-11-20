@@ -44,7 +44,7 @@ static Status cross_entropy_create_output(const Tensor input, Tensor* output) {
     int64_t outer_index = index / class_size;                              \
     float weight = (weight_data == NULL ? 1.0 : weight_data[inner_index]); \
     out_data[outer_index] +=                                               \
-        log10(in_data[index]) * target_data[index] * weight;               \
+        -log(in_data[index]) * target_data[index] * weight;                 \
   }
 
 Status aitisa_cross_entropy(const Tensor prob, const Tensor target,

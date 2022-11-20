@@ -9,7 +9,7 @@ void cross_entropy_assign_float(Tensor t) {
   float* data = (float*)aitisa_tensor_data(t);
   float init = -2;
   float max = 2;
-  float value = 0;
+  float value = init;
   for (int i = 0; i < size; ++i) {
     value += (max - init) / size;
     data[i] = value;
@@ -33,7 +33,6 @@ TEST(CrossEntropyLoss, Float2d) {
   Device device = {DEVICE_CPU, 0};
   int64_t dims[2] = {3, 5};
   aitisa_create(dtype, device, dims, 2, NULL, 0, &prod);
-
   cross_entropy_assign_float(prod);
 
   Tensor target;
@@ -45,14 +44,12 @@ TEST(CrossEntropyLoss, Float2d) {
   // tensor_printer2d(output);
 
   float* out_data = (float*)aitisa_tensor_data(output);
-  float test_data[] = {-0.961014, -0.845202, -0.72939};
+  float test_data[] = {2.21282, 1.94615, 1.67948};
   int64_t size = aitisa_tensor_size(output);
   for (int64_t i = 0; i < size; i++) {
     /* Due to the problem of precision, consider the two numbers
        are equal when their difference is less than 0.000001*/
     EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.0001);
-
-    //    std::cout << out_data[i] << std::endl;
   }
 
   aitisa_destroy(&prod);
