@@ -49,6 +49,7 @@ list(APPEND aitisa_test_srcs
         image_normalize_test.cpp
         image_gradients_test.cpp
         gaussian_blur_test.cpp
+        cross_entropy_loss.cpp
         )
 
 # Build a exe for each test files
