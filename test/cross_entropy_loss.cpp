@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 extern "C" {
 #include "src/new_ops6/cross_entropy.h"
-//#include "src/tool/tool.h"
+#include "src/nn/softmax.h"
 }
 
 void cross_entropy_assign_float(Tensor t) {
@@ -16,11 +16,11 @@ void cross_entropy_assign_float(Tensor t) {
   }
 }
 
-void cross_entropy_assign_target(Tensor t) {
+void cross_entropy_assign_target(Tensor t, int classes) {
   int64_t size = aitisa_tensor_size(t);
   float* data = (float*)aitisa_tensor_data(t);
   for (int i = 0; i < size; ++i) {
-    data[i] = (i == 0 || i == 6 || i == 12) ? 1 : 0;
+    data[i] = (i%classes == (i/classes)%classes) ? 1 : 0;
   }
 }
 
@@ -34,13 +34,15 @@ TEST(CrossEntropyLoss, Float2d) {
   int64_t dims[2] = {3, 5};
   aitisa_create(dtype, device, dims, 2, NULL, 0, &prod);
   cross_entropy_assign_float(prod);
+  Tensor input;
+  aitisa_softmax(prod,1,&input);
 
   Tensor target;
   aitisa_create(kFloat, device, dims, 2, NULL, 0, &target);
-  cross_entropy_assign_target(target);
+  cross_entropy_assign_target(target,5);
 
   Tensor output;
-  aitisa_cross_entropy(prod, target, NULL, &output);
+  aitisa_cross_entropy(input, target, NULL, &output);
   // tensor_printer2d(output);
 
   float* out_data = (float*)aitisa_tensor_data(output);
@@ -53,6 +55,7 @@ TEST(CrossEntropyLoss, Float2d) {
   }
 
   aitisa_destroy(&prod);
+  aitisa_destroy(&input);
   aitisa_destroy(&target);
   aitisa_destroy(&output);
 }
