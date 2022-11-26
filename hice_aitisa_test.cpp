@@ -13,6 +13,7 @@
 #include "hice/nn/activation.h"
 #include "hice/nn/batch_norm.h"
 #include "hice/nn/conv.h"
+#include "hice/nn/ctc_loss.h"
 #include "hice/nn/dropout.h"
 #include "hice/nn/l1_loss.h"
 #include "hice/nn/mse_loss.h"
@@ -20,7 +21,6 @@
 #include "hice/nn/pooling.h"
 #include "hice/nn/smooth_l1_loss.h"
 #include "hice/nn/softmax.h"
-#include "hice/nn/ctc_loss.h"
 #include "hice/nn/softmax_cross_entropy.h"
 namespace hice {
 const DataType hice_dtypes[10] = {
@@ -267,7 +267,7 @@ REGISTER_MSELOSS(hice::mse_loss_fwd);
 
 REGISTER_NLLLOSS(hice::nll_loss_fwd);
 
-REGISTER_CTCLOSS(hice::ctc_loss_fwd);
+REGISTER_CTCLOSS(hice::ctc_loss_fwd, hice::hice_softmax);
 
 REGISTER_CROSSENTROPYLOSS(hice::softmax_cross_entropy_fwd);
 int main(int argc, char** argv) {

@@ -288,9 +288,12 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
         tp.print(probs_lengths);
 
         tp.print(target_lengths);
+        UserTensor input;
+        UserFuncs::user_softmax(probs, 2, &input);
+        tp.print(input);
 
         user_result = std::get<0>(
-            UserFuncs::user_ctc_loss(probs, target, probs_lengths,
+            UserFuncs::user_ctc_loss(input, target, probs_lengths,
                                      target_lengths, inputs[i].reduction()));
 
         auto user_end = std::chrono::steady_clock::now();
@@ -350,8 +353,9 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
         std::cout << "torch_target_lengths_tensor" << std::endl
                   << torch_target_lengths_tensor << std::endl;
 
+        TorchTensor torch_input = torch::log_softmax(torch_prods_tensor, 2);
         torch_result = torch::ctc_loss(
-            torch_prods_tensor, torch_target_tensor, torch_probs_lengths_tensor,
+            torch_input, torch_target_tensor, torch_probs_lengths_tensor,
             torch_target_lengths_tensor, 0, at::Reduction::None);
         //            (inputs[i].reduction() == 1 ? at::Reduction::Mean
         //                                        : at::Reduction::Sum));
@@ -427,7 +431,7 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
 }
 REGISTER_TYPED_TEST_CASE_P(CtcLossTest, TwoTests);
 
-#define REGISTER_CTCLOSS(CTCLOSS)                                     \
+#define REGISTER_CTCLOSS(CTCLOSS, SOFTMAX)                            \
   class CtcLoss : public Basic {                                      \
    public:                                                            \
     static std::tuple<UserTensor, UserTensor> user_ctc_loss(          \
@@ -435,6 +439,10 @@ REGISTER_TYPED_TEST_CASE_P(CtcLossTest, TwoTests);
         UserTensor target_length, const int reduction) {              \
       return CTCLOSS(prods, traget, prods_length, target_length,      \
                      hice::Reduction::none);                          \
+    }                                                                 \
+    static void user_softmax(UserTensor input, const int axis,        \
+                             UserTensor* output) {                    \
+      SOFTMAX(input, axis, output);                                   \
     }                                                                 \
   };                                                                  \
   namespace aitisa_api {                                              \
