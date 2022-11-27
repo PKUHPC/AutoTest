@@ -256,6 +256,14 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
         TorchDataType torch_result_dtype;
         TorchDevice torch_result_device(c10::DeviceType::CPU);
 #endif
+        int64_t prods_dims[3] = {inputs[i].max_time(), inputs[i].batch_size(),
+                                 inputs[i].n_classes()};
+        int64_t target_dims[2] = {inputs[i].batch_size(),
+                                  inputs[i].max_length()};
+        int64_t prods_length_dims[1] = {inputs[i].batch_size()};
+        int64_t target_length_dims[1] = {inputs[i].batch_size()};
+
+
         // user
         UserDataType user_dtype =
             UserFuncs::user_int_to_dtype(inputs[i].dtype());
@@ -263,18 +271,17 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
             UserFuncs::user_int_to_device(inputs[i].device());
 
         UserTensor probs = hice::rand_uniform(
-            {inputs[i].max_time(), inputs[i].batch_size(),
-             inputs[i].n_classes()},
+            prods_dims,
             0.0, 1.0, hice::device(user_device).dtype(user_dtype));
         UserTensor target =
-            hice::rand_uniform({inputs[i].batch_size(), inputs[i].max_length()},
+            hice::rand_uniform(target_dims,
                                1, inputs[i].n_classes(),
                                hice::device(user_device).dtype(hice::kInt32));
         UserTensor probs_lengths =
-            hice::full({inputs[i].batch_size()}, inputs[i].max_time(),
+            hice::full(prods_length_dims, inputs[i].max_time(),
                        hice::device(user_device).dtype(hice::kInt32));
         UserTensor target_lengths = hice::rand_uniform(
-            {inputs[i].batch_size()}, 0, inputs[i].max_length(),
+            target_length_dims, 0, inputs[i].max_length(),
             hice::device(user_device).dtype(hice::kInt32));
         inputs[i].ctc_loss_set_data(
             const_cast<void*>(probs.raw_data()),
@@ -306,6 +313,8 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
                                 &user_result_ndim, (void**)&user_result_data,
                                 &user_result_len);
 
+
+
 #ifdef AITISA_API_PYTORCH
         //torch
         TorchDataType torch_dtype =
@@ -313,25 +322,19 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
         TorchDevice torch_device =
             libtorch_api::torch_int_to_device(inputs[i].device());
 
-        int64_t prods_dims[3] = {inputs[i].max_time(), inputs[i].batch_size(),
-                                 inputs[i].n_classes()};
-
         libtorch_api::torch_create(torch_dtype, torch_device, prods_dims, 3,
                                    inputs[i].prods(), inputs[i].len(),
                                    &torch_prods_tensor);
-        int64_t target_dims[2] = {inputs[i].batch_size(),
-                                  inputs[i].max_length()};
+
         libtorch_api::torch_create(torch::kInt32, torch_device, target_dims, 2,
                                    inputs[i].target(), inputs[i].len(),
                                    &torch_target_tensor);
 
-        int64_t prods_length_dims[1] = {inputs[i].batch_size()};
         libtorch_api::torch_create(torch::kInt32, torch_device,
                                    prods_length_dims, 1,
                                    inputs[i].probs_lengths(), inputs[i].len(),
                                    &torch_probs_lengths_tensor);
 
-        int64_t target_length_dims[1] = {inputs[i].batch_size()};
         libtorch_api::torch_create(torch::kInt32, torch_device,
                                    target_length_dims, 1,
                                    inputs[i].target_lengths(), inputs[i].len(),
