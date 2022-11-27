@@ -313,31 +313,25 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
         TorchDevice torch_device =
             libtorch_api::torch_int_to_device(inputs[i].device());
 
-        int64_t* prods_dims = new int64_t[3];
+        int64_t prods_dims[3] = {inputs[i].max_time(), inputs[i].batch_size(),
+                                 inputs[i].n_classes()};
 
-        prods_dims[0] = inputs[i].max_time();
-        prods_dims[1] = inputs[i].batch_size();
-        prods_dims[2] = inputs[i].n_classes();
         libtorch_api::torch_create(torch_dtype, torch_device, prods_dims, 3,
                                    inputs[i].prods(), inputs[i].len(),
                                    &torch_prods_tensor);
-
-        int64_t* target_dims = new int64_t[2];
-        target_dims[0] = inputs[i].batch_size();
-        target_dims[1] = inputs[i].max_length();
+        int64_t target_dims[2] = {inputs[i].batch_size(),
+                                  inputs[i].max_length()};
         libtorch_api::torch_create(torch::kInt32, torch_device, target_dims, 2,
                                    inputs[i].target(), inputs[i].len(),
                                    &torch_target_tensor);
 
-        int64_t* prods_length_dims = new int64_t[1];
-        prods_length_dims[0] = inputs[i].batch_size();
+        int64_t prods_length_dims[1] = {inputs[i].batch_size()};
         libtorch_api::torch_create(torch::kInt32, torch_device,
                                    prods_length_dims, 1,
                                    inputs[i].probs_lengths(), inputs[i].len(),
                                    &torch_probs_lengths_tensor);
 
-        int64_t* target_length_dims = new int64_t[1];
-        target_length_dims[0] = inputs[i].batch_size();
+        int64_t target_length_dims[1] = {inputs[i].batch_size()};
         libtorch_api::torch_create(torch::kInt32, torch_device,
                                    target_length_dims, 1,
                                    inputs[i].target_lengths(), inputs[i].len(),
@@ -393,10 +387,6 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
           }
         }
 #endif
-        delete[] prods_dims;
-        delete[] target_dims;
-        delete[] prods_length_dims;
-        delete[] target_length_dims;
       }
 
       auto user_time = user_elapsed.count() * 1000 / loop;
