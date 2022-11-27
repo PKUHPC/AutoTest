@@ -3,7 +3,6 @@
 #include "src/basic/factories.h"
 #include "src/core/allocator.h"
 #include "src/core/dispatch.h"
-#include "src/nn/softmax.h"
 
 static Status cross_entropy_create_output(const Tensor input, Tensor* output) {
   Status status;

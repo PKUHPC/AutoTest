@@ -5,18 +5,18 @@
 #include "src/core/allocator.h"
 #include "src/core/dispatch.h"
 
-const int64_t kBlank = 0;
+const int32_t kBlank = 0;
 
 // index help function
-static inline int64_t idx(int64_t t, int64_t s, int64_t stride) {
+static inline int32_t idx(int32_t t, int32_t s, int32_t stride) {
   return stride * t + s;
 }
-static inline int64_t targetPrime(const int64_t* tgt, int64_t s) {
+static inline int32_t targetPrime(const int32_t* tgt, int32_t s) {
   return s % 2 == 0 ? kBlank : tgt[s / 2];
 }
 static Status ctc_loss_create_output(const Tensor input, Tensor* output) {
   Status status;
-  int64_t* dims = aitisa_tensor_dims(input);
+  int64_t * dims = aitisa_tensor_dims(input);
   Tensor new_tensor;
   DataType dtype = aitisa_tensor_data_type(input);
   Device device = aitisa_tensor_device(input);
@@ -40,9 +40,9 @@ static double logPlusExp(double log_a1, double log_a2) {
 
 #define ctc_cross_kernel(typename)                                             \
   typename* probs_data = aitisa_tensor_data(probs);                            \
-  int64_t* target_data = (int64_t*)aitisa_tensor_data(target);                 \
-  int64_t* probs_lengths_data = (int64_t*)aitisa_tensor_data(probs_lengths);   \
-  int64_t* target_lengths_data = (int64_t*)aitisa_tensor_data(target_lengths); \
+  int32_t* target_data = (int32_t*)aitisa_tensor_data(target);                 \
+  int32_t* probs_lengths_data = (int32_t*)aitisa_tensor_data(probs_lengths);   \
+  int32_t* target_lengths_data = (int32_t*)aitisa_tensor_data(target_lengths); \
                                                                                \
   typename* loss_data = aitisa_tensor_data(*loss);                             \
                                                                                \
@@ -68,16 +68,16 @@ static double logPlusExp(double log_a1, double log_a2) {
   int64_t alpha_size =                                                         \
       aitisa_tensor_dims(log_alphas)[1] * aitisa_tensor_dims(log_alphas)[2];   \
                                                                                \
-  int64_t las = max_target_length * 2 + 1;                                     \
-  int64_t ps = aitisa_tensor_dims(probs)[1] * aitisa_tensor_dims(probs)[2];    \
+  int32_t las = max_target_length * 2 + 1;                                     \
+  int32_t ps = aitisa_tensor_dims(probs)[1] * aitisa_tensor_dims(probs)[2];    \
                                                                                \
   for (int i = 0; i < batch_size; ++i) {                                       \
     const typename* p_data = probs_data + i * num_classes;                     \
-    const int64_t* t_data = target_data + i * max_target_length;               \
+    const int32_t* t_data = target_data + i * max_target_length;               \
     typename* l_data = loss_data + i;                                          \
     typename* log_a_data = log_alphas_data + i * alpha_size;                   \
-    int64_t target_length = target_lengths_data[i];                            \
-    int64_t probs_length = probs_lengths_data[i];                              \
+    int32_t target_length = target_lengths_data[i];                            \
+    int32_t probs_length = probs_lengths_data[i];                              \
     if (probs_length > 0) {                                                    \
       log_a_data[idx(0, 0, las)] = log(p_data[idx(0, kBlank, ps)]);            \
     }                                                                          \
@@ -85,9 +85,9 @@ static double logPlusExp(double log_a1, double log_a2) {
       log_a_data[idx(0, 1, las)] =                                             \
           log(p_data[idx(0, targetPrime(t_data, 1), ps)]);                     \
     }                                                                          \
-    for (int64_t t = 1; t < probs_length; ++t) {                               \
-      for (int64_t s = 0; s < 2 * target_length + 1; ++s) {                    \
-        int64_t tps = targetPrime(t_data, s);                                  \
+    for (int32_t t = 1; t < probs_length; ++t) {                               \
+      for (int32_t s = 0; s < 2 * target_length + 1; ++s) {                    \
+        int32_t tps = targetPrime(t_data, s);                                  \
         typename alpha_ = log_a_data[idx(t - 1, s, las)];                      \
         if (s - 1 >= 0) {                                                      \
           alpha_ = logPlusExp(alpha_, log_a_data[idx(t - 1, s - 1, las)]);     \
@@ -122,7 +122,6 @@ Status aitisa_ctc_loss(const Tensor probs, const Tensor target,
   int64_t batch_size = aitisa_tensor_dims(probs)[1];
   int64_t max_target_length = aitisa_tensor_dims(target)[1];
   CHECK_STATUS(ctc_loss_create_output(probs, loss));
-
   AITISA_DISPATCH_ALL_TYPES_RETURN(prods_dtype, ctc_cross_kernel);
 
   return status;

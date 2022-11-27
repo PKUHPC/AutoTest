@@ -7,11 +7,13 @@
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
 #include "hice/core/tensor_printer.h"
-
+extern "C" {
+#include "src/new_ops6/ctc_loss.h"
+#include "src/nn/softmax.h"
+}
 namespace aitisa_api {
 
 namespace {
-hice::TensorPrinter tp;
 
 class CtcLossInput : public Unary_Input {
  public:
@@ -47,10 +49,10 @@ class CtcLossInput : public Unary_Input {
     this->n_classes_ = right.n_classes();
     this->reduction_ = right.reduction();
   }
-  int batch_size() const { return batch_size_; }
-  int max_time() const { return max_time_; }
-  int max_length() const { return max_length_; }
-  int n_classes() const { return n_classes_; }
+  int32_t batch_size() const { return batch_size_; }
+  int32_t max_time() const { return max_time_; }
+  int32_t max_length() const { return max_length_; }
+  int32_t n_classes() const { return n_classes_; }
   int reduction() const { return reduction_; }
   void ctc_loss_set_data(void* prods, void* target, void* probs_lengths,
                          void* target_lengths) {
@@ -65,10 +67,10 @@ class CtcLossInput : public Unary_Input {
   void* target_lengths() const { return target_lengths_; };
 
  private:
-  int batch_size_ = 0;
-  int max_time_ = 0;
-  int max_length_ = 0;
-  int n_classes_ = 0;
+  int32_t batch_size_ = 0;
+  int32_t max_time_ = 0;
+  int32_t max_length_ = 0;
+  int32_t n_classes_ = 0;
   int reduction_ = 0;
 
   void* prods_ = nullptr;
@@ -232,16 +234,21 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
+      auto aitisa_elapsed = std::chrono::duration<double>::zero();
       auto user_elapsed = std::chrono::duration<double>::zero();
 #ifdef AITISA_API_PYTORCH
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
       //loop test
-      for (int n = 0; n < 1; n++) {
-        int64_t user_result_ndim;
-        int64_t* user_result_dims = nullptr;
-        void* user_result_data = nullptr;
-        unsigned int user_result_len;
+      for (int n = 0; n < loop; n++) {
+        int64_t aitisa_result_ndim, user_result_ndim;
+        int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
+        void *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        unsigned int aitisa_result_len, user_result_len;
+        AITISA_Tensor aitisa_tensor, aitisa_result, aitisa_target_tensor,
+            aitias_prods_lenght, aitisa_target_lenght;
+        AITISA_DataType aitisa_result_dtype;
+        AITISA_Device aitisa_result_device;
         UserTensor user_tensor, user_result;
         UserDataType user_result_dtype;
         UserDevice user_result_device;
@@ -263,7 +270,6 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
         int64_t prods_length_dims[1] = {inputs[i].batch_size()};
         int64_t target_length_dims[1] = {inputs[i].batch_size()};
 
-
         // user
         UserDataType user_dtype =
             UserFuncs::user_int_to_dtype(inputs[i].dtype());
@@ -271,18 +277,16 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
             UserFuncs::user_int_to_device(inputs[i].device());
 
         UserTensor probs = hice::rand_uniform(
-            prods_dims,
-            0.0, 1.0, hice::device(user_device).dtype(user_dtype));
+            prods_dims, 0.0, 1.0, hice::device(user_device).dtype(user_dtype));
         UserTensor target =
-            hice::rand_uniform(target_dims,
-                               1, inputs[i].n_classes(),
+            hice::rand_uniform(target_dims, 1, inputs[i].n_classes(),
                                hice::device(user_device).dtype(hice::kInt32));
         UserTensor probs_lengths =
             hice::full(prods_length_dims, inputs[i].max_time(),
                        hice::device(user_device).dtype(hice::kInt32));
-        UserTensor target_lengths = hice::rand_uniform(
-            target_length_dims, 0, inputs[i].max_length(),
-            hice::device(user_device).dtype(hice::kInt32));
+        UserTensor target_lengths =
+            hice::rand_uniform(target_length_dims, 0, inputs[i].max_length(),
+                               hice::device(user_device).dtype(hice::kInt32));
         inputs[i].ctc_loss_set_data(
             const_cast<void*>(probs.raw_data()),
             const_cast<void*>(target.raw_data()),
@@ -290,21 +294,14 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
             const_cast<void*>(target_lengths.raw_data()));
 
         auto user_start = std::chrono::steady_clock::now();
-        tp.print(probs);
-        tp.print(target);
-        tp.print(probs_lengths);
-
-        tp.print(target_lengths);
         UserTensor input;
         UserFuncs::user_softmax(probs, 2, &input);
-        tp.print(input);
 
         user_result = std::get<0>(
             UserFuncs::user_ctc_loss(input, target, probs_lengths,
                                      target_lengths, inputs[i].reduction()));
 
         auto user_end = std::chrono::steady_clock::now();
-        tp.print(user_result);
 
         user_elapsed += user_end - user_start;
 
@@ -313,7 +310,38 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
                                 &user_result_ndim, (void**)&user_result_data,
                                 &user_result_len);
 
+        //aitisa
+        AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(inputs[i].dtype());
+        AITISA_Device aitisa_device =
+            aitisa_int_to_device(0);  // cpu supoorted only
+        aitisa_create(kFloat, aitisa_device, prods_dims, 3, NULL,
+                      inputs[i].len(), &aitisa_tensor);
+        aitisa_tensor->storage->data = inputs[i].prods();
+        aitisa_create(kInt32, aitisa_device, target_dims, 2, NULL,
+                      inputs[i].len(), &aitisa_target_tensor);
+        aitisa_target_tensor->storage->data = inputs[i].target();
 
+        aitisa_create(kInt32, aitisa_device, prods_length_dims, 1, NULL,
+                      inputs[i].len(), &aitias_prods_lenght);
+        aitias_prods_lenght->storage->data = inputs[i].probs_lengths();
+
+        aitisa_create(kInt32, aitisa_device, target_length_dims, 1, NULL,
+                      inputs[i].len(), &aitisa_target_lenght);
+        aitisa_target_lenght->storage->data = inputs[i].target_lengths();
+
+        auto aitisa_start = std::chrono::steady_clock::now();
+
+        AITISA_Tensor aitisa_input;
+        aitisa_softmax(aitisa_tensor, 2, &aitisa_input);
+        aitisa_ctc_loss(aitisa_input, aitisa_target_tensor, aitias_prods_lenght,
+                        aitisa_target_lenght, &aitisa_result);
+
+        auto aitisa_end = std::chrono::steady_clock::now();
+        aitisa_elapsed += aitisa_end - aitisa_start;
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype,
+                       &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data,
+                       &aitisa_result_len);
 
 #ifdef AITISA_API_PYTORCH
         //torch
@@ -341,14 +369,6 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
                                    &torch_target_lengths_tensor);
 
         auto torch_start = std::chrono::steady_clock::now();
-        std::cout << "torch_prods_tensor" << std::endl
-                  << torch_prods_tensor << std::endl;
-        std::cout << "torch_target_tensor" << std::endl
-                  << torch_target_tensor << std::endl;
-        std::cout << "torch_probs_lengths_tensor" << std::endl
-                  << torch_probs_lengths_tensor << std::endl;
-        std::cout << "torch_target_lengths_tensor" << std::endl
-                  << torch_target_lengths_tensor << std::endl;
 
         TorchTensor torch_input = torch::log_softmax(torch_prods_tensor, 2);
         torch_result = torch::ctc_loss(
@@ -357,7 +377,6 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
         //            (inputs[i].reduction() == 1 ? at::Reduction::Mean
         //                                        : at::Reduction::Sum));
 
-        std::cout << torch_result << std::endl;
         auto torch_end = std::chrono::steady_clock::now();
         torch_elapsed += torch_end - torch_start;
         libtorch_api::torch_resolve(
@@ -365,38 +384,59 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
             &torch_result_dims, &torch_result_ndim, (void**)&torch_result_data,
             &torch_result_len);
 #endif
-// compare
-#ifdef AITISA_API_PYTORCH
+        // compare
         int64_t tensor_size = 1;
-        ASSERT_EQ(user_result_ndim, torch_result_ndim);
-        ASSERT_EQ(UserFuncs::user_device_to_int(user_result_device),
-                  libtorch_api::torch_device_to_int(torch_result_device));
-        ASSERT_EQ(UserFuncs::user_dtype_to_int(user_result_dtype),
-                  libtorch_api::torch_dtype_to_int(torch_result_dtype));
-        for (int64_t j = 0; j < user_result_ndim; j++) {
-          tensor_size *= user_result_dims[j];
-          ASSERT_EQ(user_result_dims[j], torch_result_dims[j]);
+        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+        ASSERT_EQ(/*CUDA*/ 0,
+                  UserFuncs::user_device_to_int(user_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  UserFuncs::user_dtype_to_int(user_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          tensor_size *= aitisa_result_dims[j];
+          ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
         }
-        ASSERT_EQ(user_result_len, torch_result_len);
+        ASSERT_EQ(aitisa_result_len, user_result_len);
+#ifdef AITISA_API_PYTORCH
+        ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
+        ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  libtorch_api::torch_dtype_to_int(torch_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, torch_result_len);
 #endif
+        auto* aitisa_data = (float*)aitisa_result_data;
         auto* user_data = (float*)user_result_data;
 #ifdef AITISA_API_PYTORCH
         auto* torch_data = (float*)torch_result_data;
         for (int64_t j = 0; j < tensor_size; j++) {
-          if (inputs[i].reduction() == 2) {
-            ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-1);
-          } else {
-            ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-2);
-          }
+          ASSERT_TRUE(abs(aitisa_data[j] - torch_data[j]) < 1e-3);
         }
 #endif
+        for (int64_t j = 0; j < tensor_size; j++) {
+          ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+        }
+        aitisa_tensor->storage->data = nullptr;
+        aitisa_destroy(&aitisa_tensor);
+        aitisa_destroy(&aitisa_input);
+        aitisa_target_tensor->storage->data = nullptr;
+        aitisa_destroy(&aitisa_target_tensor);
+        aitias_prods_lenght->storage->data = nullptr;
+        aitisa_target_lenght->storage->data = nullptr;
+        aitisa_result->storage->data = nullptr;
+        aitisa_destroy(&aitias_prods_lenght);
+        aitisa_destroy(&aitisa_target_lenght);
+        aitisa_destroy(&aitisa_result);
       }
-
+      auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
       auto user_time = user_elapsed.count() * 1000 / loop;
 
       // print result of test
       std::cout << "[ " << test_case_name << " sample" << i << " / "
                 << inputs_name[i] << " ] " << std::endl;
+      std::cout << "\t[ AITISA ] " << aitisa_time << " ms average for " << loop
+                << " loop " << std::endl;
       std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
                 << " loop " << std::endl;
 #ifdef AITISA_API_PYTORCH

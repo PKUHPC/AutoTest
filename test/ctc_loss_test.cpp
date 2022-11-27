@@ -8,7 +8,7 @@ extern "C" {
 }
 
 void ctc_loss_assign_float(Tensor t) {
-  int64_t size = aitisa_tensor_size(t);
+  int32_t size = aitisa_tensor_size(t);
   auto* data = (float*)aitisa_tensor_data(t);
   float init = 0;
   float max = 1;
@@ -20,8 +20,8 @@ void ctc_loss_assign_float(Tensor t) {
 }
 
 void ctc_loss_assign_target(Tensor t, int classes) {
-  int64_t size = aitisa_tensor_size(t);
-  auto* data = (int64_t*)aitisa_tensor_data(t);
+  int32_t size = aitisa_tensor_size(t);
+  auto* data = (int32_t*)aitisa_tensor_data(t);
   for (int i = 0; i < size; ++i) {
     data[i] = (i % classes) + 1;
   }
@@ -51,16 +51,17 @@ TEST(CtcLoss, Float2d) {
   aitisa_full(target_dtype, device, probs_lengths_dims, 1, 5, &probs_lengths);
   aitisa_full(target_dtype, device, probs_lengths_dims, 1, 4, &target_lengths);
   Tensor output;
-
+  int32_t* out_data1 = (int32_t *)aitisa_tensor_data(target);
+  std::cout << out_data1[0] << std::endl;
   aitisa_ctc_loss(input, target, probs_lengths, target_lengths, &output);
 
   float* out_data = (float*)aitisa_tensor_data(output);
   float test_data[] = {5.83585, 5.8952, 5.88033};
   int64_t size = aitisa_tensor_size(output);
-  for (int64_t i = 0; i < size; i++) {
+  for (int32_t i = 0; i < size; i++) {
     /* Due to the problem of precision, consider the two numbers
        are equal when their difference is less than 0.000001*/
-    //    std::cout << out_data[i] << std::endl;
+//        std::cout << out_data[i] << std::endl;
     EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.0001);
   }
 
