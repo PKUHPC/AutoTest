@@ -51,6 +51,8 @@ list(APPEND aitisa_test_srcs
         gaussian_blur_test.cpp
         cross_entropy_loss.cpp
         ctc_loss_test.cpp
+        abs_test.cpp
+        l1_loss_test.cpp
         )
 
 # Build a exe for each test files

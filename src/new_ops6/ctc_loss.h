@@ -4,7 +4,7 @@
 #include "src/core/tensor.h"
 
 /**
- * @brief This criterion computes the cross entropy loss between input logits and target.
+ * @brief This criterion computes the ctc loss between input logits and target.
  *
  * @param prob float or double, [max_time, batch_size, num_classes]
  * @param target int32 or int64, [batch_size, max_length]
