@@ -53,6 +53,8 @@ list(APPEND aitisa_test_srcs
         ctc_loss_test.cpp
         abs_test.cpp
         l1_loss_test.cpp
+        square_test.cpp
+        mse_test.cpp
         )
 
 # Build a exe for each test files
