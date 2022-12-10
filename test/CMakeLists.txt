@@ -60,6 +60,7 @@ list(APPEND aitisa_test_srcs
         exp_test.cpp
         log_test.cpp
         compare.cpp
+        elu_test.cpp
         )
 
 # Build a exe for each test files
