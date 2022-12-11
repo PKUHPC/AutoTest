@@ -5,7 +5,7 @@ extern "C" {
 //#include "src/tool/tool.h"
 }
 
-void natural_assign1(Tensor t) {
+void compare_natural_assign1(Tensor t) {
   int64_t ndim = aitisa_tensor_ndim(t);
   int64_t* dims = aitisa_tensor_dims(t);
   int64_t size = aitisa_tensor_size(t);
@@ -17,7 +17,7 @@ void natural_assign1(Tensor t) {
   }
 }
 
-void natural_assign2(Tensor t) {
+void compare_natural_assign2(Tensor t) {
   int64_t ndim = aitisa_tensor_ndim(t);
   int64_t* dims = aitisa_tensor_dims(t);
   int64_t size = aitisa_tensor_size(t);
@@ -40,8 +40,8 @@ TEST(Binary, equal) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign1(tensor1);
-  natural_assign1(tensor2);
+  compare_natural_assign1(tensor1);
+  compare_natural_assign1(tensor2);
   Tensor output;
   aitisa_equal(tensor1, tensor2, &output);
   /*
@@ -73,8 +73,8 @@ TEST(Binary, greater) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign2(tensor1);
-  natural_assign1(tensor2);
+  compare_natural_assign2(tensor1);
+  compare_natural_assign1(tensor2);
   Tensor output;
   aitisa_greater(tensor1, tensor2, &output);
   /*
@@ -106,8 +106,8 @@ TEST(Binary, greater_equal) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign1(tensor1);
-  natural_assign1(tensor2);
+  compare_natural_assign1(tensor1);
+  compare_natural_assign1(tensor2);
   Tensor output;
   aitisa_greater_equal(tensor1, tensor2, &output);
   /*
@@ -144,8 +144,8 @@ TEST(Binary, less) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign1(tensor1);
-  natural_assign1(tensor2);
+  compare_natural_assign1(tensor1);
+  compare_natural_assign1(tensor2);
   Tensor output;
   aitisa_less(tensor1, tensor2, &output);
   /*
@@ -178,8 +178,8 @@ TEST(Binary, less_equal) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign1(tensor1);
-  natural_assign1(tensor2);
+  compare_natural_assign1(tensor1);
+  compare_natural_assign1(tensor2);
   Tensor output;
   aitisa_less_equal(tensor1, tensor2, &output);
   /*

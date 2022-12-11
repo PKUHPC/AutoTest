@@ -5,11 +5,11 @@ extern "C" {
 //#include "src/tool/tool.h"
 }
 
-void natural_assign1(Tensor t) {
+void binary_natural_assign1(Tensor t) {
   int64_t ndim = aitisa_tensor_ndim(t);
-  int64_t *dims = aitisa_tensor_dims(t);
+  int64_t* dims = aitisa_tensor_dims(t);
   int64_t size = aitisa_tensor_size(t);
-  float *data = (float *)aitisa_tensor_data(t);
+  float* data = (float*)aitisa_tensor_data(t);
   float value = 0;
   for (int i = 0; i < size; ++i) {
     value = i * 0.1;
@@ -17,11 +17,11 @@ void natural_assign1(Tensor t) {
   }
 }
 
-void natural_assign2(Tensor t) {
+void binary_natural_assign2(Tensor t) {
   int64_t ndim = aitisa_tensor_ndim(t);
-  int64_t *dims = aitisa_tensor_dims(t);
+  int64_t* dims = aitisa_tensor_dims(t);
   int64_t size = aitisa_tensor_size(t);
-  float *data = (float *)aitisa_tensor_data(t);
+  float* data = (float*)aitisa_tensor_data(t);
   float value = 0;
   for (int i = 0; i < size; ++i) {
     value = i * 0.2;
@@ -40,8 +40,8 @@ TEST(Binary, add) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign1(tensor1);
-  natural_assign1(tensor2);
+  binary_natural_assign1(tensor1);
+  binary_natural_assign1(tensor2);
   Tensor output;
   aitisa_add(tensor1, tensor2, &output);
   /*
@@ -55,7 +55,7 @@ TEST(Binary, add) {
   for (int i = 0; i < expected_ndim; ++i) {
     EXPECT_EQ(expected_dims[i], aitisa_tensor_dim(output, i));
   }
-  float *data = (float *)aitisa_tensor_data(output);
+  float* data = (float*)aitisa_tensor_data(output);
   float result[4] = {0, 0.2, 0.4, 0.6};
   for (int i = 0; i < aitisa_tensor_size(output); ++i) {
     EXPECT_FLOAT_EQ(result[i], data[i]);
@@ -73,8 +73,8 @@ TEST(Binary, sub) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign2(tensor1);
-  natural_assign1(tensor2);
+  binary_natural_assign2(tensor1);
+  binary_natural_assign1(tensor2);
   Tensor output;
   aitisa_sub(tensor1, tensor2, &output);
   /*
@@ -88,7 +88,7 @@ TEST(Binary, sub) {
   for (int i = 0; i < expected_ndim; ++i) {
     EXPECT_EQ(expected_dims[i], aitisa_tensor_dim(output, i));
   }
-  float *data = (float *)aitisa_tensor_data(output);
+  float* data = (float*)aitisa_tensor_data(output);
   float result[4] = {0, 0.1, 0.2, 0.3};
   for (int i = 0; i < aitisa_tensor_size(output); ++i) {
     EXPECT_FLOAT_EQ(result[i], data[i]);
@@ -106,8 +106,8 @@ TEST(Binary, mul) {
   int64_t dims[1] = {4};
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor1);
   aitisa_create(dtype, device, dims, 1, NULL, 0, &tensor2);
-  natural_assign1(tensor1);
-  natural_assign1(tensor2);
+  binary_natural_assign1(tensor1);
+  binary_natural_assign1(tensor2);
   Tensor output;
   aitisa_mul(tensor1, tensor2, &output);
   /*
@@ -121,7 +121,7 @@ TEST(Binary, mul) {
   for (int i = 0; i < expected_ndim; ++i) {
     EXPECT_EQ(expected_dims[i], aitisa_tensor_dim(output, i));
   }
-  float *data = (float *)aitisa_tensor_data(output);
+  float* data = (float*)aitisa_tensor_data(output);
   float result[4] = {0, 0.01, 0.04, 0.09};
   for (int i = 0; i < aitisa_tensor_size(output); ++i) {
     EXPECT_FLOAT_EQ(result[i], data[i]);

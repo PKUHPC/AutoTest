@@ -4,7 +4,7 @@ extern "C" {
 #include "src/new_ops7/elu.h"
 }
 
-void exp_assign_int32(Tensor t) {
+void elu_assign_int32(Tensor t) {
   int64_t size = aitisa_tensor_size(t);
   int32_t* data = (int32_t*)aitisa_tensor_data(t);
   int32_t value = -5;
@@ -14,7 +14,7 @@ void exp_assign_int32(Tensor t) {
   }
 }
 
-void exp_assign_float(Tensor t) {
+void elu_assign_float(Tensor t) {
   int64_t size = aitisa_tensor_size(t);
   float* data = (float*)aitisa_tensor_data(t);
   float value = -2;
@@ -33,7 +33,7 @@ TEST(Elu, Float) {
   Device device = {DEVICE_CPU, 0};
   int64_t dims[2] = {2, 3};
   aitisa_create(dtype, device, dims, 2, NULL, 0, &input);
-  exp_assign_float(input);
+  elu_assign_float(input);
   float alpha = 1.0;
   Tensor output;
   aitisa_elu(input, alpha, &output);
@@ -58,7 +58,7 @@ TEST(Elu, Int32) {
   Device device = {DEVICE_CPU, 0};
   int64_t dims[2] = {2, 3};
   aitisa_create(dtype, device, dims, 2, NULL, 0, &input);
-  exp_assign_int32(input);
+  elu_assign_int32(input);
   // tensor_printer2d(input);
 
   Tensor output;
