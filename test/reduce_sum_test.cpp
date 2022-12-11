@@ -31,8 +31,8 @@ TEST(Reduce_sum, Float) {
   Tensor input;
   DataType dtype = kFloat;
   Device device = {DEVICE_CPU, 0};
-  int64_t input_dims[4] = {2, 2, 3, 3};
-  aitisa_create(dtype, device, input_dims, 4, NULL, 0, &input);
+  int64_t input_dims[3] = {2, 2, 3};
+  aitisa_create(dtype, device, input_dims, 3, NULL, 0, &input);
   reduce_sum_assign_float(input);
   int64_t dims[2] = {2, 1};
   int64_t dims_length = 2;
@@ -50,6 +50,12 @@ TEST(Reduce_sum, Float) {
     /* Due to the problem of precision, consider the two numbers
        are equal when their difference is less than 0.000001*/
     //    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
+  }
+  int64_t output_size = aitisa_tensor_size(output);
+  auto* out_data = (float *)aitisa_tensor_data(output);
+  std::cout << " size === " << output_size << std::endl;
+  for (int64_t i = 0; i < output_size; i++) {
+    std::cout << out_data[i] << std::endl;
   }
   std::cout << std::endl;
   aitisa_destroy(&input);
