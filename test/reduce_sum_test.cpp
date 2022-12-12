@@ -113,7 +113,6 @@ TEST(Reduce_sum, Int32) {
     std::cout << out_data[i] << std::endl;
   }
   aitisa_destroy(&input);
-  output->shape.layout.min2maj = nullptr;
   aitisa_destroy(&output);
 }
 }  // namespace

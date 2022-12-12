@@ -72,7 +72,7 @@ static Status reduce_sum_create_output(const Tensor input, const int64_t* dims,
   int64_t* input_dims = aitisa_tensor_dims(input);
   int64_t input_ndim = aitisa_tensor_ndim(input);
   Tensor new_tensor;
-  DataType dtype = aitisa_tensor_data_type(input);
+  DataType dtype = kDouble;
   Device device = aitisa_tensor_device(input);
   int64_t mask[input_ndim];
   memset(mask, 1, sizeof(mask));
