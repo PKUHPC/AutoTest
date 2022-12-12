@@ -14,7 +14,7 @@ static Status permute_dims(const int64_t* stride, const int64_t stride_length,
 }
 
 static Status should_swap(const int64_t* strides, int64_t dim0, int64_t dim1) {
-  printf(" strides[dim0] = %ld  || strides[dim0] = %ld  ", strides[dim0],
+  printf("strides[dim0] = %ld  || strides[dim0] = %ld \n ", strides[dim0],
          strides[dim1]);
 
   return strides[dim0] < strides[dim1];
@@ -32,11 +32,11 @@ static Status reorder_dims(int64_t* strides, int64_t strides_length,
   }
   for (int i = 1; i < strides_length; ++i) {
     for (int j = i; j > 0; j--) {
-      printf(" j == %d", j);
-      printf("perm[j] = %ld || perm[j-1] = %ld ", perm[j], perm[j - 1]);
+      printf("j == %d", j);
+      printf("perm[j] = %ld || perm[j-1] = %ld \n", perm[j], perm[j - 1]);
       int comparsion = should_swap(strides, perm[j], perm[j - 1]);
       if (comparsion) {
-        printf("yes");
+        printf("yes\n");
         int64_swap(perm + j, perm + j - 1);
       } else {
         break;
@@ -114,7 +114,7 @@ static Status reduce_sum_create_output(const Tensor input, const int64_t* dims,
     }                                                                          \
   } else {                                                                     \
     int count = 0;                                                             \
-    int64_t step_value[stride_length];                                         \
+    int64_t step_value[input_ndim];                                            \
     memset(step_value, 0, sizeof(step_value));                                 \
     while (count < num_items) {                                                \
       typename* in_ptr_tmp = in_data;                                          \
@@ -122,7 +122,7 @@ static Status reduce_sum_create_output(const Tensor input, const int64_t* dims,
         in_ptr_tmp += step_value[i] * permuted_strides_in[i];                  \
       }                                                                        \
       typename* in = in_ptr_tmp;                                               \
-      typename* out_ptr_tmp = in_data;                                         \
+      typename* out_ptr_tmp = out_data;                                        \
       for (int i = 0; i < stride_length; i++) {                                \
         out_ptr_tmp += step_value[i] * permuted_strides_out[i];                \
       }                                                                        \
@@ -190,24 +190,31 @@ Status aitisa_reduce_sum(const Tensor input, const int64_t* dims,
   for (int64_t i = 0; i < stride_length; i++) {
     printf("#%ld, ", output_stride_new[i]);
   }
-
+  printf("\n");
   for (int64_t i = 0; i < stride_length; i++) {
     printf("$%ld, ", input_stride[i]);
   }
+  printf("\n");
+
   for (int64_t i = 0; i < stride_length; i++) {
     printf("$%ld, ", output_stride[i]);
   }
+  printf("\n");
+
   for (int64_t i = 0; i < stride_length; i++) {
     printf("(%ld, ", input_stride_new[i]);
   }
+  printf("\n");
 
   for (int64_t i = 0; i < stride_length; i++) {
     printf("(%ld,", output_stride_new[i]);
   }
+  printf("\n");
 
   for (int64_t i = 0; i < stride_length; i++) {
     printf("&%ld,", perm[i]);
   }
+  printf("\n");
 
   AITISA_DISPATCH_ALL_TYPES_RETURN(prods_dtype, reduce_sum_kernel,
                                    permuted_strides_in, permuted_strides_out,

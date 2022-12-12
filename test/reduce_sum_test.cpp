@@ -19,7 +19,7 @@ void reduce_sum_assign_float(Tensor t) {
   float* data = (float*)aitisa_tensor_data(t);
   float value = 0;
   for (int i = 0; i < size; ++i) {
-    value += 0.5;
+    value += 1;
     data[i] = value;
   }
 }
@@ -37,6 +37,13 @@ TEST(Reduce_sum, Float) {
   int64_t dims[2] = {2, 1};
   int64_t dims_length = 2;
   Tensor output;
+  int64_t input_size = aitisa_tensor_size(input);
+  auto* input_data = (float *)aitisa_tensor_data(input);
+  std::cout << " input size === " << input_size << std::endl;
+  for (int64_t i = 0; i < input_size; i++) {
+    std::cout << input_data[i] << std::endl;
+  }
+
   aitisa_reduce_sum(input, dims, dims_length, 1, &output);
 
   //  auto* out_data = (double*)aitisa_tensor_data(output);
@@ -51,6 +58,14 @@ TEST(Reduce_sum, Float) {
        are equal when their difference is less than 0.000001*/
     //    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
   }
+
+  input_data = (float *)aitisa_tensor_data(input);
+  std::cout << " input size === " << input_size << std::endl;
+  for (int64_t i = 0; i < input_size; i++) {
+    std::cout << input_data[i] << std::endl;
+  }
+
+
   int64_t output_size = aitisa_tensor_size(output);
   auto* out_data = (float *)aitisa_tensor_data(output);
   std::cout << " size === " << output_size << std::endl;
@@ -90,7 +105,22 @@ TEST(Reduce_sum, Int32) {
     //    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
   }
 
+  int64_t input_size = aitisa_tensor_size(input);
+  auto* input_data = (int32_t *)aitisa_tensor_data(input);
+  std::cout << " input size === " << input_size << std::endl;
+  for (int64_t i = 0; i < input_size; i++) {
+    std::cout << input_data[i] << std::endl;
+  }
+
+
+  int64_t output_size = aitisa_tensor_size(output);
+  auto* out_data = (float *)aitisa_tensor_data(output);
+  std::cout << " size === " << output_size << std::endl;
+  for (int64_t i = 0; i < output_size; i++) {
+    std::cout << out_data[i] << std::endl;
+  }
   aitisa_destroy(&input);
+  output->shape.layout.min2maj= nullptr;
   aitisa_destroy(&output);
 }
 }  // namespace
