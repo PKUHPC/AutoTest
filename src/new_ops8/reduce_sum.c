@@ -3,6 +3,7 @@
 #include <math.h>
 #include "src/basic/factories.h"
 #include "src/basic/index_utils.h"
+#include "src/basic/squeeze.h"
 #include "src/core/allocator.h"
 #include "src/core/dispatch.h"
 
@@ -14,17 +15,16 @@ static Status permute_dims(const int64_t* stride, const int64_t stride_length,
 }
 
 static Status should_swap(const int64_t* strides, int64_t dim0, int64_t dim1) {
-  printf("strides[dim0] = %ld  || strides[dim0] = %ld \n ", strides[dim0],
-         strides[dim1]);
-
   return strides[dim0] < strides[dim1];
 }
+
 static Status int64_swap(int64_t* a, int64_t* b) {
   int64_t tmp;
   tmp = *a;
   *a = *b;
   *b = tmp;
 }
+
 static Status reorder_dims(int64_t* strides, int64_t strides_length,
                            int64_t* perm) {
   for (int i = 0; i < strides_length; i++) {
@@ -32,11 +32,8 @@ static Status reorder_dims(int64_t* strides, int64_t strides_length,
   }
   for (int i = 1; i < strides_length; ++i) {
     for (int j = i; j > 0; j--) {
-      printf("j == %d", j);
-      printf("perm[j] = %ld || perm[j-1] = %ld \n", perm[j], perm[j - 1]);
       int comparsion = should_swap(strides, perm[j], perm[j - 1]);
       if (comparsion) {
-        printf("yes\n");
         int64_swap(perm + j, perm + j - 1);
       } else {
         break;
@@ -67,7 +64,7 @@ int64_t int64_max(int64_t x, int64_t y) {
 
 static Status reduce_sum_create_output(const Tensor input, const int64_t* dims,
                                        const int64_t dims_length,
-                                       const int keepdim, Tensor* output) {
+                                       Tensor* output) {
   Status status;
   int64_t* input_dims = aitisa_tensor_dims(input);
   int64_t input_ndim = aitisa_tensor_ndim(input);
@@ -79,26 +76,13 @@ static Status reduce_sum_create_output(const Tensor input, const int64_t* dims,
   for (int i = 0; i < dims_length; i++) {
     mask[dims[i]] = 0;
   }
-  if (keepdim) {
-    int64_t new_tensor_dims[input_ndim];
-    memcpy(new_tensor_dims, input_dims, sizeof(int64_t) * input_ndim);
-    for (int i = 0; i < dims_length; i++) {
-      new_tensor_dims[dims[i]] = 1;
-    }
-    status =
-        aitisa_full(dtype, device, new_tensor_dims, input_ndim, 0, &new_tensor);
-  } else {
-    int64_t new_tensor_dims[input_ndim - dims_length];
-    int64_t* ptr = new_tensor_dims;
-    for (int i = 0; i < input_ndim; i++) {
-      if (mask[i]) {
-        *ptr = input_dims[i];
-        ptr++;
-      }
-    }
-    status = aitisa_full(dtype, device, new_tensor_dims,
-                         input_ndim - dims_length, 0, &new_tensor);
+  int64_t new_tensor_dims[input_ndim];
+  memcpy(new_tensor_dims, input_dims, sizeof(int64_t) * input_ndim);
+  for (int i = 0; i < dims_length; i++) {
+    new_tensor_dims[dims[i]] = 1;
   }
+  status =
+      aitisa_full(dtype, device, new_tensor_dims, input_ndim, 0, &new_tensor);
   *output = new_tensor;
   return status;
 }
@@ -153,8 +137,7 @@ Status aitisa_reduce_sum(const Tensor input, const int64_t* dims,
 
   Status status = STATUS_SUCCESS;
   DataType prods_dtype = aitisa_tensor_data_type(input);
-  CHECK_STATUS(
-      reduce_sum_create_output(input, dims, dims_length, keepdim, output));
+  CHECK_STATUS(reduce_sum_create_output(input, dims, dims_length, output));
   int64_t num_items = aitisa_tensor_size(input);
   int64_t input_ndim = aitisa_tensor_ndim(input);
   int64_t output_ndim = aitisa_tensor_ndim(*output);
@@ -187,38 +170,11 @@ Status aitisa_reduce_sum(const Tensor input, const int64_t* dims,
   permute_dims(output_stride_new, stride_length, perm, permuted_strides_out);
   permute_dims(input_dims, input_ndim, perm, permuted_dims);
 
-  for (int64_t i = 0; i < stride_length; i++) {
-    printf("#%ld, ", output_stride_new[i]);
-  }
-  printf("\n");
-  for (int64_t i = 0; i < stride_length; i++) {
-    printf("$%ld, ", input_stride[i]);
-  }
-  printf("\n");
-
-  for (int64_t i = 0; i < stride_length; i++) {
-    printf("$%ld, ", output_stride[i]);
-  }
-  printf("\n");
-
-  for (int64_t i = 0; i < stride_length; i++) {
-    printf("(%ld, ", input_stride_new[i]);
-  }
-  printf("\n");
-
-  for (int64_t i = 0; i < stride_length; i++) {
-    printf("(%ld,", output_stride_new[i]);
-  }
-  printf("\n");
-
-  for (int64_t i = 0; i < stride_length; i++) {
-    printf("&%ld,", perm[i]);
-  }
-  printf("\n");
-
   AITISA_DISPATCH_ALL_TYPES_RETURN(prods_dtype, reduce_sum_kernel,
                                    permuted_strides_in, permuted_strides_out,
                                    permuted_dims, num_items);
-
+  if (!keepdim) {
+    aitisa_squeeze(*output, NULL, 0, output);
+  }
   return status;
 }
