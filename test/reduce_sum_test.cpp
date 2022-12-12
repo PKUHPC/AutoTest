@@ -31,18 +31,13 @@ TEST(Reduce_sum, Float) {
   Tensor input;
   DataType dtype = kFloat;
   Device device = {DEVICE_CPU, 0};
-  int64_t input_dims[3] = {2, 2, 3};
-  aitisa_create(dtype, device, input_dims, 3, NULL, 0, &input);
+  int64_t input_dims[4] = {2, 2, 2, 3};
+  aitisa_create(dtype, device, input_dims, 4, NULL, 0, &input);
   reduce_sum_assign_float(input);
   int64_t dims[2] = {2, 1};
   int64_t dims_length = 2;
   Tensor output;
   int64_t input_size = aitisa_tensor_size(input);
-  auto* input_data = (float *)aitisa_tensor_data(input);
-  std::cout << " input size === " << input_size << std::endl;
-  for (int64_t i = 0; i < input_size; i++) {
-    std::cout << input_data[i] << std::endl;
-  }
 
   aitisa_reduce_sum(input, dims, dims_length, 1, &output);
 
@@ -59,15 +54,14 @@ TEST(Reduce_sum, Float) {
     //    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
   }
 
-  input_data = (float *)aitisa_tensor_data(input);
+  auto* input_data = (float *)aitisa_tensor_data(input);
   std::cout << " input size === " << input_size << std::endl;
   for (int64_t i = 0; i < input_size; i++) {
     std::cout << input_data[i] << std::endl;
   }
 
-
   int64_t output_size = aitisa_tensor_size(output);
-  auto* out_data = (float *)aitisa_tensor_data(output);
+  auto* out_data = (double*)aitisa_tensor_data(output);
   std::cout << " size === " << output_size << std::endl;
   for (int64_t i = 0; i < output_size; i++) {
     std::cout << out_data[i] << std::endl;
@@ -81,13 +75,13 @@ TEST(Reduce_sum, Int32) {
   Tensor input;
   DataType dtype = kInt32;
   Device device = {DEVICE_CPU, 0};
-  int64_t input_dims[4] = {2, 2, 3, 3};
+  int64_t input_dims[4] = {2, 2, 2, 3};
   aitisa_create(dtype, device, input_dims, 4, NULL, 0, &input);
   reduce_sum_assign_int32(input);
   int64_t dims[2] = {2, 1};
   int64_t dims_length = 2;
   Tensor output;
-  aitisa_reduce_sum(input, dims, dims_length, 0, &output);
+  aitisa_reduce_sum(input, dims, dims_length, 1, &output);
   // tensor_printer2d(output);
   int64_t* out_dims = aitisa_tensor_dims(output);
   int64_t out_ndim = aitisa_tensor_ndim(output);
@@ -112,15 +106,14 @@ TEST(Reduce_sum, Int32) {
     std::cout << input_data[i] << std::endl;
   }
 
-
   int64_t output_size = aitisa_tensor_size(output);
-  auto* out_data = (float *)aitisa_tensor_data(output);
+  auto* out_data = (double *)aitisa_tensor_data(output);
   std::cout << " size === " << output_size << std::endl;
   for (int64_t i = 0; i < output_size; i++) {
     std::cout << out_data[i] << std::endl;
   }
   aitisa_destroy(&input);
-  output->shape.layout.min2maj= nullptr;
+  output->shape.layout.min2maj = nullptr;
   aitisa_destroy(&output);
 }
 }  // namespace

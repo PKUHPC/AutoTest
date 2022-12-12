@@ -106,7 +106,7 @@ static Status reduce_sum_create_output(const Tensor input, const int64_t* dims,
 #define reduce_sum_kernel(typename, permuted_strides_in, permuted_strides_out, \
                           permuted_dims, num_items)                            \
   typename* in_data = (typename*)aitisa_tensor_data(input);                    \
-  typename* out_data = (typename*)aitisa_tensor_data(*output);                 \
+  double* out_data = (double*)aitisa_tensor_data(*output);                     \
   if (input_ndim <= 1) {                                                       \
     for (int i = 0; i < input_dims[0]; i++) {                                  \
       typename* in_ptr = in_data + i;                                          \
@@ -122,15 +122,15 @@ static Status reduce_sum_create_output(const Tensor input, const int64_t* dims,
         in_ptr_tmp += step_value[i] * permuted_strides_in[i];                  \
       }                                                                        \
       typename* in = in_ptr_tmp;                                               \
-      typename* out_ptr_tmp = out_data;                                        \
+      double* out_ptr_tmp = out_data;                                          \
       for (int i = 0; i < stride_length; i++) {                                \
         out_ptr_tmp += step_value[i] * permuted_strides_out[i];                \
       }                                                                        \
-      typename* out = out_ptr_tmp;                                             \
+      double* out = out_ptr_tmp;                                               \
       for (int i = 0; i < permuted_dims[1]; i++) {                             \
         for (int j = 0; j < permuted_dims[0]; j++) {                           \
           typename* in_ptr = in + j * permuted_strides_in[0];                  \
-          typename* out_ptr = out + j * permuted_strides_out[0];               \
+          double* out_ptr = out + j * permuted_strides_out[0];                 \
           *out_ptr = *out_ptr + *in_ptr;                                       \
         }                                                                      \
         in = in + permuted_strides_in[1];                                      \
