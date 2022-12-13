@@ -27,7 +27,7 @@ void reduce_mean_assign_float(Tensor t) {
 namespace aitisa_api {
 namespace {
 
-TEST(Reduce_sum, Float) {
+TEST(Reduce_mean, Float) {
   Tensor input, output;
   DataType dtype = kFloat;
   Device device = {DEVICE_CPU, 0};
@@ -53,7 +53,7 @@ TEST(Reduce_sum, Float) {
   aitisa_destroy(&output);
 }
 
-TEST(Reduce_sum, Int32) {
+TEST(Reduce_mean, Int32) {
   Tensor input, output;
   DataType dtype = kInt32;
   Device device = {DEVICE_CPU, 0};
