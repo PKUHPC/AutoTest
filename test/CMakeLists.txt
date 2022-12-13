@@ -63,6 +63,7 @@ list(APPEND aitisa_test_srcs
         elu_test.cpp
         reduce_sum_test.cpp
         reduce_prod_test.cpp
+        reduce_mean_test.cpp
         )
 
 # Build a exe for each test files
