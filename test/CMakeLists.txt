@@ -69,6 +69,8 @@ list(APPEND aitisa_test_srcs
         nll_loss_test.cpp
         argmax_test.cpp
         argmin_test.cpp
+        max_test.cpp
+        min_test.cpp
         )
 
 # Build a exe for each test files
