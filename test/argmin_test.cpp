@@ -39,14 +39,13 @@ TEST(Arg_min, Float) {
   int64_t dim = 3;
   aitisa_argmin(input, dim, 0, &output);
 
-  double test_data[] = {12.000000, 24.000000};
+  int64_t test_data[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
   int64_t output_size = aitisa_tensor_size(output);
-  auto* out_data = (double*)aitisa_tensor_data(output);
+  auto* out_data = (int64_t*)aitisa_tensor_data(output);
 
   for (int64_t i = 0; i < output_size; i++) {
-    //    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
-    std::cout << out_data[i] << std::endl;
+    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
   }
 
   aitisa_destroy(&input);
@@ -65,16 +64,13 @@ TEST(Arg_min, Int32) {
   int64_t dim = 2;
   aitisa_argmin(input, dim, 0, &output);
 
-  double test_data[] = {10.000000, 11.000000, 12.000000,
-                        22.000000, 23.000000, 24.000000};
+  int64_t test_data[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   int64_t output_size = aitisa_tensor_size(output);
-  auto* out_data = (double*)aitisa_tensor_data(output);
+  auto* out_data = (int64_t*)aitisa_tensor_data(output);
 
   for (int64_t i = 0; i < output_size; i++) {
-    //    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
-    std::cout << out_data[i] << std::endl;
-
+    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
   }
 
   aitisa_destroy(&input);
