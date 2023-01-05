@@ -14,10 +14,10 @@ typedef enum {
   OP_GREATER_EQUAL,
   OP_LESS,
   OP_LESS_EQUAL,
-  OP_NOPS = 5U /**< The total number of all possible operations */
-} OpCode;
+  OP_COMPARE_NOPS = 5U /**< The total number of all possible operations */
+} CompareOpCode;
 
-typedef void (*CompareOpFunc)(void *a, void *b, OpCode op, void *c);
+typedef void (*CompareOpFunc)(void *a, void *b, CompareOpCode op, void *c);
 CompareOpFunc aitisa_compare_op_func(DataType dtype);
 
 /**

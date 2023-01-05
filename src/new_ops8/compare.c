@@ -2,220 +2,220 @@
 #include "src/core/allocator.h"
 #include "src/core/utils.h"
 
-void compare_int8_value(void *a, void *b, OpCode op, void *c) {
+void compare_int8_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(int8_t *)a) == (*(int8_t *)b);
+      *(int8_t *)c = (*(int8_t *)a) == (*(int8_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(int8_t *)a) > (*(int8_t *)b);
+      *(int8_t *)c = (*(int8_t *)a) > (*(int8_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(int8_t *)a) >= (*(int8_t *)b);
+      *(int8_t *)c = (*(int8_t *)a) >= (*(int8_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(int8_t *)a) < (*(int8_t *)b);
+      *(int8_t *)c = (*(int8_t *)a) < (*(int8_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(int8_t *)a) <= (*(int8_t *)b);
+      *(int8_t *)c = (*(int8_t *)a) <= (*(int8_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_uint8_value(void *a, void *b, OpCode op, void *c) {
+void compare_uint8_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(uint8_t *)a) == (*(uint8_t *)b);
+      *(int8_t *)c = (*(uint8_t *)a) == (*(uint8_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(uint8_t *)a) > (*(uint8_t *)b);
+      *(int8_t *)c = (*(uint8_t *)a) > (*(uint8_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(uint8_t *)a) >= (*(uint8_t *)b);
+      *(int8_t *)c = (*(uint8_t *)a) >= (*(uint8_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(uint8_t *)a) < (*(uint8_t *)b);
+      *(int8_t *)c = (*(uint8_t *)a) < (*(uint8_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(uint8_t *)a) <= (*(uint8_t *)b);
+      *(int8_t *)c = (*(uint8_t *)a) <= (*(uint8_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_int16_value(void *a, void *b, OpCode op, void *c) {
+void compare_int16_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(int16_t *)a) == (*(int16_t *)b);
+      *(int8_t *)c = (*(int16_t *)a) == (*(int16_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(int16_t *)a) > (*(int16_t *)b);
+      *(int8_t *)c = (*(int16_t *)a) > (*(int16_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(int16_t *)a) >= (*(int16_t *)b);
+      *(int8_t *)c = (*(int16_t *)a) >= (*(int16_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(int16_t *)a) < (*(int16_t *)b);
+      *(int8_t *)c = (*(int16_t *)a) < (*(int16_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(int16_t *)a) <= (*(int16_t *)b);
+      *(int8_t *)c = (*(int16_t *)a) <= (*(int16_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_uint16_value(void *a, void *b, OpCode op, void *c) {
+void compare_uint16_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(uint16_t *)a) == (*(uint16_t *)b);
+      *(int8_t *)c = (*(uint16_t *)a) == (*(uint16_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(uint16_t *)a) > (*(uint16_t *)b);
+      *(int8_t *)c = (*(uint16_t *)a) > (*(uint16_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(uint16_t *)a) >= (*(uint16_t *)b);
+      *(int8_t *)c = (*(uint16_t *)a) >= (*(uint16_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(uint16_t *)a) < (*(uint16_t *)b);
+      *(int8_t *)c = (*(uint16_t *)a) < (*(uint16_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(uint16_t *)a) <= (*(uint16_t *)b);
+      *(int8_t *)c = (*(uint16_t *)a) <= (*(uint16_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_int32_value(void *a, void *b, OpCode op, void *c) {
+void compare_int32_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(int32_t *)a) == (*(int32_t *)b);
+      *(int8_t *)c = (*(int32_t *)a) == (*(int32_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(int32_t *)a) > (*(int32_t *)b);
+      *(int8_t *)c = (*(int32_t *)a) > (*(int32_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(int32_t *)a) >= (*(int32_t *)b);
+      *(int8_t *)c = (*(int32_t *)a) >= (*(int32_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(int32_t *)a) < (*(int32_t *)b);
+      *(int8_t *)c = (*(int32_t *)a) < (*(int32_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(int32_t *)a) <= (*(int32_t *)b);
+      *(int8_t *)c = (*(int32_t *)a) <= (*(int32_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_uint32_value(void *a, void *b, OpCode op, void *c) {
+void compare_uint32_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(uint32_t *)a) == (*(uint32_t *)b);
+      *(int8_t *)c = (*(uint32_t *)a) == (*(uint32_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(uint32_t *)a) > (*(uint32_t *)b);
+      *(int8_t *)c = (*(uint32_t *)a) > (*(uint32_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(uint32_t *)a) >= (*(uint32_t *)b);
+      *(int8_t *)c = (*(uint32_t *)a) >= (*(uint32_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(uint32_t *)a) < (*(uint32_t *)b);
+      *(int8_t *)c = (*(uint32_t *)a) < (*(uint32_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(uint32_t *)a) <= (*(uint32_t *)b);
+      *(int8_t *)c = (*(uint32_t *)a) <= (*(uint32_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_int64_value(void *a, void *b, OpCode op, void *c) {
+void compare_int64_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(int64_t *)a) == (*(int64_t *)b);
+      *(int8_t *)c = (*(int64_t *)a) == (*(int64_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(int64_t *)a) > (*(int64_t *)b);
+      *(int8_t *)c = (*(int64_t *)a) > (*(int64_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(int64_t *)a) >= (*(int64_t *)b);
+      *(int8_t *)c = (*(int64_t *)a) >= (*(int64_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(int64_t *)a) < (*(int64_t *)b);
+      *(int8_t *)c = (*(int64_t *)a) < (*(int64_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(int64_t *)a) <= (*(int64_t *)b);
+      *(int8_t *)c = (*(int64_t *)a) <= (*(int64_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_uint64_value(void *a, void *b, OpCode op, void *c) {
+void compare_uint64_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(uint64_t *)a) == (*(uint64_t *)b);
+      *(int8_t *)c = (*(uint64_t *)a) == (*(uint64_t *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(uint64_t *)a) > (*(uint64_t *)b);
+      *(int8_t *)c = (*(uint64_t *)a) > (*(uint64_t *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(uint64_t *)a) >= (*(uint64_t *)b);
+      *(int8_t *)c = (*(uint64_t *)a) >= (*(uint64_t *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(uint64_t *)a) < (*(uint64_t *)b);
+      *(int8_t *)c = (*(uint64_t *)a) < (*(uint64_t *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(uint64_t *)a) <= (*(uint64_t *)b);
+      *(int8_t *)c = (*(uint64_t *)a) <= (*(uint64_t *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_float_value(void *a, void *b, OpCode op, void *c) {
+void compare_float_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(float *)a) == (*(float *)b);
+      *(int8_t *)c = (*(float *)a) == (*(float *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(float *)a) > (*(float *)b);
+      *(int8_t *)c = (*(float *)a) > (*(float *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(float *)a) >= (*(float *)b);
+      *(int8_t *)c = (*(float *)a) >= (*(float *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(float *)a) < (*(float *)b);
+      *(int8_t *)c = (*(float *)a) < (*(float *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(float *)a) <= (*(float *)b);
+      *(int8_t *)c = (*(float *)a) <= (*(float *)b);
       break;
     default:
       break;
   }
 }
 
-void compare_double_value(void *a, void *b, OpCode op, void *c) {
+void compare_double_value(void *a, void *b, CompareOpCode op, void *c) {
   switch (op) {
     case OP_EQUAL:
-      *(int32_t *)c = (*(double *)a) == (*(double *)b);
+      *(int8_t *)c = (*(double *)a) == (*(double *)b);
       break;
     case OP_GREATER:
-      *(int32_t *)c = (*(double *)a) > (*(double *)b);
+      *(int8_t *)c = (*(double *)a) > (*(double *)b);
       break;
     case OP_GREATER_EQUAL:
-      *(int32_t *)c = (*(double *)a) >= (*(double *)b);
+      *(int8_t *)c = (*(double *)a) >= (*(double *)b);
       break;
     case OP_LESS:
-      *(int32_t *)c = (*(double *)a) < (*(double *)b);
+      *(int8_t *)c = (*(double *)a) < (*(double *)b);
       break;
     case OP_LESS_EQUAL:
-      *(int32_t *)c = (*(double *)a) <= (*(double *)b);
+      *(int8_t *)c = (*(double *)a) <= (*(double *)b);
       break;
     default:
       break;
@@ -255,7 +255,7 @@ Status aitisa_equal(const Tensor tensor1, const Tensor tensor2, Tensor *output) 
     }
   }
   // create output
-  CHECK_STATUS(aitisa_create(kInt32,
+  CHECK_STATUS(aitisa_create(kInt8,
                              aitisa_tensor_device(tensor1),
                              dims_tensor1, ndim_tensor1, NULL, 0, output));
   int64_t size = aitisa_tensor_size(tensor1);
@@ -302,7 +302,7 @@ Status aitisa_greater(const Tensor tensor1, const Tensor tensor2, Tensor *output
     }
   }
   // create output
-  CHECK_STATUS(aitisa_create(kInt32,
+  CHECK_STATUS(aitisa_create(kInt8,
                              aitisa_tensor_device(tensor1),
                              dims_tensor1, ndim_tensor1, NULL, 0, output));
   int64_t size = aitisa_tensor_size(tensor1);
@@ -349,7 +349,7 @@ Status aitisa_greater_equal(const Tensor tensor1, const Tensor tensor2, Tensor *
     }
   }
   // create output
-  CHECK_STATUS(aitisa_create(kInt32,
+  CHECK_STATUS(aitisa_create(kInt8,
                              aitisa_tensor_device(tensor1),
                              dims_tensor1, ndim_tensor1, NULL, 0, output));
   int64_t size = aitisa_tensor_size(tensor1);
@@ -396,7 +396,7 @@ Status aitisa_less(const Tensor tensor1, const Tensor tensor2, Tensor *output) {
     }
   }
   // create output
-  CHECK_STATUS(aitisa_create(kInt32,
+  CHECK_STATUS(aitisa_create(kInt8,
                              aitisa_tensor_device(tensor1),
                              dims_tensor1, ndim_tensor1, NULL, 0, output));
   int64_t size = aitisa_tensor_size(tensor1);
@@ -443,7 +443,7 @@ Status aitisa_less_equal(const Tensor tensor1, const Tensor tensor2, Tensor *out
     }
   }
   // create output
-  CHECK_STATUS(aitisa_create(kInt32,
+  CHECK_STATUS(aitisa_create(kInt8,
                              aitisa_tensor_device(tensor1),
                              dims_tensor1, ndim_tensor1, NULL, 0, output));
   int64_t size = aitisa_tensor_size(tensor1);
