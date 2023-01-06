@@ -6,7 +6,9 @@
 #include <utility>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
-
+extern "C" {
+#include "src/new_ops6/nll_loss.h"
+}
 namespace aitisa_api {
 
 template <typename InterfaceType>
@@ -195,16 +197,20 @@ TYPED_TEST_P(NllLossTest, TwoTests) {
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
+      auto aitisa_elapsed = std::chrono::duration<double>::zero();
       auto user_elapsed = std::chrono::duration<double>::zero();
 #ifdef AITISA_API_PYTORCH
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
       //loop test
       for (int n = 0; n < loop; n++) {
-        int64_t user_result_ndim;
-        int64_t* user_result_dims = nullptr;
-        void* user_result_data = nullptr;
-        unsigned user_result_len;
+        int64_t aitisa_result_ndim, user_result_ndim;
+        int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
+        void *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        unsigned int aitisa_result_len, user_result_len;
+        AITISA_Tensor aitisa_tensor1, aitisa_tensor2, aitisa_result;
+        AITISA_DataType aitisa_result_dtype;
+        AITISA_Device aitisa_result_device;
         UserTensor user_tensor1, user_tensor2, user_result;
         UserDataType user_result_dtype;
         UserDevice user_result_device;
@@ -217,6 +223,32 @@ TYPED_TEST_P(NllLossTest, TwoTests) {
         TorchDataType torch_result_dtype;
         TorchDevice torch_result_device(c10::DeviceType::CPU);
 #endif
+        // aitisa
+        AITISA_DataType aitisa_dtype1 = aitisa_int_to_dtype(inputs[i].dtype1());
+        AITISA_DataType aitisa_dtype2 = aitisa_int_to_dtype(inputs[i].dtype2());
+        AITISA_Device aitisa_device1 =
+            aitisa_int_to_device(inputs[i].device1());
+        AITISA_Device aitisa_device2 =
+            aitisa_int_to_device(inputs[i].device2());
+
+        aitisa_create(aitisa_dtype1, aitisa_device1, inputs[i].dims1(),
+                      inputs[i].ndim1(), (void*)(inputs[i].data1()),
+                      inputs[i].len1(), &aitisa_tensor1);
+        aitisa_create(aitisa_dtype2, aitisa_device2, inputs[i].dims2(),
+                      inputs[i].ndim2(), (void*)(inputs[i].data2()),
+                      inputs[i].len2(), &aitisa_tensor2);
+
+        auto aitisa_start = std::chrono::steady_clock::now();
+
+        aitisa_nll_loss(aitisa_tensor1, aitisa_tensor2, {}, &aitisa_result);
+
+        auto aitisa_end = std::chrono::steady_clock::now();
+        aitisa_elapsed += aitisa_end - aitisa_start;
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype,
+                       &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data,
+                       &aitisa_result_len);
+
         // user
         UserDataType user_dtype1 =
             UserFuncs::user_int_to_dtype(inputs[i].dtype1());
@@ -272,44 +304,63 @@ TYPED_TEST_P(NllLossTest, TwoTests) {
             &torch_result_len);
 #endif
         // compare
-#ifdef AITISA_API_PYTORCH
         int64_t tensor_size = 1;
-        ASSERT_EQ(user_result_ndim, torch_result_ndim);
-        ASSERT_EQ(UserFuncs::user_device_to_int(user_result_device),
-                  libtorch_api::torch_device_to_int(torch_result_device));
-        ASSERT_EQ(UserFuncs::user_dtype_to_int(user_result_dtype),
-                  libtorch_api::torch_dtype_to_int(torch_result_dtype));
-        for (int64_t j = 0; j < user_result_ndim; j++) {
-          tensor_size *= user_result_dims[j];
-          ASSERT_EQ(user_result_dims[j], torch_result_dims[j]);
+        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+        ASSERT_EQ(0, UserFuncs::user_device_to_int(user_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  UserFuncs::user_dtype_to_int(user_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          tensor_size *= aitisa_result_dims[j];
+          ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
         }
-        ASSERT_EQ(user_result_len, torch_result_len);
+        ASSERT_EQ(aitisa_result_len, user_result_len);
+#ifdef AITISA_API_PYTORCH
+        ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
+        ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  libtorch_api::torch_dtype_to_int(torch_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, torch_result_len);
 #endif
+        auto* aitisa_data = (float*)aitisa_result_data;
         auto* user_data = (float*)user_result_data;
 #ifdef AITISA_API_PYTORCH
         auto* torch_data = (float*)torch_result_data;
         for (int64_t j = 0; j < tensor_size; j++) {
-          ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-2);
+          ASSERT_EQ(aitisa_data[j], torch_data[j]);
         }
 #endif
+        for (int64_t j = 0; j < tensor_size; j++) {
+          ASSERT_EQ(aitisa_data[j], user_data[j]);
+        }
+        aitisa_tensor1->storage->data = nullptr;
+        aitisa_tensor2->storage->data = nullptr;
+        aitisa_destroy(&aitisa_tensor1);
+        aitisa_destroy(&aitisa_tensor2);
+        aitisa_destroy(&aitisa_result);
       }
+      auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
       auto user_time = user_elapsed.count() * 1000 / loop;
 
       // print result of test
       std::cout << "[ " << test_case_name << " sample" << i << " / "
                 << inputs_name[i] << " ] " << std::endl;
+      std::cout << "\t[ AITISA ] " << aitisa_time << " ms average for " << loop
+                << " loop " << std::endl;
       std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
                 << " loop " << std::endl;
 #ifdef AITISA_API_PYTORCH
       auto torch_time = torch_elapsed.count() * 1000 / loop;
       std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
                 << " loop " << std::endl;
-//      m.insert(
-//          std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                         time_map_value(aitisa_time, user_time, torch_time)));
+      m.insert(
+          std::make_pair(test_case_name + " sample " + std::to_string(i),
+                         time_map_value(aitisa_time, user_time, torch_time)));
 #else
-//      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                              time_map_value(aitisa_time, user_time)));
+      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
+                              time_map_value(aitisa_time, user_time)));
 #endif
     }
   };
@@ -318,7 +369,7 @@ TYPED_TEST_P(NllLossTest, TwoTests) {
          std::move(this->nll_loss_inputs_name), "nll_loss",
          this->test_case["nll_loss"]);
 #ifdef AITISA_API_GENERATE_FIGURE
-//    draw_fig_fun(m, "conv2d");
+    draw_fig_fun(m, "nll_loss");
 #endif
   } else
     FAIL() << "No input test case.";

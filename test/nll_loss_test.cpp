@@ -8,7 +8,7 @@ extern "C" {
 }
 
 void nll_loss_assign_float(Tensor t) {
-  int32_t size = aitisa_tensor_size(t);
+  int64_t size = aitisa_tensor_size(t);
   auto* data = (float*)aitisa_tensor_data(t);
   float init = 0;
   float max = 1;
@@ -20,8 +20,8 @@ void nll_loss_assign_float(Tensor t) {
 }
 
 void nll_loss_assign_target(Tensor t, int classes) {
-  int32_t size = aitisa_tensor_size(t);
-  auto* data = (int32_t*)aitisa_tensor_data(t);
+  int64_t size = aitisa_tensor_size(t);
+  auto* data = (int64_t*)aitisa_tensor_data(t);
   for (int i = 0; i < size; ++i) {
     data[i] = (i % classes) + 1;
   }
@@ -53,7 +53,7 @@ TEST(NllLoss, Float2d) {
   auto* out_data = (float*)aitisa_tensor_data(output);
   float test_data[] = {-0.330268, -0.390166};
   int64_t size = aitisa_tensor_size(output);
-  for (int32_t i = 0; i < size; i++) {
+  for (int64_t i = 0; i < size; i++) {
     /* Due to the problem of precision, consider the two numbers
        are equal when their difference is less than 0.000001*/
     EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.0001);

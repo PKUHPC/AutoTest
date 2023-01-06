@@ -26,15 +26,15 @@ static Status nll_loss_create_output(const Tensor input, Tensor* output) {
 
 #define nll_cross_kernel(typename)                               \
   typename* probs_data = aitisa_tensor_data(probs);              \
-  int32_t* target_data = (int32_t*)aitisa_tensor_data(target);   \
+  int64_t* target_data = (int64_t*)aitisa_tensor_data(target);   \
   typename* loss_data = aitisa_tensor_data(*loss);               \
   typename* weight_data = NULL;                                  \
   if (weight) {                                                  \
-    printf("yes");                                               \
     weight_data = aitisa_tensor_data(weight);                    \
   }                                                              \
   int64_t loss_size = aitisa_tensor_size(*loss);                 \
-  int64_t n_class = aitisa_tensor_dims(probs)[2];                \
+  int64_t ndim = aitisa_tensor_ndim(probs);                      \
+  int64_t n_class = aitisa_tensor_dims(probs)[ndim - 1];         \
   for (int64_t idx_loss = 0; idx_loss < loss_size; idx_loss++) { \
     int64_t trg = target_data[idx_loss];                         \
     int64_t offset_ipt = idx_loss * n_class + trg;               \
