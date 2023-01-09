@@ -8,6 +8,7 @@
 
 extern "C" {
 #include "src/math/matmul.h"
+#include "src/math/matmul_simple.h"
 }
 
 namespace aitisa_api {
@@ -159,8 +160,8 @@ class MatmulTest : public ::testing::Test {
         unsigned int input_len2 = input_nelem2 * elem_size(input.dtype2());
         void* input_data1 = (void*)new char[input_len1];
         void* input_data2 = (void*)new char[input_len2];
-        natural_assign(input_data1, input_len1, input.dtype1());
-        natural_assign(input_data2, input_len2, input.dtype2());
+        random_assign(input_data1, input_len1, input.dtype1());
+        random_assign(input_data2, input_len2, input.dtype2());
         input.set_data1(input_data1, input_len1);
         input.set_data2(input_data2, input_len2);
       }
@@ -234,6 +235,7 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
                       inputs[i].len2(), &aitisa_tensor2);
         auto aitisa_start = std::chrono::steady_clock::now();
         aitisa_matmul(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
+        //        aitisa_matmul_simple(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
         auto aitisa_end = std::chrono::steady_clock::now();
 
         aitisa_elapsed += aitisa_end - aitisa_start;
