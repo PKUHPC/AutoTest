@@ -9,6 +9,7 @@
 
 extern "C" {
 #include "src/nn/conv.h"
+#include "src/nn/conv2d_simple.h"
 }
 
 namespace aitisa_api {
@@ -371,6 +372,7 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
         aitisa_conv2d(aitisa_tensor1, aitisa_tensor2, inputs[i].stride(), 2,
                       inputs[i].padding(), 2, inputs[i].dilation(), 2,
                       inputs[i].groups(), &aitisa_result);
+//        aitisa_conv2d_simple(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
         auto aitisa_end = std::chrono::steady_clock::now();
         aitisa_elapsed += aitisa_end - aitisa_start;
 
