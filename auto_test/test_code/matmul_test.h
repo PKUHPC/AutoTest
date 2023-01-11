@@ -319,12 +319,14 @@ TYPED_TEST_P(MatmulTest, SevenTests) {
         }
         ASSERT_EQ(aitisa_result_len, torch_result_len);
 #endif
-        auto* aitisa_data = (float*)aitisa_result_data;
-        auto* user_data = (float*)user_result_data;
+        auto* aitisa_data = (double *)aitisa_result_data;
+        auto* user_data = (double *)user_result_data;
         for (int64_t j = 0; j < tensor_size; j++) {
+//          std::cout << aitisa_data[j] << " and " << user_data[j] << std::endl;
           ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
 #ifdef AITISA_API_PYTORCH
-          auto* torch_data = (float*)torch_result_data;
+          auto* torch_data = (double *)torch_result_data;
+//          std::cout << aitisa_data[j] << " and " << torch_data[j] << std::endl;
           ASSERT_TRUE(abs(aitisa_data[j] - torch_data[j]) < 1e-3);
 #endif
         }
