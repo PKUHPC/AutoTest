@@ -73,7 +73,7 @@ TEST(MseLoss, Float) {
   mse_loss_assign_float_weight(weight);
 
   Tensor output;
-  aitisa_mse_loss(input, target, weight, &output);
+  aitisa_mse_loss(input, target, weight, 0, &output);
 
   float* out_data = (float*)aitisa_tensor_data(output);
   float test_data[] = {25.919998, 30.719997, 31.359993,
@@ -104,7 +104,7 @@ TEST(MseLoss, Int32) {
   mse_loss_assign_int32_target(target);
 
   Tensor output;
-  aitisa_mse_loss(input, target, {}, &output);
+  aitisa_mse_loss(input, target, {}, 0, &output);
 
   int32_t* out_data = (int32_t*)aitisa_tensor_data(output);
   int32_t test_data[] = {81, 64, 49, 36, 25, 16};

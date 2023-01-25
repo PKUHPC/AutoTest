@@ -73,7 +73,7 @@ TEST(SmoothL1loss, Float) {
   smooth_l1_loss_assign_float_weight(weight);
 
   Tensor output;
-  aitisa_smooth_l1_loss(input, target, weight, &output);
+  aitisa_smooth_l1_loss(input, target, weight, 0, &output);
 
   float* out_data = (float*)aitisa_tensor_data(output);
   float test_data[] = {6.200000, 8.099999, 9.199999,
@@ -104,7 +104,7 @@ TEST(SmoothL1loss, Int32) {
   smooth_l1_loss_assign_int32_target(target);
 
   Tensor output;
-  aitisa_smooth_l1_loss(input, target, {}, &output);
+  aitisa_smooth_l1_loss(input, target, {}, 0, &output);
 
   int32_t* out_data = (int32_t*)aitisa_tensor_data(output);
   int32_t test_data[] = {8, 7, 6, 5, 4, 3};

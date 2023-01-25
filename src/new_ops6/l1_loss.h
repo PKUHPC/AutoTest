@@ -9,6 +9,7 @@
  * @param input
  * @param target
  * @param weight a manual rescaling weight given to each loss.
+ * @param reduction Specifies the reduction to apply to the output: 'none' | 'mean' | 'sum'.
  * @param output The output tensor pointer.
  */
 AITISA_API_PUBLIC Status aitisa_l1_loss(const Tensor input, const Tensor target,
