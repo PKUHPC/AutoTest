@@ -272,7 +272,7 @@ TYPED_TEST_P(L1LossTest, TwoTests) {
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
       //loop test
-      for (int n = 0; n < 1; n++) {
+      for (int n = 0; n < loop; n++) {
         int64_t aitisa_result_ndim, user_result_ndim;
         int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
         void *aitisa_result_data = nullptr, *user_result_data = nullptr;
