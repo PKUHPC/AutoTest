@@ -5,9 +5,9 @@
 
 #define reduce_mean_kernel(typename, dims, dims_length, num_items) \
   typename* in_data = (typename*)aitisa_tensor_data(input);        \
-  typename* out_data = (typename*)aitisa_tensor_data(*output);         \
+  typename* out_data = (typename*)aitisa_tensor_data(*output);     \
   int64_t* input_dims = aitisa_tensor_dims(input);                 \
-  typename factor = 1;                                               \
+  typename factor = 1;                                             \
   for (int64_t i = 0; i < dims_length; i++) {                      \
     factor *= input_dims[dims[i]];                                 \
   }                                                                \

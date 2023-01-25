@@ -40,10 +40,10 @@ TEST(Reduce_max, Float) {
   int64_t dims_length = 3;
   aitisa_reduce_max(input, dims, dims_length, 0, &output);
 
-  double test_data[] = {12.000000, 24.000000};
+  float test_data[] = {12.000000, 24.000000};
 
   int64_t output_size = aitisa_tensor_size(output);
-  auto* out_data = (double*)aitisa_tensor_data(output);
+  auto* out_data = (float*)aitisa_tensor_data(output);
 
   for (int64_t i = 0; i < output_size; i++) {
     EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
@@ -67,14 +67,13 @@ TEST(Reduce_max, Int32) {
 
   aitisa_reduce_max(input, dims, dims_length, 0, &output);
 
-  double test_data[] = {10.000000, 11.000000, 12.000000,
-                        22.000000, 23.000000, 24.000000};
+  int32_t test_data[] = {10, 11, 12, 22, 23, 24};
 
   int64_t output_size = aitisa_tensor_size(output);
-  auto* out_data = (double*)aitisa_tensor_data(output);
+  auto* out_data = (int32_t*)aitisa_tensor_data(output);
 
   for (int64_t i = 0; i < output_size; i++) {
-    EXPECT_TRUE(abs(out_data[i] - test_data[i]) < 0.000001);
+    EXPECT_EQ(out_data[i], test_data[i]);
   }
 
   aitisa_destroy(&input);

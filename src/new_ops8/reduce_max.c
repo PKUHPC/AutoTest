@@ -15,7 +15,7 @@ static Status reduce_max_create_output(const Tensor input, const int64_t* dims,
   int64_t* input_dims = aitisa_tensor_dims(input);
   int64_t input_ndim = aitisa_tensor_ndim(input);
   Tensor new_tensor;
-  DataType dtype = kDouble;
+  DataType dtype = aitisa_tensor_data_type(input);
   Device device = aitisa_tensor_device(input);
   int64_t mask[input_ndim];
   memset(mask, 1, sizeof(mask));
@@ -36,7 +36,7 @@ static Status reduce_max_create_output(const Tensor input, const int64_t* dims,
 #define reduce_max_kernel(typename, permuted_strides_in, permuted_strides_out, \
                           permuted_dims, num_items)                            \
   typename* in_data = (typename*)aitisa_tensor_data(input);                    \
-  double* out_data = (double*)aitisa_tensor_data(*output);                     \
+  typename* out_data = (typename*)aitisa_tensor_data(*output);                 \
   if (input_ndim <= 1) {                                                       \
     for (int i = 0; i < input_dims[0]; i++) {                                  \
       typename* in_ptr = in_data + i;                                          \
@@ -53,15 +53,15 @@ static Status reduce_max_create_output(const Tensor input, const int64_t* dims,
         in_ptr_tmp += step_value[i] * permuted_strides_in[i];                  \
       }                                                                        \
       typename* in = in_ptr_tmp;                                               \
-      double* out_ptr_tmp = out_data;                                          \
+      typename* out_ptr_tmp = out_data;                                        \
       for (int i = 0; i < stride_length; i++) {                                \
         out_ptr_tmp += step_value[i] * permuted_strides_out[i];                \
       }                                                                        \
-      double* out = out_ptr_tmp;                                               \
+      typename* out = out_ptr_tmp;                                             \
       for (int i = 0; i < permuted_dims[1]; i++) {                             \
         for (int j = 0; j < permuted_dims[0]; j++) {                           \
           typename* in_ptr = in + j * permuted_strides_in[0];                  \
-          double* out_ptr = out + j * permuted_strides_out[0];                 \
+          typename* out_ptr = out + j * permuted_strides_out[0];               \
           if (*out_ptr < *in_ptr)                                              \
             *out_ptr = *in_ptr;                                                \
         }                                                                      \
