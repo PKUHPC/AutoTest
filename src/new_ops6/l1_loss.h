@@ -12,6 +12,7 @@
  * @param output The output tensor pointer.
  */
 AITISA_API_PUBLIC Status aitisa_l1_loss(const Tensor input, const Tensor target,
-                                        const Tensor weight, Tensor* output);
+                                        const Tensor weight,
+                                        const int reduction, Tensor* output);
 
 #endif  // L1_LOSS

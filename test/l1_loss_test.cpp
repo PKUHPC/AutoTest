@@ -73,7 +73,7 @@ TEST(L1loss, Float) {
   l1_loss_assign_float_weight(weight);
 
   Tensor output;
-  aitisa_l1_loss(input, target, weight, &output);
+  aitisa_l1_loss(input, target, weight, 0, &output);
 
   float* out_data = (float*)aitisa_tensor_data(output);
   float test_data[] = {7.2, 9.6, 11.2, 12, 12, 11.2};
@@ -103,13 +103,13 @@ TEST(L1loss, Int32) {
   l1_loss_assign_int32_target(target);
 
   Tensor output;
-  aitisa_l1_loss(input, target, {}, &output);
+  aitisa_l1_loss(input, target, {}, 0, &output);
 
   int32_t* out_data = (int32_t*)aitisa_tensor_data(output);
   int32_t test_data[] = {9, 8, 7, 6, 5, 4};
   int64_t size = aitisa_tensor_size(input);
   for (int64_t i = 0; i < size; i++) {
-        EXPECT_EQ(out_data[i], test_data[i]);
+    EXPECT_EQ(out_data[i], test_data[i]);
   }
 
   aitisa_destroy(&input);
