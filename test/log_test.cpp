@@ -27,7 +27,7 @@ void log_assign_float(Tensor t) {
 namespace aitisa_api {
 namespace {
 
-TEST(LOg, Float) {
+TEST(Log, Float) {
   Tensor input;
   DataType dtype = kFloat;
   Device device = {DEVICE_CPU, 0};
