@@ -5,8 +5,8 @@
 #include <string>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
-#include "src/new_ops7/log.h"
 extern "C" {
+#include "src/new_ops7/log.h"
 #include "src/new_ops7/abs.h"
 #include "src/new_ops7/exp.h"
 #include "src/new_ops7/neg.h"
@@ -217,9 +217,9 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
           case 0:
             aitisa_exp(aitisa_tensor, &aitisa_result);
             break;
-            //          case 1:
-            //            aitisa_log(aitisa_tensor, &aitisa_result);
-            //            break;
+          case 1:
+            aitisa_log(aitisa_tensor, &aitisa_result);
+            break;
           case 2:
             aitisa_neg(aitisa_tensor, &aitisa_result);
             break;
@@ -381,8 +381,8 @@ TYPED_TEST_P(UnaryExprTest, FourTests) {
       this->square_inputs.size()) {
     test(std::move(this->exp_inputs), std::move(this->exp_inputs_name), "exp",
          this->test_case["exp"]);
-    //    test(std::move(this->log_inputs), std::move(this->log_inputs_name), "log",
-    //         this->test_case["log"]);
+    test(std::move(this->log_inputs), std::move(this->log_inputs_name), "log",
+         this->test_case["log"]);
     test(std::move(this->neg_inputs), std::move(this->neg_inputs_name), "neg",
          this->test_case["neg"]);
     test(std::move(this->abs_inputs), std::move(this->abs_inputs_name), "abs",

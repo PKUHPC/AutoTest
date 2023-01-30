@@ -1,5 +1,5 @@
-#ifndef LOG
-#define LOG
+#ifndef AITISA_LOG
+#define AITISA_LOG
 
 #include "src/core/tensor.h"
 /**
@@ -11,4 +11,4 @@
  */
 AITISA_API_PUBLIC Status aitisa_log(const Tensor input, Tensor* output);
 
-#endif  // LOG
+#endif  // AITISA_LOG
