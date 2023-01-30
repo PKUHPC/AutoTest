@@ -348,12 +348,12 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
       auto torch_time = torch_elapsed.count() * 1000 / loop;
       std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
                 << " loop " << std::endl;
-//      m.insert(
-//          std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                         time_map_value(aitisa_time, user_time, torch_time)));
+      m.insert(
+          std::make_pair(test_case_name + " sample " + std::to_string(i),
+                         time_map_value(aitisa_time, user_time, torch_time)));
 #else
-//      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                              time_map_value(aitisa_time, user_time)));
+      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
+                              time_map_value(aitisa_time, user_time)));
 #endif
     }
   };
@@ -362,7 +362,7 @@ TYPED_TEST_P(CrossEntropyLossTest, TwoTests) {
          std::move(this->cross_entropy_loss_inputs_name), "cross_entropy_loss",
          this->test_case["cross_entropy_loss"]);
 #ifdef AITISA_API_GENERATE_FIGURE
-//    draw_fig_fun(m, "drop_out");
+    draw_fig_fun(m, "cross_entropy");
 #endif
   } else
     FAIL() << "No input test case.";

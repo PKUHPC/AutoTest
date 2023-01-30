@@ -443,12 +443,12 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
       auto torch_time = torch_elapsed.count() * 1000 / loop;
       std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
                 << " loop " << std::endl;
-//      m.insert(
-//          std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                         time_map_value(aitisa_time, user_time, torch_time)));
+      m.insert(
+          std::make_pair(test_case_name + " sample " + std::to_string(i),
+                         time_map_value(aitisa_time, user_time, torch_time)));
 #else
-//      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                              time_map_value(aitisa_time, user_time)));
+      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
+                              time_map_value(aitisa_time, user_time)));
 #endif
     }
   };
@@ -457,7 +457,7 @@ TYPED_TEST_P(CtcLossTest, TwoTests) {
          std::move(this->ctc_loss_inputs_name), "ctc_loss",
          this->test_case["ctc_loss"]);
 #ifdef AITISA_API_GENERATE_FIGURE
-//    draw_fig_fun(m, "drop_out");
+    draw_fig_fun(m, "ctc_loss");
 #endif
   } else
     FAIL() << "No input test case.";
