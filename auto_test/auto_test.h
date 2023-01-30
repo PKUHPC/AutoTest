@@ -13,7 +13,6 @@
 #include "auto_test/test_code/elu.h"
 #include "auto_test/test_code/hice_torch/arg_reduce.h"
 #include "auto_test/test_code/hice_torch/reduce.h"
-#include "auto_test/test_code/hice_torch/unary_expr.h"
 #include "auto_test/test_code/l1_loss.h"
 #include "auto_test/test_code/matmul_test.h"
 #include "auto_test/test_code/mse_loss.h"
@@ -21,3 +20,4 @@
 #include "auto_test/test_code/pooling_test.h"
 #include "auto_test/test_code/smooth_l1_loss.h"
 #include "auto_test/test_code/softmax_test.h"
+#include "auto_test/test_code/unary_expr.h"
