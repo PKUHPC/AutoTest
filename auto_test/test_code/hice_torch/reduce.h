@@ -6,6 +6,12 @@
 #include <utility>
 #include "auto_test/basic.h"
 #include "auto_test/sample.h"
+extern "C" {
+#include "src/new_ops8/reduce_max.h"
+#include "src/new_ops8/reduce_mean.h"
+#include "src/new_ops8/reduce_min.h"
+#include "src/new_ops8/reduce_sum.h"
+}
 
 namespace aitisa_api {
 
@@ -15,18 +21,19 @@ class Reduce_Input : public Unary_Input {
  public:
   Reduce_Input() = default;
   Reduce_Input(int64_t ndim, int64_t* dims, int dtype, int device, void* data,
-               unsigned int len, int* dim, int dim_len, bool keepdim)
+               unsigned int len, int64_t* dim, int64_t dim_len, bool keepdim)
       : Unary_Input(ndim, dims, dtype, device, data, len),
         dim_(dim),
         dim_len_(dim_len),
         keepdim_(keepdim == 1) {}
   Reduce_Input(int64_t ndim, std::vector<int64_t> dims, int dtype, int device,
-               void* data, unsigned int len, std::vector<int> dim, bool keepdim)
+               void* data, unsigned int len, std::vector<int64_t> dim,
+               bool keepdim)
       : Unary_Input(ndim, std::move(dims), dtype, device, data, len),
         dim_(nullptr),
         dim_len_(dim.size()),
         keepdim_(keepdim == 1) {
-    this->dim_ = new int[dim_len_];
+    this->dim_ = new int64_t[dim_len_];
     for (int i = 0; i < dim_len_; i++) {
       this->dim_[i] = dim[i];
     }
@@ -42,19 +49,19 @@ class Reduce_Input : public Unary_Input {
   }
   ~Reduce_Input() override { delete[] dim_; }
   Reduce_Input& operator=(Reduce_Input const& right) {
-    int spatial_len = right.dim_len();
+    int64_t spatial_len = right.dim_len();
     auto& left = (Unary_Input&)(*this);
     left = (Unary_Input&)right;
-    this->dim_ = new int[spatial_len];
-    memcpy(this->dim_, right.dim(), spatial_len * sizeof(int));
+    this->dim_ = new int64_t[spatial_len];
+    memcpy(this->dim_, right.dim(), spatial_len * sizeof(int64_t));
   }
-  int* dim() const { return dim_; }
-  int dim_len() const { return dim_len_; }
+  int64_t* dim() const { return dim_; }
+  int64_t dim_len() const { return dim_len_; }
   bool keepdim() const { return keepdim_; }
 
  private:
-  int* dim_ = nullptr;
-  int dim_len_ = 0;
+  int64_t* dim_ = nullptr;
+  int64_t dim_len_ = 0;
   bool keepdim_ = false;
 };
 
@@ -64,14 +71,10 @@ template <typename InterfaceType>
 class ReduceTest : public ::testing::Test {
  public:
   ReduceTest() {
-    fetch_test_data("reduce.sum", reduce_sum_inputs,
-                    reduce_sum_inputs_name);
-    fetch_test_data("reduce.mean", reduce_mean_inputs,
-                    reduce_mean_inputs_name);
-    fetch_test_data("reduce.min", reduce_min_inputs,
-                    reduce_min_inputs_name);
-    fetch_test_data("reduce.max", reduce_max_inputs,
-                    reduce_max_inputs_name);
+    fetch_test_data("reduce.sum", reduce_sum_inputs, reduce_sum_inputs_name);
+    fetch_test_data("reduce.mean", reduce_mean_inputs, reduce_mean_inputs_name);
+    fetch_test_data("reduce.min", reduce_min_inputs, reduce_min_inputs_name);
+    fetch_test_data("reduce.max", reduce_max_inputs, reduce_max_inputs_name);
   }
   ~ReduceTest() override = default;
   using InputType = Reduce_Input;
@@ -101,7 +104,7 @@ class ReduceTest : public ::testing::Test {
         const libconfig::Setting& setting = settings[i];
 
         std::vector<int64_t> dims;
-        std::vector<int> dim;
+        std::vector<int64_t> dim;
         int test_index, ndim, dtype, device, len, keepdim_int;
         std::string input_name;
 
@@ -232,16 +235,20 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
     for (int i = 0; i < inputs.size(); i++) {
+      auto aitisa_elapsed = std::chrono::duration<double>::zero();
       auto user_elapsed = std::chrono::duration<double>::zero();
 #ifdef AITISA_API_PYTORCH
       auto torch_elapsed = std::chrono::duration<double>::zero();
 #endif
       //loop test
       for (int n = 0; n < loop; n++) {
-        int64_t user_result_ndim;
-        int64_t* user_result_dims = nullptr;
-        void* user_result_data = nullptr;
-        unsigned int user_result_len;
+        int64_t aitisa_result_ndim, user_result_ndim;
+        int64_t *aitisa_result_dims = nullptr, *user_result_dims = nullptr;
+        void *aitisa_result_data = nullptr, *user_result_data = nullptr;
+        unsigned int aitisa_result_len, user_result_len;
+        AITISA_Tensor aitisa_tensor, aitisa_result;
+        AITISA_DataType aitisa_result_dtype;
+        AITISA_Device aitisa_result_device;
         UserTensor user_tensor, user_result;
         UserDataType user_result_dtype;
         UserDevice user_result_device;
@@ -254,6 +261,45 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
         TorchDataType torch_result_dtype;
         TorchDevice torch_result_device(c10::DeviceType::CPU);
 #endif
+        // aitisa
+        AITISA_DataType aitisa_dtype = aitisa_int_to_dtype(inputs[i].dtype());
+        AITISA_Device aitisa_device = aitisa_int_to_device(inputs[i].device());
+        aitisa_create(aitisa_dtype, aitisa_device, inputs[i].dims(),
+                      inputs[i].ndim(), (void*)(inputs[i].data()),
+                      inputs[i].len(), &aitisa_tensor);
+
+        auto aitisa_start = std::chrono::steady_clock::now();
+
+        switch (test_case_index) {
+          case 0:
+            aitisa_reduce_sum(aitisa_tensor, inputs[i].dim(),
+                              inputs[i].dim_len(), inputs[i].keepdim(),
+                              &aitisa_result);
+            break;
+          case 1:
+            aitisa_reduce_mean(aitisa_tensor, inputs[i].dim(),
+                               inputs[i].dim_len(), inputs[i].keepdim(),
+                               &aitisa_result);
+            break;
+          case 2:
+            aitisa_reduce_min(aitisa_tensor, inputs[i].dim(),
+                              inputs[i].dim_len(), inputs[i].keepdim(),
+                              &aitisa_result);
+            break;
+          case 3:
+            aitisa_reduce_max(aitisa_tensor, inputs[i].dim(),
+                              inputs[i].dim_len(), inputs[i].keepdim(),
+                              &aitisa_result);
+            break;
+          default:
+            break;
+        }
+        auto aitisa_end = std::chrono::steady_clock::now();
+        aitisa_elapsed += aitisa_end - aitisa_start;
+        aitisa_resolve(aitisa_result, &aitisa_result_dtype,
+                       &aitisa_result_device, &aitisa_result_dims,
+                       &aitisa_result_ndim, (void**)&aitisa_result_data,
+                       &aitisa_result_len);
         // user
         UserDataType user_dtype =
             UserFuncs::user_int_to_dtype(inputs[i].dtype());
@@ -339,47 +385,61 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
             &torch_result_len);
 #endif
         // compare
-#ifdef AITISA_API_PYTORCH
-        ASSERT_EQ(user_result_ndim, torch_result_ndim);
         int64_t tensor_size = 1;
-        ASSERT_EQ(UserFuncs::user_device_to_int(user_result_device),
-                  libtorch_api::torch_device_to_int(torch_result_device));
-        ASSERT_EQ(UserFuncs::user_dtype_to_int(user_result_dtype),
+        ASSERT_EQ(aitisa_result_ndim, user_result_ndim);
+        ASSERT_EQ(0, UserFuncs::user_device_to_int(user_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
+                  UserFuncs::user_dtype_to_int(user_result_dtype));
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          tensor_size *= aitisa_result_dims[j];
+          ASSERT_EQ(aitisa_result_dims[j], user_result_dims[j]);
+        }
+        ASSERT_EQ(aitisa_result_len, user_result_len);
+#ifdef AITISA_API_PYTORCH
+        ASSERT_EQ(aitisa_result_ndim, torch_result_ndim);
+        ASSERT_EQ(0, libtorch_api::torch_device_to_int(torch_result_device));
+        ASSERT_EQ(aitisa_dtype_to_int(aitisa_result_dtype),
                   libtorch_api::torch_dtype_to_int(torch_result_dtype));
-        for (int64_t j = 0; j < user_result_ndim; j++) {
-          tensor_size *= user_result_dims[j];
-          ASSERT_EQ(user_result_dims[j], torch_result_dims[j]);
+        for (int64_t j = 0; j < aitisa_result_ndim; j++) {
+          ASSERT_EQ(aitisa_result_dims[j], torch_result_dims[j]);
         }
-        ASSERT_EQ(user_result_len, torch_result_len);
+        ASSERT_EQ(aitisa_result_len, torch_result_len);
 #endif
-
-        auto* user_data = (float*)user_result_data;
-        auto* torch_data = (float*)torch_result_data;
+        auto* aitisa_data = (double*)aitisa_result_data;
+        auto* user_data = (double*)user_result_data;
+#ifdef AITISA_API_PYTORCH
+        auto* torch_data = (double*)torch_result_data;
         for (int64_t j = 0; j < tensor_size; j++) {
-          if (test_case_index == 2 || test_case_index == 3) {
-            ASSERT_EQ(user_data[j], torch_data[j]);
-          } else {
-            ASSERT_TRUE(abs(user_data[j] - torch_data[j]) < 1e-2);
-          }
+          ASSERT_TRUE(abs(aitisa_data[j] - torch_data[j]) < 1e-3);
         }
+#endif
+        for (int64_t j = 0; j < tensor_size; j++) {
+          ASSERT_TRUE(abs(aitisa_data[j] - user_data[j]) < 1e-3);
+        }
+        aitisa_tensor->storage->data = nullptr;
+        aitisa_destroy(&aitisa_tensor);
+        aitisa_destroy(&aitisa_result);
       }
+      auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
       auto user_time = user_elapsed.count() * 1000 / loop;
 
       // print result of test
       std::cout << "[ " << test_case_name << " sample" << i << " / "
                 << inputs_name[i] << " ] " << std::endl;
+      std::cout << "\t[ AITISA ] " << aitisa_time << " ms average for " << loop
+                << " loop " << std::endl;
       std::cout << "\t[  USER  ] " << user_time << " ms average for " << loop
                 << " loop " << std::endl;
 #ifdef AITISA_API_PYTORCH
       auto torch_time = torch_elapsed.count() * 1000 / loop;
       std::cout << "\t[  TORCH  ] " << torch_time << " ms average for " << loop
                 << " loop " << std::endl;
-//      m.insert(
-//          std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                         time_map_value(aitisa_time, user_time, torch_time)));
+      m.insert(
+          std::make_pair(test_case_name + " sample " + std::to_string(i),
+                         time_map_value(aitisa_time, user_time, torch_time)));
 #else
-//      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
-//                              time_map_value(aitisa_time, user_time)));
+      m.insert(std::make_pair(test_case_name + " sample " + std::to_string(i),
+                              time_map_value(aitisa_time, user_time)));
 #endif
     }
   };
@@ -398,56 +458,59 @@ TYPED_TEST_P(ReduceTest, TwoTests) {
          std::move(this->reduce_max_inputs_name), "reduce_max",
          this->test_case["reduce_max"]);
 #ifdef AITISA_API_GENERATE_FIGURE
-//    draw_fig_fun(m, "pooling");
+    draw_fig_fun(m, "reduce");
 #endif
   } else
     FAIL() << "No input test case.";
 }
 REGISTER_TYPED_TEST_CASE_P(ReduceTest, TwoTests);
 
-#define REGISTER_REDUCE(REDUCE_SUM, REDUCE_MEAN, REDUCE_MIN, REDUCE_MAX)       \
-  class Reduce : public Basic {                                                \
-   public:                                                                     \
-    static UserTensor user_reduce_sum(UserTensor input, const int* dim,        \
-                                      const int dim_len, const bool keepdim) { \
-      std::vector<int64_t> dim_vector = {};                                    \
-      dim_vector.reserve(dim_len);                                             \
-      for (auto i = 0; i < dim_len; i++) {                                     \
-        dim_vector.push_back(dim[i]);                                          \
-      }                                                                        \
-      return REDUCE_SUM(input, dim_vector, keepdim);                           \
-    }                                                                          \
-    static UserTensor user_reduce_mean(UserTensor input, const int* dim,       \
-                                       const int dim_len,                      \
-                                       const bool keepdim) {                   \
-      std::vector<int64_t> dim_vector = {};                                    \
-      dim_vector.reserve(dim_len);                                             \
-      for (auto i = 0; i < dim_len; i++) {                                     \
-        dim_vector.push_back(dim[i]);                                          \
-      }                                                                        \
-      return REDUCE_MEAN(input, dim_vector, keepdim);                          \
-    }                                                                          \
-    static UserTensor user_reduce_min(UserTensor input, const int* dim,        \
-                                      const int dim_len, const bool keepdim) { \
-      std::vector<int64_t> dim_vector = {};                                    \
-      dim_vector.reserve(dim_len);                                             \
-      for (auto i = 0; i < dim_len; i++) {                                     \
-        dim_vector.push_back(dim[i]);                                          \
-      }                                                                        \
-      return REDUCE_MIN(input, dim_vector, keepdim);                           \
-    }                                                                          \
-    static UserTensor user_reduce_max(UserTensor input, const int* dim,        \
-                                      const int dim_len, const bool keepdim) { \
-      std::vector<int64_t> dim_vector = {};                                    \
-      dim_vector.reserve(dim_len);                                             \
-      for (auto i = 0; i < dim_len; i++) {                                     \
-        dim_vector.push_back(dim[i]);                                          \
-      }                                                                        \
-      return REDUCE_MAX(input, dim_vector, keepdim);                           \
-    }                                                                          \
-  };                                                                           \
-  namespace aitisa_api {                                                       \
-  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, ReduceTest, Reduce);               \
+#define REGISTER_REDUCE(REDUCE_SUM, REDUCE_MEAN, REDUCE_MIN, REDUCE_MAX)     \
+  class Reduce : public Basic {                                              \
+   public:                                                                   \
+    static UserTensor user_reduce_sum(UserTensor input, const int64_t* dim,  \
+                                      const int64_t dim_len,                 \
+                                      const bool keepdim) {                  \
+      std::vector<int64_t> dim_vector = {};                                  \
+      dim_vector.reserve(dim_len);                                           \
+      for (auto i = 0; i < dim_len; i++) {                                   \
+        dim_vector.push_back(dim[i]);                                        \
+      }                                                                      \
+      return REDUCE_SUM(input, dim_vector, keepdim);                         \
+    }                                                                        \
+    static UserTensor user_reduce_mean(UserTensor input, const int64_t* dim, \
+                                       const int64_t dim_len,                \
+                                       const bool keepdim) {                 \
+      std::vector<int64_t> dim_vector = {};                                  \
+      dim_vector.reserve(dim_len);                                           \
+      for (auto i = 0; i < dim_len; i++) {                                   \
+        dim_vector.push_back(dim[i]);                                        \
+      }                                                                      \
+      return REDUCE_MEAN(input, dim_vector, keepdim);                        \
+    }                                                                        \
+    static UserTensor user_reduce_min(UserTensor input, const int64_t* dim,  \
+                                      const int64_t dim_len,                 \
+                                      const bool keepdim) {                  \
+      std::vector<int64_t> dim_vector = {};                                  \
+      dim_vector.reserve(dim_len);                                           \
+      for (auto i = 0; i < dim_len; i++) {                                   \
+        dim_vector.push_back(dim[i]);                                        \
+      }                                                                      \
+      return REDUCE_MIN(input, dim_vector, keepdim);                         \
+    }                                                                        \
+    static UserTensor user_reduce_max(UserTensor input, const int64_t* dim,  \
+                                      const int64_t dim_len,                 \
+                                      const bool keepdim) {                  \
+      std::vector<int64_t> dim_vector = {};                                  \
+      dim_vector.reserve(dim_len);                                           \
+      for (auto i = 0; i < dim_len; i++) {                                   \
+        dim_vector.push_back(dim[i]);                                        \
+      }                                                                      \
+      return REDUCE_MAX(input, dim_vector, keepdim);                         \
+    }                                                                        \
+  };                                                                         \
+  namespace aitisa_api {                                                     \
+  INSTANTIATE_TYPED_TEST_CASE_P(aitisa_api, ReduceTest, Reduce);             \
   }
 
 }  // namespace aitisa_api
