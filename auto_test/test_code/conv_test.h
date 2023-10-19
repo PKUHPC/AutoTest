@@ -327,6 +327,8 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
   auto test = [&m](std::vector<Conv_Input>&& inputs,
                    std::vector<std::string>&& inputs_name,
                    const std::string& test_case_name, int test_case_index) {
+    double dur;
+    clock_t start,end;
     for (int i = 0; i < inputs.size(); i++) {
       auto aitisa_elapsed = std::chrono::duration<double>::zero();
       auto user_elapsed = std::chrono::duration<double>::zero();
@@ -361,7 +363,7 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                       inputs[i].groups(), &aitisa_result);
       }
       auto aitisa_start = std::chrono::steady_clock::now();
-
+      start = clock();
       //loop
       for (int iter = 0; iter < loop; iter++) {
         aitisa_conv2d(aitisa_tensor1, aitisa_tensor2, inputs[i].stride(), 2,
@@ -370,7 +372,10 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
         //        aitisa_conv2d_simple(aitisa_tensor1, aitisa_tensor2, &aitisa_result);
       }
       auto aitisa_end = std::chrono::steady_clock::now();
+      end = clock();
       aitisa_elapsed += aitisa_end - aitisa_start;
+      dur = (double)(end - start);
+      printf("aitisa Time:%f ms\n",(dur/CLOCKS_PER_SEC) * 1000/ loop);
       auto aitisa_time = aitisa_elapsed.count() * 1000 / loop;
 
       aitisa_resolve(aitisa_result, &aitisa_result_dtype, &aitisa_result_device,
@@ -410,6 +415,7 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                                2, inputs[i].groups(), &user_result);
       }
       auto user_start = std::chrono::steady_clock::now();
+      start = clock();
 
       //loop
       for (int iter = 0; iter < loop; iter++) {
@@ -418,7 +424,9 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
                                2, inputs[i].groups(), &user_result);
       }
       auto user_end = std::chrono::steady_clock::now();
-
+      end = clock();
+      dur = (double)(end - start);
+      printf("user Time:%f ms\n",(dur/CLOCKS_PER_SEC) * 1000/ loop);
       user_elapsed += user_end - user_start;
       auto user_time = user_elapsed.count() * 1000 / loop;
 
@@ -473,11 +481,15 @@ TYPED_TEST_P(Conv2dTest, TwoTests) {
         torch::nn::functional::conv2d(torch_tensor1, torch_tensor2, options);
       }
       auto torch_start = std::chrono::steady_clock::now();
+      start = clock();
 
       //loop
       for (int i = 0; i < loop; i++) {
         torch::nn::functional::conv2d(torch_tensor1, torch_tensor2, options);
       }
+      end = clock();
+      dur = (double)(end - start);
+      printf("torch Time:%f ms\n",(dur/CLOCKS_PER_SEC)* 1000 / loop);
       auto torch_end = std::chrono::steady_clock::now();
 
       torch_elapsed += torch_end - torch_start;
