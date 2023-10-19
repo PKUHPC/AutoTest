@@ -19,7 +19,7 @@ endif()
 # Show the detail of compile messages
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_COLOR_MAKEFILE   ON)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 ##############################################
 # General setup
@@ -151,6 +151,13 @@ if(AITISA_API_BUILD_AUTO_TESTING)
 
       target_link_libraries(auto_test "${TORCH_LIBRARIES}")
       ADD_DEFINITIONS(-DAITISA_API_PYTORCH)
+#      include(cmake/local/TorchVision.cmake)
+#      set(TorchVision_DIR "${AITISA_API_EXTERNAL_DIR}/torchvision/")
+
+#      find_package(TorchVision REQUIRED)
+#       include_directories(/home/xgy/Desktop/AutoTest/third_party/torchvision/torchvision-src/vision-0.13.1/torchvision/csrc)
+#      target_link_libraries(auto_test /home/xgy/Desktop/AutoTest/third_party/torchvision/torchvision-build/libtorchvision.so)
+#      target_link_libraries(auto_test PUBLIC TorchVision::TorchVision)
   endif()
 
   target_link_libraries(auto_test aitisa_api::aitisa_api aitisa_api::gmock aitisa_api::libconfig)
