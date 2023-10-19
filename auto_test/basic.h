@@ -16,6 +16,7 @@ extern "C" {
 
 namespace aitisa_api {
 static constexpr int loop = 100;
+static constexpr int warmup = 5;
 
 extern const DataType aitisa_dtypes[];
 extern const Device aitisa_devices[];
