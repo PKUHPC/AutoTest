@@ -1,4 +1,4 @@
-Standard APIs for AI operations
+Standard APIs for AI operations and automation testing framework.
 
 # Environment Requirement
 
@@ -11,12 +11,14 @@ Standard APIs for AI operations
 | Libtorch   | latest            |
 
 # Project Layout
-Autotest is an operator standard automation testing framework.
+AutoTest is an operator standard automation testing framework.
 
-- [**`Autotest/auto_test`**](Autotest/auto_test) contains comparative test files.
-- [**`Autotest/src`**](Autotest/src) contains data type and kernels for aitisa.
-- [**`Autotest/test`**](Autotest/test) contains test files for aitisa kernels.
-- [**`Autotest/generate`**](Autotest/generate) contains comparison results.
+- [**`Autotest/auto_test`**](/auto_test) contains comparative test files.
+- [**`Autotest/src`**](src) contains data type and kernels for aitisa.
+- [**`Autotest/hice-master`**](hice-master) contains data type and kernels for hice.
+- [**`Autotest/test`**](test) contains test files for aitisa kernels.
+- [**`Autotest/generate`**](generate) contains comparison results.
+- [**`Autotest/Config`**](config) contains some test config.
 
 Here is a comparative test result of the 'activate' operator among the three different operator libraries: Aitisa, Hice, and Torch.
 ![activate](./generate/activate.png)
