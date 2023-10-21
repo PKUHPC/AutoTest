@@ -168,10 +168,10 @@ if(AITISA_API_BUILD_AUTO_TESTING)
   target_link_libraries(auto_test hice::hice)
 
   #add user test code
-  add_executable(hicetest hice_aitisa_test.cpp)
+  add_executable(hice_aitisa_test hice_aitisa_test.cpp)
 
   #link auto_test
-  target_link_libraries(hicetest auto_test)
+  target_link_libraries(hice_aitisa_test auto_test)
   include_directories(hice-master)
 
 endif()
