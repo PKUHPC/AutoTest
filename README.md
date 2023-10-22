@@ -59,7 +59,7 @@ You can setup *Standard APIs for AI operations* by following instructions:
       ./hice_aitisa_test
       ```
 
-If you want compare with pytorch, you should switch AITISA_API_PYTORCH ON in [**`CMakeList.txt`**](./CMakeList.txt)
+If you want compare with pytorch, you should switch AITISA_API_PYTORCH ON in [**`CMakeList.txt`**](./CMakeLists.txt)
 ```bash
     option(AITISA_API_PYTORCH "test with pytorch" ON)
 ```
