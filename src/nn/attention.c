@@ -20,8 +20,7 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
 
   int64_t ndim = aitisa_tensor_ndim(query);
 
-  int64_t* out_dims =
-      aitisa_default_cpu_allocator()->raw_alloc(sizeof(*out_dims) * ndim);
+  int64_t* out_dims;
   int64_t out_dims_vector[4] = {batch, seq_q, head, dim};
   out_dims = out_dims_vector;
 
@@ -33,7 +32,6 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
       aitisa_default_cpu_allocator()->raw_alloc(sizeof(*value_strides) * ndim);
   int64_t* out_strides =
       aitisa_default_cpu_allocator()->raw_alloc(sizeof(*out_strides) * ndim);
-
   Tensor out_tensor;
   DataType dtype = aitisa_tensor_data_type(query);
   Device device = aitisa_tensor_device(query);
@@ -59,8 +57,12 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
   int64_t s_dims_vector[4] = {batch, seq_q, head, seq_k};
   s_dims = s_dims_vector;
   Tensor s_tensor;
+
+
   CHECK_STATUS(aitisa_create(dtype, device, s_dims, ndim, NULL, 0, &s_tensor));
-  Tensor* s = s_tensor;
+  Tensor* s = &s_tensor;
+
+
   float* s_ptr = aitisa_tensor_data(*s);
 
   for (size_t b = 0; b < batch; ++b) {
@@ -82,13 +84,13 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
   }
 
   // P = Softmax(S)
-  int64_t* p_dims =
-      aitisa_default_cpu_allocator()->raw_alloc(sizeof(*s_dims) * ndim);
+  int64_t* p_dims;
   int64_t p_dims_vector[4] = {batch, seq_q, head, seq_k};
   p_dims = p_dims_vector;
   Tensor p_tensor;
-  CHECK_STATUS(aitisa_create(dtype, device, p_dims, ndim, NULL, 0, &s_tensor));
-  Tensor* p = p_tensor;
+  CHECK_STATUS(aitisa_create(dtype, device, p_dims, ndim, NULL, 0, &p_tensor));
+  Tensor* p = &p_tensor;
+
   float* p_ptr = aitisa_tensor_data(*p);
 
   float scale = 1.0 / sqrt(dim);
@@ -126,7 +128,7 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
         }
 
         // Causal(S)
-        if (is_causal) {
+          if (is_causal) {
           for (size_t sk = row; sk < seq_q; ++sk) {
             p_ptr[b * (seq_q * head * seq_k) + sq * (head * seq_k) + h * seq_k +
                   sk] = 0.0;
@@ -155,14 +157,10 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
       }
     }
   }
-
-  aitisa_default_cpu_allocator()->raw_dealloc(out_dims);
   aitisa_default_cpu_allocator()->raw_dealloc(query_strides);
   aitisa_default_cpu_allocator()->raw_dealloc(key_strides);
   aitisa_default_cpu_allocator()->raw_dealloc(value_strides);
   aitisa_default_cpu_allocator()->raw_dealloc(out_strides);
-  aitisa_default_cpu_allocator()->raw_dealloc(s_dims);
-  aitisa_default_cpu_allocator()->raw_dealloc(p_dims);
 }
 
 Status aitisa_attention(const Tensor query, const Tensor key,

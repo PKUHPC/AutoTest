@@ -71,14 +71,15 @@ list(APPEND aitisa_test_srcs
         argmin_test.cpp
         max_test.cpp
         min_test.cpp
+        attention_test.cpp
         )
 
-# Build a exe for each test files
-foreach (test_src ${aitisa_test_srcs})
-    get_filename_component(test_name ${test_src} NAME_WE)
-    aitisa_api_register_exe(${test_name}
-            "${test_src}" "test" "aitisa_api::aitisa_api" "aitisa_api::gmock")
-endforeach ()
+## Build a exe for each test files
+#foreach (test_src ${aitisa_test_srcs})
+#    get_filename_component(test_name ${test_src} NAME_WE)
+#    aitisa_api_register_exe(${test_name}
+#            "${test_src}" "test" "aitisa_api::aitisa_api" "aitisa_api::gmock")
+#endforeach ()
 
 # Build a exe including all test files 
 set(AITISA_BUILD_TEST_MAIN ON)
