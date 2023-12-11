@@ -178,6 +178,155 @@ Binary_Input& Binary_Input::operator=(Binary_Input& right) {
   return *this;
 }
 
+Ternary_Input::Ternary_Input(int64_t ndim1, int64_t* dims1, int dtype1,
+                             int device1, void* data1, unsigned int len1,
+                             int64_t ndim2, int64_t* dims2, int dtype2,
+                             int device2, void* data2, unsigned int len2,
+                             int64_t ndim3, int64_t* dims3, int dtype3,
+                             int device3, void* data3, unsigned int len3)
+    : ndim1_(ndim1),
+      dims1_(dims1),
+      dtype1_(dtype1),
+      device1_(device1),
+      data1_(data1),
+      len1_(len1),
+      ndim2_(ndim2),
+      dims2_(dims2),
+      dtype2_(dtype2),
+      device2_(device2),
+      data2_(data2),
+      len2_(len2),
+      ndim3_(ndim3),
+      dims3_(dims3),
+      dtype3_(dtype3),
+      device3_(device3),
+      data3_(data3),
+      len3_(len3) {
+  count_ = new int;
+  *count_ = 1;
+}
+
+Ternary_Input::Ternary_Input(int64_t ndim1, std::vector<int64_t> dims1,
+                             int dtype1, int device1, void* data1,
+                             unsigned int len1, int64_t ndim2,
+                             std::vector<int64_t> dims2, int dtype2,
+                             int device2, void* data2, unsigned int len2,
+                             int64_t ndim3, std::vector<int64_t> dims3,
+                             int dtype3, int device3, void* data3,
+                             unsigned int len3)
+    : ndim1_(ndim1),
+      dims1_(nullptr),
+      dtype1_(dtype1),
+      device1_(device1),
+      data1_(data1),
+      len1_(len1),
+      ndim2_(ndim2),
+      dims2_(nullptr),
+      dtype2_(dtype2),
+      device2_(device2),
+      data2_(data2),
+      len2_(len2),
+      ndim3_(ndim3),
+      dims3_(nullptr),
+      dtype3_(dtype3),
+      device3_(device3),
+      data3_(data3),
+      len3_(len3) {
+  dims1_ = new int64_t[ndim1];
+  dims2_ = new int64_t[ndim2];
+  dims3_ = new int64_t[ndim3];
+  for (int64_t i = 0; i < ndim1; i++) {
+    dims1_[i] = dims1[i];
+  }
+  for (int64_t i = 0; i < ndim2; i++) {
+    dims2_[i] = dims2[i];
+  }
+  for (int64_t i = 0; i < ndim3; i++) {
+    dims3_[i] = dims3[i];
+  }
+  count_ = new int;
+  *count_ = 1;
+}
+
+Ternary_Input::Ternary_Input(Ternary_Input& input)
+    : ndim1_(input.ndim1()),
+      dims1_(input.dims1()),
+      dtype1_(input.dtype1()),
+      device1_(input.device1()),
+      data1_(input.data1()),
+      len1_(input.len1()),
+      ndim2_(input.ndim2()),
+      dims2_(input.dims2()),
+      dtype2_(input.dtype2()),
+      device2_(input.device2()),
+      data2_(input.data2()),
+      len2_(input.len2()),
+      ndim3_(input.ndim3()),
+      dims3_(input.dims3()),
+      dtype3_(input.dtype3()),
+      device3_(input.device3()),
+      data3_(input.data3()),
+      len3_(input.len3()),
+      count_(input.count()) {
+  (*count_)++;
+}
+
+Ternary_Input::Ternary_Input(Ternary_Input&& input)
+    : ndim1_(input.ndim1()),
+      dims1_(input.dims1()),
+      dtype1_(input.dtype1()),
+      device1_(input.device1()),
+      data1_(input.data1()),
+      len1_(input.len1()),
+      ndim2_(input.ndim2()),
+      dims2_(input.dims2()),
+      dtype2_(input.dtype2()),
+      device2_(input.device2()),
+      data2_(input.data2()),
+      len2_(input.len2()),
+      ndim3_(input.ndim3()),
+      dims3_(input.dims3()),
+      dtype3_(input.dtype3()),
+      device3_(input.device3()),
+      data3_(input.data3()),
+      len3_(input.len3()),
+      count_(input.count()) {
+  input.to_nullptr();
+}
+
+Ternary_Input& Ternary_Input::operator=(Ternary_Input& right) {
+  (*(this->count_))--;
+  if (*(this->count_) == 0) {
+    delete[] this->dims1_;
+    delete[] this->dims2_;
+    delete[] this->dims3_;
+    delete[] (char*)this->data1_;
+    delete[] (char*)this->data2_;
+    delete[] (char*)this->data3_;
+  }
+  this->ndim1_ = right.ndim1();
+  this->ndim2_ = right.ndim2();
+  this->ndim3_ = right.ndim3();
+  this->dims1_ = right.dims1();
+  this->dims2_ = right.dims2();
+  this->dims3_ = right.dims3();
+  this->dtype1_ = right.dtype1();
+  this->dtype2_ = right.dtype2();
+  this->dtype3_ = right.dtype3();
+  this->device1_ = right.device1();
+  this->device2_ = right.device2();
+  this->device3_ = right.device3();
+  this->len1_ = right.len1();
+  this->len2_ = right.len2();
+  this->len3_ = right.len3();
+  this->data1_ = right.data1();
+  this->data2_ = right.data2();
+  this->data3_ = right.data3();
+  this->count_ = right.count();
+  (*(this->count_))++;
+  return *this;
+}
+
 Result::Result(Result& result)
     : ndim_(result.ndim()),
       dims_(result.dims()),

@@ -142,6 +142,111 @@ class Binary_Input {
   int* count_ = nullptr;
 };
 
+class Ternary_Input {
+ public:
+  Ternary_Input() {
+    count_ = new int;
+    *count_ = 1;
+  }
+  Ternary_Input(int64_t ndim1, int64_t* dims1, int dtype1, int device1,
+               void* data1, unsigned int len1, int64_t ndim2, int64_t* dims2,
+               int dtype2, int device2, void* data2, unsigned int len2,int64_t ndim3, int64_t* dims3, int dtype3, int device3,
+                void* data3, unsigned int len3);
+  Ternary_Input(int64_t ndim1, std::vector<int64_t> dims1, int dtype1,
+               int device1, void* data1, unsigned int len1, int64_t ndim2,
+               std::vector<int64_t> dims2, int dtype2, int device2, void* data2,
+               unsigned int len2,int64_t ndim3, std::vector<int64_t> dims3, int dtype3,
+                int device3, void* data3, unsigned int len3);
+  Ternary_Input(Ternary_Input& input);
+  Ternary_Input(Ternary_Input&& input);
+  virtual ~Ternary_Input() {
+    if (count_) {
+      (*count_)--;
+      if (*count_ == 0) {
+        delete[] (char*)dims1_;
+        delete[] (char*)dims2_;
+        delete[] (char*)dims3_;
+        delete[] (char*)data1_;
+        delete[] (char*)data2_;
+        delete[] (char*)data3_;
+        delete count_;
+      }
+    }
+  }
+  Ternary_Input& operator=(Ternary_Input& right);
+  void to_CUDA() {
+    device1_ = 1;
+    device2_ = 1;
+    device3_ = 1;
+  }
+  void to_CPU() {
+    device1_ = 0;
+    device2_ = 0;
+    device3_ = 0;
+  }
+  int64_t ndim1() { return ndim1_; }
+  int64_t ndim2() { return ndim2_; }
+  int64_t ndim3() { return ndim3_; }
+  int64_t* dims1() { return dims1_; }
+  int64_t* dims2() { return dims2_; }
+  int64_t* dims3() { return dims3_; }
+  int dtype1() { return dtype1_; }
+  int dtype2() { return dtype2_; }
+  int dtype3() { return dtype3_; }
+  int device1() { return device1_; }
+  int device2() { return device2_; }
+  int device3() { return device3_; }
+  void* data1() { return data1_; }
+  void* data2() { return data2_; }
+  void* data3() { return data3_; }
+  unsigned int len1() { return len1_; }
+  unsigned int len2() { return len2_; }
+  unsigned int len3() { return len3_; }
+  void set_data1(void* data, unsigned int len) {
+    data1_ = data;
+    len1_ = len;
+  }
+  void set_data2(void* data, unsigned int len) {
+    data2_ = data;
+    len2_ = len;
+  }
+  void set_data3(void* data, unsigned int len) {
+    data3_ = data;
+    len3_ = len;
+  }
+  int* count() { return count_; }
+  void to_nullptr() {
+    count_ = nullptr;
+    dims1_ = nullptr;
+    dims2_ = nullptr;
+    dims3_ = nullptr;
+    data1_ = nullptr;
+    data2_ = nullptr;
+    data3_ = nullptr;
+  }
+
+ private:
+  int64_t ndim1_ = 0;
+  int64_t* dims1_ = nullptr;
+  int dtype1_ = 0;
+  int device1_ = 0;
+  void* data1_ = nullptr;
+  unsigned int len1_ = 0;
+  int64_t ndim2_ = 0;
+  int64_t* dims2_ = nullptr;
+  int dtype2_ = 0;
+  int device2_ = 0;
+  void* data2_ = nullptr;
+  unsigned int len2_ = 0;
+  int64_t ndim3_ = 0;
+  int64_t* dims3_ = nullptr;
+  int dtype3_ = 0;
+  int device3_ = 0;
+  void* data3_ = nullptr;
+  unsigned int len3_ = 0;
+  int* count_ = nullptr;
+};
+
 class Result {
  public:
   Result() {
