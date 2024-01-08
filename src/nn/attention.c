@@ -58,10 +58,8 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
   s_dims = s_dims_vector;
   Tensor s_tensor;
 
-
   CHECK_STATUS(aitisa_create(dtype, device, s_dims, ndim, NULL, 0, &s_tensor));
   Tensor* s = &s_tensor;
-
 
   float* s_ptr = aitisa_tensor_data(*s);
 
@@ -82,7 +80,6 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
       }
     }
   }
-
   // P = Softmax(S)
   int64_t* p_dims;
   int64_t p_dims_vector[4] = {batch, seq_q, head, seq_k};
@@ -103,7 +100,7 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
         }
 
         // Max(S)
-        int64_t* tmp_s =
+        float* tmp_s =
             aitisa_default_cpu_allocator()->raw_alloc(sizeof(*tmp_s) * seq_k);
 
         float max_s = -FLT_MIN;
@@ -113,7 +110,6 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
                       scale;
           max_s = max(max_s, tmp_s[sk]);
         }
-
         // Sum(S)
         float sum_s = 0.0;
         for (size_t sk = 0; sk < row; ++sk) {
@@ -128,7 +124,7 @@ static Status aitisa_attention_float(const Tensor query, const Tensor key,
         }
 
         // Causal(S)
-          if (is_causal) {
+        if (is_causal) {
           for (size_t sk = row; sk < seq_q; ++sk) {
             p_ptr[b * (seq_q * head * seq_k) + sq * (head * seq_k) + h * seq_k +
                   sk] = 0.0;

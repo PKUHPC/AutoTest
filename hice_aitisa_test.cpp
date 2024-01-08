@@ -246,6 +246,8 @@ REGISTER_TRANSPOSE();
 
 REGISTER_ROT90();
 
+REGISTER_AttentionTest();
+
 REGISTER_COMPARE(hice::equal, hice::greater_equal, hice::greater,
                  hice::less_equal, hice::less);
 
